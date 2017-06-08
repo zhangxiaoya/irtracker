@@ -13,11 +13,11 @@ const auto DELAY = 100;
 const auto WINDOW_WIDTH = 8;
 const auto WINDOW_HEIGHT = 8;
 
-const auto THRESHHOLD = 20;
+const auto THRESHHOLD = 25;
 const auto CONTIUNITY_THRESHHOLD = 0.4;
 
-const auto TARGET_WIDTH_MIN_LIMIT = 4;
-const auto TARGET_HEIGHT_MIN_LIMIT = 4;
+const auto TARGET_WIDTH_MIN_LIMIT = 3;
+const auto TARGET_HEIGHT_MIN_LIMIT = 3;
 const auto TARGET_WIDTH_MAX_LIMIT = 16;
 const auto TARGET_HEIGHT_MAX_LIMIT = 16;
 
@@ -186,7 +186,7 @@ void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, in
 	}
 }
 
-void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
+void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
 {
 	std::stack<cv::Point> deepTrace;
 	bitMap.at<int32_t>(r, c) = currentIndex;
@@ -227,7 +227,7 @@ void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, 
 	}
 }
 
-void DFSWithoutRecursionForField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
+void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
 {
 	std::stack<cv::Point> deepTrace;
 	bitMap.at<int32_t>(r, c) = currentIndex;
@@ -298,7 +298,7 @@ void FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int
 	if(fieldType == FieldType::Eight)
 		DFSWithoutRecursionEightField(binaryFrame, bitMap, r, c, currentIndex);
 	else if(fieldType == FieldType::Four)
-		DFSWithoutRecursionForField(binaryFrame, bitMap, r, c, currentIndex);
+		DFSWithoutRecursionFourField(binaryFrame, bitMap, r, c, currentIndex);
 	else
 		std::cout << "FieldType Error!" << std::endl;
 }
@@ -401,8 +401,8 @@ void ShowCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>
 			continue;
 		}
 
-		if((width < TARGET_WIDTH_MIN_LIMIT && height < TARGET_HEIGHT_MIN_LIMIT) ||
-		   (width > TARGET_WIDTH_MAX_LIMIT && height > TARGET_HEIGHT_MAX_LIMIT))
+		if((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
+		   (width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
 			continue;
 
 		auto rect = cv::Rect(allObject[i].left, allObject[i].top, width, height);
