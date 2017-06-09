@@ -1,5 +1,9 @@
 #pragma once
 
+#include "FourLimits.hpp"
+#include "FieldType.hpp"
+#include <stack>
+
 const auto WINDOW_WIDTH = 8;
 const auto WINDOW_HEIGHT = 8;
 const auto THRESHHOLD = 25;

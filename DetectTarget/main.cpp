@@ -9,6 +9,9 @@
 #include "FieldType.hpp"
 #include "FourLimits.hpp"
 #include "Util.hpp"
+#include "DetectByDiscontinuity.hpp"
+#include "DetectByBinaryBitMap.hpp"
+#include "DetectByMultiscaleLocalDifference.hpp"
 
 const auto DELAY = 10;
 
@@ -76,6 +79,43 @@ int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
 	return currentIndex;
 }
 
+void DetectByMaxFilterAndAdptiveThreshHold(cv::Mat curFrame)
+{
+	cv::Mat filtedFrame(cv::Size(curFrame.cols,curFrame.rows),CV_8UC1);
+	auto kernelSize = 3;
+
+	MaxFilter(curFrame, filtedFrame, kernelSize);
+
+	imshow("Max Filter", filtedFrame);
+
+	const auto topCount = 5;
+	std::vector<uchar> maxValues(topCount, 0);
+
+	std::vector<uchar> allValues;
+
+	for (auto r = 0; r < filtedFrame.rows; ++r)
+		for (auto c = 0; c < filtedFrame.cols; ++c)
+			allValues.push_back(filtedFrame.at<uchar>(r, c));
+
+	sort(allValues.begin(), allValues.end(), Util::comp);
+
+	auto iterator = unique(allValues.begin(), allValues.end());
+	allValues.resize(distance(allValues.begin(), iterator));
+
+	for (auto i = 0; i < topCount; ++i)
+		maxValues[i] = allValues[i];
+
+	cv::Mat blockMap(cv::Size(filtedFrame.cols, filtedFrame.rows), CV_32SC1, cv::Scalar(-1));
+	auto totalObject = GetBlocks(filtedFrame, blockMap);
+
+	std::vector<FourLimits> allObjects(totalObject);
+	Util::GetRectangleSize(blockMap, allObjects, totalObject);
+
+	std::cout << "Max Value Threh Hold = " << static_cast<int>(maxValues[2]) <<std::endl;
+	Util::ShowAllObject(curFrame, allObjects);
+	Util::ShowCandidateTargets(curFrame, allObjects, maxValues[4]);
+}
+
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
@@ -96,45 +136,13 @@ int main(int argc, char* argv[])
 				imshow("Current Frame", curFrame);
 				cv::waitKey(DELAY);
 
-//				DetectByDiscontinuity::DetectTarget(curFrame);
+				DetectByDiscontinuity::DetectTarget(curFrame);
 
-//				DetectByBinaryBitMap::DetectTargetsByBitMap(curFrame);
+				DetectByBinaryBitMap::DetectTargetsByBitMap(curFrame);
 
-//				DetectByMultiScaleLocalDifference::MultiscaleLocalDifferenceContrast(curFrame);
+				DetectByMultiScaleLocalDifference::MultiscaleLocalDifferenceContrast(curFrame);
 
-				cv::Mat filtedFrame(cv::Size(curFrame.cols,curFrame.rows),CV_8UC1);
-				auto kernelSize = 3;
-
-				MaxFilter(curFrame, filtedFrame, kernelSize);
-
-				imshow("Max Filter", filtedFrame);
-
-				const auto topCount = 5;
-				std::vector<uchar> maxValues(topCount, 0);
-
-				std::vector<uchar> allValues;
-
-				for (auto r = 0; r < filtedFrame.rows; ++r)
-					for (auto c = 0; c < filtedFrame.cols; ++c)
-						allValues.push_back(filtedFrame.at<uchar>(r, c));
-
-				sort(allValues.begin(), allValues.end(), Util::comp);
-
-				auto iterator = unique(allValues.begin(), allValues.end());
-				allValues.resize(distance(allValues.begin(), iterator));
-
-				for (auto i = 0; i < topCount; ++i)
-					maxValues[i] = allValues[i];
-
-				cv::Mat blockMap(cv::Size(filtedFrame.cols, filtedFrame.rows), CV_32SC1, cv::Scalar(-1));
-				auto totalObject = GetBlocks(filtedFrame, blockMap);
-
-				std::vector<FourLimits> allObjects(totalObject);
-				Util::GetRectangleSize(blockMap, allObjects, totalObject);
-
-				std::cout << "Max Value Threh Hold = " << static_cast<int>(maxValues[2]) <<std::endl;
-				Util::ShowAllObject(curFrame, allObjects);
-				Util::ShowCandidateTargets(curFrame, allObjects, maxValues[4]);
+				DetectByMaxFilterAndAdptiveThreshHold(curFrame);
 
 				std::cout << "Index : " << std::setw(4) << frameIndex << std::endl;
 				++frameIndex;

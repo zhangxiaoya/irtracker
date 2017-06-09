@@ -32,5 +32,11 @@
     <ClInclude Include="DetectByDiscontinuity.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DetectByBinaryBitMap.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DetectByMultiscaleLocalDifference.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

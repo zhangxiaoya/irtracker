@@ -122,7 +122,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DetectByBinaryBitMap.hpp" />
     <ClInclude Include="DetectByDiscontinuity.hpp" />
+    <ClInclude Include="DetectByMultiscaleLocalDifference.hpp" />
     <ClInclude Include="FieldType.hpp" />
     <ClInclude Include="FourLimits.hpp" />
     <ClInclude Include="Util.hpp" />

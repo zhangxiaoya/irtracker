@@ -1,7 +1,6 @@
 #pragma once
 #include <core/core.hpp>
 #include "Util.hpp"
-#include "FourLimits.hpp"
 
 class DetectByBinaryBitMap
 {

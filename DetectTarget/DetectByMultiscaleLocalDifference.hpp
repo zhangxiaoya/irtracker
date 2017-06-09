@@ -2,6 +2,7 @@
 
 #include <highgui/highgui.hpp>
 #include <iostream>
+#include "Util.hpp"
 
 class DetectByMultiScaleLocalDifference
 {
