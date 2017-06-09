@@ -1,164 +1,33 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include  <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <stack>
+#include <iterator>
 
-auto const REDCOLOR = cv::Scalar(0, 0, 255);
-auto const BLUECOLOR = cv::Scalar(255, 0, 0);
-auto const GREENCOLOR = cv::Scalar(0, 255, 0);
+#include "FieldType.hpp"
+#include "FourLimits.hpp"
+#include "Util.hpp"
+#include "DetectByDiscontinuity.hpp"
 
-const auto DELAY = 100;
-const auto WINDOW_WIDTH = 8;
-const auto WINDOW_HEIGHT = 8;
+const auto DELAY = 10;
 
-const auto THRESHHOLD = 25;
 const auto CONTIUNITY_THRESHHOLD = 0.4;
 
-const auto TARGET_WIDTH_MIN_LIMIT = 3;
-const auto TARGET_HEIGHT_MIN_LIMIT = 3;
+const auto TARGET_WIDTH_MIN_LIMIT = 2;
+const auto TARGET_HEIGHT_MIN_LIMIT = 2;
 const auto TARGET_WIDTH_MAX_LIMIT = 16;
 const auto TARGET_HEIGHT_MAX_LIMIT = 16;
 
-struct FourLimits
+//const char* firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\second\\frame_%04d.png";
+//const char* firstImageList = "D:\\Bag\\Code_VS15\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_1_8bit\\Frame_%04d.png";
+const char* firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_1_8bit\\Frame_%04d.png";
+
+inline bool comp(uchar left, uchar right)
 {
-	FourLimits():top(-1),bottom(-1),left(-1),right(-1){}
-
-	int top;
-	int bottom;
-	int left;
-	int right;
-};
-
-enum FieldType
-{
-	Four,
-	Eight
-};
-
-const char* firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\second\\frame_%04d.png";
-
-void BinaryMat(cv::Mat& mat)
-{
-	for (auto r = 0; r < mat.rows; ++r)
-		for (auto c = 0; c < mat.cols; ++c)
-			mat.at<uchar>(r, c) = mat.at<uchar>(r, c) > THRESHHOLD ? 1 : 0;
-}
-
-double MeanMat(const cv::Mat& mat)
-{
-	double sum = 0;
-	for (auto r = 0; r < mat.rows; ++r)
-		for (auto c = 0; c < mat.cols; ++c)
-			sum += static_cast<int>(mat.at<uchar>(r, c));
-
-	return  sum / (mat.rows * mat.cols);
-}
-
-bool CheckDiscontinuity(const cv::Mat& frame, const cv::Point& leftTop)
-{
-	auto curRect = cv::Rect(leftTop.x, leftTop.y, WINDOW_WIDTH, WINDOW_HEIGHT);
-	cv::Mat curMat;
-	frame(curRect).copyTo(curMat);
-
-	auto regionMean = MeanMat(curMat);
-
-	BinaryMat(curMat);
-
-	auto rowTop = leftTop.y - 1;
-	auto rowBottom = leftTop.y + WINDOW_HEIGHT;
-	auto colLeft = leftTop.x - 1;
-	auto colRight = leftTop.x + WINDOW_WIDTH;
-
-	auto totalCount = 0;
-	auto continuityCount = 0;
-
-	auto sum = 0.0;
-
-	if(rowTop >= 0)
-	{
-		for (auto x = leftTop.x; x < leftTop.x + WINDOW_WIDTH; ++x)
-		{
-			totalCount++;
-			sum += static_cast<int>(frame.at<uchar>(rowTop, x));
-
-			auto curValue = frame.at<uchar>(rowTop, x) > THRESHHOLD ? 1 : 0;
-			if (curValue == curMat.at<uchar>(rowTop - leftTop.y + 1, x - leftTop.x))
-				continuityCount++;
-		}
-	}
-	if (rowBottom < frame.rows)
-	{
-		for (auto x = leftTop.x; x < leftTop.x + WINDOW_WIDTH; ++x)
-		{
-			totalCount++;
-			sum += static_cast<int>(frame.at<uchar>(rowBottom, x));
-
-			auto curValue = frame.at<uchar>(rowBottom, x) > THRESHHOLD ? 1 : 0;
-			if (curValue == curMat.at<uchar>(rowBottom - leftTop.y - 1, x - leftTop.x))
-				continuityCount++;
-		}
-	}
-
-	if(colLeft >=0)
-	{
-		for (auto y = leftTop.y; y < leftTop.y + WINDOW_HEIGHT; ++y)
-		{
-			totalCount++;
-			sum += static_cast<int>(frame.at<uchar>(y, colLeft));
-
-			auto curValue = frame.at<uchar>(y, colLeft) > THRESHHOLD ? 1 : 0;
-			if (curValue == curMat.at<uchar>(y - leftTop.y, colLeft - leftTop.x + 1))
-				continuityCount++;
-		}
-	}
-
-	if(colRight < frame.cols)
-	{
-		for (auto y = leftTop.y; y < leftTop.y + WINDOW_HEIGHT; ++y)
-		{
-			totalCount++;
-			sum += static_cast<int>(frame.at<uchar>(y, colRight));
-
-			auto curValue = frame.at<uchar>(y, colRight) > THRESHHOLD ? 1 : 0;
-			if (curValue == curMat.at<uchar>(y - leftTop.y, colRight - leftTop.x - 1))
-				continuityCount++;
-		}
-	}
-
-	auto roundMean = sum / totalCount;
-
-	return std::abs(roundMean - regionMean) > 2 && regionMean > THRESHHOLD;
-
-//	return static_cast<double>(continuityCount) / totalCount < CONTIUNITY_THRESHHOLD;
-}
-
-void ShowCandidateRects(const cv::Mat& grayFrame, const std::vector<cv::Rect_<int>>& candidate_rects)
-{
-	cv::Mat colorFrame;
-	cvtColor(grayFrame, colorFrame, CV_GRAY2RGB);
-
-	for(auto i = 0;i<candidate_rects.size();++i)
-		rectangle(colorFrame, candidate_rects[i], REDCOLOR);
-
-	imshow("Color Frame", colorFrame);
-}
-
-void DetectTarget(cv::Mat& frame)
-{
-	std::vector<cv::Rect> candidateRects;
-
-	for (auto r = 0; r < frame.rows - WINDOW_HEIGHT + 1; ++r)
-	{
-		for (auto c = 0; c < frame.cols - WINDOW_WIDTH + 1; ++c)
-		{
-			if (CheckDiscontinuity(frame, cv::Point(c, r)))
-				candidateRects.push_back(cv::Rect(c, r, WINDOW_WIDTH, WINDOW_HEIGHT));
-		}
-	}
-
-	ShowCandidateRects(frame, candidateRects);
+	return left > right;
 }
 
 void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
@@ -186,7 +55,7 @@ void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, in
 	}
 }
 
-void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
+void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0)
 {
 	std::stack<cv::Point> deepTrace;
 	bitMap.at<int32_t>(r, c) = currentIndex;
@@ -201,25 +70,25 @@ void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, i
 		auto curC = curPos.x;
 
 		// up
-		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == 0 && bitMap.at<int32_t>(curR - 1, curC) == -1)
+		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == value && bitMap.at<int32_t>(curR - 1, curC) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC) = currentIndex;
 			deepTrace.push(cv::Point(curC, curR - 1));
 		}
 		// down
-		if (curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC) == 0 && bitMap.at<int32_t>(curR + 1, curC) == -1)
+		if (curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC) == value && bitMap.at<int32_t>(curR + 1, curC) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC) = currentIndex;
 			deepTrace.push(cv::Point(curC, curR + 1));
 		}
 		// left
-		if (curC - 1 >= 0 && binaryFrame.at<uchar>(curR, curC - 1) == 0 && bitMap.at<int32_t>(curR, curC - 1) == -1)
+		if (curC - 1 >= 0 && binaryFrame.at<uchar>(curR, curC - 1) == value && bitMap.at<int32_t>(curR, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR));
 		}
 		// right
-		if (curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR, curC + 1) == 0 && bitMap.at<int32_t>(curR, curC + 1) == -1)
+		if (curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR, curC + 1) == value && bitMap.at<int32_t>(curR, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR));
@@ -293,12 +162,12 @@ void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, 
 	}
 }
 
-void FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType)
+void FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType,uchar value = 0)
 {
 	if(fieldType == FieldType::Eight)
 		DFSWithoutRecursionEightField(binaryFrame, bitMap, r, c, currentIndex);
 	else if(fieldType == FieldType::Four)
-		DFSWithoutRecursionFourField(binaryFrame, bitMap, r, c, currentIndex);
+		DFSWithoutRecursionFourField(binaryFrame, bitMap, r, c, currentIndex,value);
 	else
 		std::cout << "FieldType Error!" << std::endl;
 }
@@ -386,7 +255,7 @@ void ShowAllObject(const cv::Mat& curFrame, const std::vector<FourLimits>& allOb
 	imshow("All Object", colorFrame);
 }
 
-void ShowCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject)
+void ShowCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject,uchar valueThreshHold = 0)
 {
 	cv::Mat colorFrame;
 	cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
@@ -405,11 +274,181 @@ void ShowCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>
 		   (width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
 			continue;
 
+		if(curFrame.at<uchar>(allObject[i].top+1,allObject[i].left+1) < valueThreshHold)
+			continue;
+
 		auto rect = cv::Rect(allObject[i].left, allObject[i].top, width, height);
 		rectangle(colorFrame, rect, GREENCOLOR);
 	}
 
 	imshow("Candidate Targets", colorFrame);
+}
+
+void DetectTargetsByBitMap(const cv::Mat& curFrame)
+{
+	cv::Mat binaryFrame;
+	curFrame.copyTo(binaryFrame);
+	Util::BinaryMat(binaryFrame);
+
+	cv::Mat bitMap(cv::Size(binaryFrame.cols, binaryFrame.rows), CV_32SC1, cv::Scalar(-1));
+	auto totalObject = GetBitMap(binaryFrame, bitMap);
+
+	std::vector<FourLimits> allObjects(totalObject);
+	GetRectangleSize(bitMap,allObjects,totalObject);
+
+	ShowAllObject(curFrame,allObjects);
+	ShowCandidateTargets(curFrame, allObjects);
+}
+
+uint8_t GetAverageGrayValueOfKNeighbor(const cv::Mat& curFrame, int r, int c, int i)
+{
+	auto radius = i;
+	auto leftTopX = c - i;
+	auto leftTopY = r - i;
+
+	auto rightBottomX = leftTopX + 2 * radius;
+	auto rightBottomY = leftTopY + 2 * radius;
+
+	auto sum = 0;
+	auto totalCount = 0;
+
+	for (auto row = leftTopY; row <= rightBottomY; ++row)
+	{
+		if(row >= 0 && row < curFrame.rows)
+		{
+			for (auto col = leftTopX; col <= rightBottomX; ++col)
+			{
+				if (col >= 0 && col < curFrame.cols)
+				{
+					sum += curFrame.at<uchar>(row, col);
+					++totalCount;
+				}
+			}
+		}
+	}
+	return sum / totalCount;
+}
+
+uchar MaxOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end)
+{
+	auto maxResult = *begin;
+	for (auto it = begin;it != end;++it)
+	{
+		if (maxResult < *it)
+			maxResult = *it;
+	}
+	return maxResult;
+}
+
+uchar MinOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end)
+{
+	auto minResult = *begin;
+	for (auto it = begin; it != end; ++it)
+	{
+		if (minResult > *it)
+			minResult = *it;
+	}
+	return minResult;
+}
+
+void MultiscaleLocalDifferenceContrast(cv::Mat curFrame)
+{
+	cv::Mat mldFilterFrame(cv::Size(curFrame.cols,curFrame.rows),CV_8UC1,cv::Scalar(0));
+
+	std::vector<uchar> averageOfKNeighbor;
+	std::vector<uchar> contrastOfKNeighbor;
+	auto L = 6;
+	for (auto r = 0; r < curFrame.rows; ++r)
+	{
+		for (auto c = 0; c < curFrame.cols; ++c)
+		{
+			averageOfKNeighbor.clear();
+			contrastOfKNeighbor.clear();
+
+			for (auto i = 1; i <= L; ++i)
+				averageOfKNeighbor.push_back(GetAverageGrayValueOfKNeighbor(curFrame, r, c, i));
+
+			auto maxVal = MaxOfVector(averageOfKNeighbor.begin(),averageOfKNeighbor.end());
+			auto minVal = MinOfVector(averageOfKNeighbor.begin(), averageOfKNeighbor.end());
+
+			auto squareDiff = (maxVal - minVal) * (maxVal - minVal);
+						
+			if (squareDiff == 0)
+			{
+				mldFilterFrame.at<uchar>(r, c) = maxVal;
+				std::cout << "Dummy" <<std::endl;
+				continue;
+			}
+
+			for (auto i = 0; i < L - 1; ++i)
+			{
+				contrastOfKNeighbor.push_back((averageOfKNeighbor[i] - averageOfKNeighbor[L - 1]) * (averageOfKNeighbor[i] - averageOfKNeighbor[L - 1]) / squareDiff);
+			}
+
+			contrastOfKNeighbor.push_back(0);
+
+			mldFilterFrame.at<uchar>(r, c) = MaxOfVector(contrastOfKNeighbor.begin(), contrastOfKNeighbor.end());
+		}
+	}
+
+	imshow("Map", mldFilterFrame);
+}
+
+unsigned char GetMaxPixelValue(const cv::Mat& curFrame, int r, int c, int kernelSize)
+{
+	auto radius = kernelSize / 2;
+	auto leftTopX = c - radius;
+	auto leftTopY = r - radius;
+
+	auto rightBottomX = leftTopX + 2 * radius;
+	auto rightBottomY = leftTopY + 2 * radius;
+
+	std::vector<uchar> pixelValues;
+
+	for (auto row = leftTopY; row <= rightBottomY; ++row)
+	{
+		if (row >= 0 && row < curFrame.rows)
+		{
+			for (auto col = leftTopX; col <= rightBottomX; ++col)
+			{
+				if (col >= 0 && col < curFrame.cols)
+					pixelValues.push_back(curFrame.at<uchar>(row, col));
+			}
+		}
+	}
+
+	return MaxOfVector(pixelValues.begin(), pixelValues.end());
+}
+
+void MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize)
+{
+	std::vector<uchar> pixelVector;
+
+	for (auto r = 0; r < curFrame.rows; ++r)
+	{
+		for (auto c = 0; c < curFrame.cols; ++c)
+		{
+			pixelVector.clear();
+			filtedFrame.at<uchar>(r,c) = GetMaxPixelValue(curFrame,r,c,kernelSize);
+		}
+	}
+}
+
+int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
+{
+	auto currentIndex = 0;
+	for (auto r = 0; r < filtedFrame.rows; ++r)
+	{
+		for (auto c = 0; c < filtedFrame.cols; ++c)
+		{
+			if (blockMap.at<int32_t>(r, c) != -1)
+				continue;
+
+			auto val = filtedFrame.at<uchar>(r, c);
+			FindNeighbor(filtedFrame, blockMap, r, c, currentIndex++, FieldType::Four, val);
+		}
+	}
+	return currentIndex;
 }
 
 int main(int argc, char* argv[])
@@ -432,20 +471,45 @@ int main(int argc, char* argv[])
 				imshow("Current Frame", curFrame);
 				cv::waitKey(DELAY);
 
-//				DetectTarget(curFrame);
+				DetectByDiscontinuity::DetectTarget(curFrame);
 
-				cv::Mat binaryFrame;
-				curFrame.copyTo(binaryFrame);
-				BinaryMat(binaryFrame);
+//				DetectTargetsByBitMap(curFrame);
 
-				cv::Mat bitMap(cv::Size(binaryFrame.cols, binaryFrame.rows), CV_32SC1, cv::Scalar(-1));
-				auto totalObject = GetBitMap(binaryFrame, bitMap);
+//				MultiscaleLocalDifferenceContrast(curFrame);
+
+				cv::Mat filtedFrame(cv::Size(curFrame.cols,curFrame.rows),CV_8UC1);
+				auto kernelSize = 3;
+
+				MaxFilter(curFrame, filtedFrame, kernelSize);
+
+				imshow("Max Filter", filtedFrame);
+
+				const auto topCount = 5;
+				std::vector<uchar> maxValues(topCount, 0);
+
+				std::vector<uchar> allValues;
+
+				for (auto r = 0; r < filtedFrame.rows; ++r)
+					for (auto c = 0; c < filtedFrame.cols; ++c)
+						allValues.push_back(filtedFrame.at<uchar>(r, c));
+
+				sort(allValues.begin(), allValues.end(), comp);
+
+				auto iterator = unique(allValues.begin(), allValues.end());
+				allValues.resize(distance(allValues.begin(), iterator));
+
+				for (auto i = 0; i < topCount; ++i)
+					maxValues[i] = allValues[i];
+
+				cv::Mat blockMap(cv::Size(filtedFrame.cols, filtedFrame.rows), CV_32SC1, cv::Scalar(-1));
+				auto totalObject = GetBlocks(filtedFrame, blockMap);
 
 				std::vector<FourLimits> allObjects(totalObject);
-				GetRectangleSize(bitMap,allObjects,totalObject);
+				GetRectangleSize(blockMap, allObjects, totalObject);
 
-				ShowAllObject(curFrame,allObjects);
-				ShowCandidateTargets(curFrame, allObjects);
+				std::cout << "Max Value Threh Hold = " << static_cast<int>(maxValues[2]) <<std::endl;
+				ShowAllObject(curFrame, allObjects);
+				ShowCandidateTargets(curFrame, allObjects, maxValues[4]);
 
 				std::cout << "Index : " << std::setw(4) << frameIndex << std::endl;
 				++frameIndex;
