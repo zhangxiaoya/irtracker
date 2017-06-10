@@ -87,56 +87,73 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::RemoveSmallAndBigObjects(std:
 
 inline void DetectByMaxFilterAndAdptiveThreshHold::MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects)
 {
-	for (auto i = 0; i < allObjects.size() - 1; ++i)
+	for (auto i = 0; i < allObjects.size(); ++i)
 	{
-		for (auto j = i + 1; j < allObjects.size();++j)
+		if(allObjects[i].identify == -1)
+			continue;
+		for (auto j = 0; j < allObjects.size();++j)
 		{
-			if (i == 19)
-				auto dummy = 0;
-			if(allObjects[j].identify == allObjects[i].identify)
+			if(i == j || allObjects[j].identify == -1)
 				continue;
 			if(CheckCross(allObjects[i], allObjects[j]))
 			{
-				allObjects[j].identify = allObjects[i].identify;
+				allObjects[j].identify = -1;
+
+				if (allObjects[i].top > allObjects[j].top)
+					allObjects[i].top = allObjects[j].top;
+
+				if (allObjects[i].left > allObjects[j].left)
+					allObjects[i].left = allObjects[j].left;
+
+				if (allObjects[i].right < allObjects[j].right)
+					allObjects[i].right = allObjects[j].right;
+
+				if (allObjects[i].bottom < allObjects[j].bottom)
+					allObjects[i].bottom = allObjects[j].bottom;
 			}
 		}
 	}
-
-	while(true)
+	for (auto i = 0; i < allObjects.size();++i)
 	{
-		auto it = allObjects.begin();
-		while(it != allObjects.end() && it->identify == -1)
-			++it;
-
-		if(it == allObjects.end())
-			break;
-
-		afterMergeObjects.push_back(*it);
-
-		it->identify = -1;
-		++it;
-
-		while(it != allObjects.end())
-		{
-			if(it->identify != -1 && it->identify == afterMergeObjects[afterMergeObjects.size()-1].identify)
-			{
-				if (it->top < afterMergeObjects[afterMergeObjects.size() - 1].top)
-					afterMergeObjects[afterMergeObjects.size() - 1].top = it->top;
-
-				if (it->left < afterMergeObjects[afterMergeObjects.size() - 1].left)
-					afterMergeObjects[afterMergeObjects.size() - 1].left = it->left;
-
-				if (it->right > afterMergeObjects[afterMergeObjects.size() - 1].right)
-					afterMergeObjects[afterMergeObjects.size() - 1].right = it->right;
-
-				if (it->bottom > afterMergeObjects[afterMergeObjects.size() - 1].bottom)
-					afterMergeObjects[afterMergeObjects.size() - 1].bottom = it->bottom;
-
-				it->identify = -1;
-			}
-			++it;
-		}
+		if (allObjects[i].identify != -1)
+			afterMergeObjects.push_back(allObjects[i]);
 	}
+
+//	while(true)
+//	{
+//		auto it = allObjects.begin();
+//		while(it != allObjects.end() && it->identify == -1)
+//			++it;
+//
+//		if(it == allObjects.end())
+//			break;
+//
+//		afterMergeObjects.push_back(*it);
+//
+//		it->identify = -1;
+//		++it;
+//
+//		while(it != allObjects.end())
+//		{
+//			if(it->identify != -1 && it->identify == afterMergeObjects[afterMergeObjects.size()-1].identify)
+//			{
+//				if (it->top < afterMergeObjects[afterMergeObjects.size() - 1].top)
+//					afterMergeObjects[afterMergeObjects.size() - 1].top = it->top;
+//
+//				if (it->left < afterMergeObjects[afterMergeObjects.size() - 1].left)
+//					afterMergeObjects[afterMergeObjects.size() - 1].left = it->left;
+//
+//				if (it->right > afterMergeObjects[afterMergeObjects.size() - 1].right)
+//					afterMergeObjects[afterMergeObjects.size() - 1].right = it->right;
+//
+//				if (it->bottom > afterMergeObjects[afterMergeObjects.size() - 1].bottom)
+//					afterMergeObjects[afterMergeObjects.size() - 1].bottom = it->bottom;
+//
+//				it->identify = -1;
+//			}
+//			++it;
+//		}
+//	}
 }
 
 inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::Mat curFrame)
