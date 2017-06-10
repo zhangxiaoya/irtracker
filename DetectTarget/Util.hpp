@@ -3,6 +3,9 @@
 #include "FourLimits.hpp"
 #include "FieldType.hpp"
 #include <stack>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 const auto WINDOW_WIDTH = 8;
 const auto WINDOW_HEIGHT = 8;
@@ -17,6 +20,8 @@ const auto TARGET_HEIGHT_MIN_LIMIT = 2;
 const auto TARGET_WIDTH_MAX_LIMIT = 16;
 const auto TARGET_HEIGHT_MAX_LIMIT = 16;
 
+const auto AFTER_MAX_FILTER = true;
+
 class Util
 {
 public:
@@ -29,7 +34,7 @@ public:
 
 	static void FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, uchar value = 0);
 
-	static void GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject, int totalObject);
+	static void GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject);
 
 	static void ShowAllObject(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject);
 
@@ -40,6 +45,8 @@ public:
 	static uchar MinOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end);
 
 	static bool comp(uchar left, uchar right);
+
+	static std::vector<cv::Rect> GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects, unsigned char max_value);
 
 private:
 
@@ -88,7 +95,7 @@ inline void Util::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int 
 		std::cout << "FieldType Error!" << std::endl;
 }
 
-inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject, int totalObject)
+inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject)
 {
 	// top
 	for (auto r = 0; r<bitMap.rows; ++r)
@@ -97,7 +104,11 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 		{
 			auto curIndex = bitMap.at<int32_t>(r, c);
 			if (curIndex != -1 && allObject[curIndex].top == -1)
+			{
 				allObject[curIndex].top = r;
+				if (allObject[curIndex].identify == -1)
+					allObject[curIndex].identify = curIndex;
+			}
 		}
 	}
 	// bottom
@@ -207,6 +218,34 @@ inline uchar Util::MinOfVector(const std::vector<uchar>::iterator& begin, const 
 inline bool Util::comp(uchar left, uchar right)
 {
 	return left > right;
+}
+
+inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects, unsigned char max_value)
+{
+	std::vector<cv::Rect> targetRect;
+
+	for (auto i = 0; i<afterMergeObjects.size(); ++i)
+	{
+		auto width = afterMergeObjects[i].right - afterMergeObjects[i].left + 1;
+		auto height = afterMergeObjects[i].bottom - afterMergeObjects[i].top + 1;
+		if (width <= 0 || height <= 0)
+		{
+			std::cout << "Rect Error, and index is " << i << std::endl;
+			continue;
+		}
+
+		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
+			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
+			continue;
+
+		if (curFrame.at<uchar>(afterMergeObjects[i].top + 1, afterMergeObjects[i].left + 1) < max_value)
+			continue;
+
+		auto rect = cv::Rect(afterMergeObjects[i].left, afterMergeObjects[i].top, width, height);
+		targetRect.push_back(rect);
+	}
+
+	return targetRect;
 }
 
 inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
