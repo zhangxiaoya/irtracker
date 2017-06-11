@@ -5,6 +5,8 @@
 #include <iostream>
 #include <filesystem>
 
+cv::Mat previousFrame = cv::Mat(cv::Size(320, 256), CV_32SC1, cv::Scalar(1));
+
 class DetectByMaxFilterAndAdptiveThreshHold
 {
 public:
@@ -12,6 +14,7 @@ public:
 	static std::vector<cv::Rect> Detect(cv::Mat curFrame);
 
 private:
+
 
 	static void MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize);
 
@@ -21,11 +24,18 @@ private:
 
 	static void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects);
 
+	static void RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result);
+	static void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
+
 	static bool GetTopValues(const cv::Mat filtedFrame, uchar& pixelThreshHold, int topCount);
 
 	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
 
 	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame, uchar threshHold);
+
+	static void FillRectToFrame(cv::Rect& rect);
+
+	static bool CheckRect(cv::Rect& rect);
 
 };
 
@@ -85,6 +95,39 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::RemoveSmallAndBigObjects(std:
 	}
 }
 
+inline void DetectByMaxFilterAndAdptiveThreshHold::FillRectToFrame(cv::Rect& rect)
+{
+	for (auto r = rect.y; r < rect.y + rect.height;++r)
+	{
+		for (auto c = rect.x; c < rect.x + rect.width;++c)
+		{
+			previousFrame.at<int32_t>(r, c) = 1;
+		}
+	}
+}
+
+inline bool DetectByMaxFilterAndAdptiveThreshHold::CheckRect(cv::Rect& rect)
+{
+	auto leftTopX = rect.x - rect.width > 0 ? rect.x - rect.width > 0: 0;
+	auto leftTopY = rect.y - rect.height > 0 ? rect.y - rect.height > 0: 0;
+	auto rightBottomX = rect.x + 2 * rect.width < previousFrame.cols ? rect.x + 2 * rect.width : previousFrame.cols-1;
+	auto rightBottomY = rect.y + 2 * rect.height < previousFrame.rows ? rect.y + 2 * rect.height : previousFrame.rows-1;
+
+	auto count = 0;
+	for (auto r = leftTopY; r <= rightBottomY;++r)
+	{
+		for (auto c = leftTopX; c <= rightBottomX;++c)
+		{
+			if (previousFrame.at<int32_t>(r, c) == 1)
+				++count;
+		}
+	}
+	auto x = static_cast<double>(count)/ (rect.width * rect.height * 4);
+	if(x > 0.2)
+		return true;
+	return false;
+}
+
 inline void DetectByMaxFilterAndAdptiveThreshHold::MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects)
 {
 	for (auto i = 0; i < allObjects.size(); ++i)
@@ -113,47 +156,61 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::MergeCrossedRectangles(std::v
 			}
 		}
 	}
+	// for left top may be missed, so need double check
+	for (auto i = 0; i < allObjects.size(); ++i)
+	{
+		if (allObjects[i].identify == -1)
+			continue;
+		for (auto j = 0; j < allObjects.size(); ++j)
+		{
+			if (i == j || allObjects[j].identify == -1)
+				continue;
+			if (CheckCross(allObjects[i], allObjects[j]))
+			{
+				allObjects[j].identify = -1;
+
+				if (allObjects[i].top > allObjects[j].top)
+					allObjects[i].top = allObjects[j].top;
+
+				if (allObjects[i].left > allObjects[j].left)
+					allObjects[i].left = allObjects[j].left;
+
+				if (allObjects[i].right < allObjects[j].right)
+					allObjects[i].right = allObjects[j].right;
+
+				if (allObjects[i].bottom < allObjects[j].bottom)
+					allObjects[i].bottom = allObjects[j].bottom;
+			}
+		}
+	}
+
 	for (auto i = 0; i < allObjects.size();++i)
 	{
 		if (allObjects[i].identify != -1)
 			afterMergeObjects.push_back(allObjects[i]);
 	}
+}
 
-//	while(true)
-//	{
-//		auto it = allObjects.begin();
-//		while(it != allObjects.end() && it->identify == -1)
-//			++it;
-//
-//		if(it == allObjects.end())
-//			break;
-//
-//		afterMergeObjects.push_back(*it);
-//
-//		it->identify = -1;
-//		++it;
-//
-//		while(it != allObjects.end())
-//		{
-//			if(it->identify != -1 && it->identify == afterMergeObjects[afterMergeObjects.size()-1].identify)
-//			{
-//				if (it->top < afterMergeObjects[afterMergeObjects.size() - 1].top)
-//					afterMergeObjects[afterMergeObjects.size() - 1].top = it->top;
-//
-//				if (it->left < afterMergeObjects[afterMergeObjects.size() - 1].left)
-//					afterMergeObjects[afterMergeObjects.size() - 1].left = it->left;
-//
-//				if (it->right > afterMergeObjects[afterMergeObjects.size() - 1].right)
-//					afterMergeObjects[afterMergeObjects.size() - 1].right = it->right;
-//
-//				if (it->bottom > afterMergeObjects[afterMergeObjects.size() - 1].bottom)
-//					afterMergeObjects[afterMergeObjects.size() - 1].bottom = it->bottom;
-//
-//				it->identify = -1;
-//			}
-//			++it;
-//		}
-//	}
+inline void DetectByMaxFilterAndAdptiveThreshHold::RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result)
+{
+	previousFrame.release();
+	previousFrame = cv::Mat(cv::Size(curFrame.cols, curFrame.rows), CV_32SC1, cv::Scalar(-1));
+	for (auto i = 0; i < result.size(); ++i)
+		FillRectToFrame(result[i]);
+}
+
+void DetectByMaxFilterAndAdptiveThreshHold::FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result)
+{
+	for (auto it = rects.begin(); it != rects.end(); ++it)
+	{
+		if (CheckRect(*it))
+			result.push_back(*it);
+	}
+
+	if(result.size() >= 2)
+		RefreshMask(curFrame, result);
+	else
+		RefreshMask(curFrame, rects);
 }
 
 inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::Mat curFrame)
@@ -192,9 +249,15 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::M
 
 	std::cout << "Max Value Threh Hold = " << static_cast<int>(pixelThreshHold) << std::endl;
 	Util::ShowAllObject(curFrame, afterMergeObjects);
-	Util::ShowCandidateTargets(curFrame, afterMergeObjects, pixelThreshHold);
 
-	return Util::GetCandidateTargets(curFrame, afterMergeObjects, pixelThreshHold);
+	auto rects = Util::GetCandidateTargets(curFrame, afterMergeObjects, pixelThreshHold);
+
+//	std::vector<cv::Rect> result;
+//	FilterRectByContinuty(curFrame, rects, result);
+
+//	Util::ShowCandidateTargets(curFrame, afterMergeObjects, pixelThreshHold);
+
+	return rects;
 }
 
 inline void DetectByMaxFilterAndAdptiveThreshHold::MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize)
