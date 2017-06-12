@@ -11,6 +11,8 @@
 #include "GlobalInitialUtil.hpp"
 
 const auto SHOW_DELAY = 1;
+const auto TopCount = 5;
+const auto WRITE_FILE_NAME_BUFFER_SIZE = 100;
 
 void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects)
 {
@@ -47,6 +49,31 @@ void UpdateConfidenceVector(double countX, double countY, const std::vector<std:
 	}
 }
 
+void GetMostLiklyTargetsRect(const std::vector<ConfidenceElem>& allConfidence, const int topCount, int& searchIndex)
+{
+	auto currentTop = 0;
+
+	while (searchIndex < allConfidence.size())
+	{
+		if (searchIndex == 0)
+		{
+			++searchIndex;
+			continue;
+		}
+		if (allConfidence[currentTop].confidenceVal == allConfidence[searchIndex].confidenceVal)
+		{
+			++searchIndex;
+		}
+		else
+		{
+			++currentTop;
+			++searchIndex;
+			if (currentTop >= topCount)
+				break;
+		}
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
@@ -58,9 +85,8 @@ int main(int argc, char* argv[])
 
 	auto frameIndex = 0;
 
-	char* fileNameFormat = ".\\ir_file_20170531_1000m_1\\Frame_%04d.png";
-	const auto bufferSize = 100;
-	char fileName[bufferSize];
+	char writeFileNameFormat[] = ".\\ir_file_20170531_1000m_1\\Frame_%04d.png";
+	char writeFileName[WRITE_FILE_NAME_BUFFER_SIZE];
 
 	
 	auto countX = ceil(static_cast<double>(320) / STEP);
@@ -102,29 +128,9 @@ int main(int argc, char* argv[])
 
 				sort(allConfidence.begin(), allConfidence.end(), Util::ConfidenceCompare);
 
-				const auto topCount = 5;
 				auto searchIndex = 0;
-				auto currentTop = 0;
 
-				while (searchIndex < allConfidence.size())
-				{
-					if (searchIndex == 0)
-					{
-						++searchIndex;
-						continue;
-					}
-					if (allConfidence[currentTop].confidenceVal == allConfidence[searchIndex].confidenceVal)
-					{
-						++searchIndex;
-					}
-					else
-					{
-						++currentTop;
-						++searchIndex;
-						if (currentTop >= topCount)
-							break;
-					}
-				}
+				GetMostLiklyTargetsRect(allConfidence, TopCount, searchIndex);
 
 				for (auto i = 0; i < targetRects.size(); ++i)
 				{
@@ -136,8 +142,8 @@ int main(int argc, char* argv[])
 				ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceMap);
 
 				imshow("last result", colorFrame);
-				sprintf_s(fileName, bufferSize, fileNameFormat, frameIndex);
-				imwrite(fileName, colorFrame);
+				sprintf_s(writeFileName, WRITE_FILE_NAME_BUFFER_SIZE, writeFileNameFormat, frameIndex);
+				imwrite(writeFileName, colorFrame);
 
 				std::cout << "Index : " << std::setw(4) << frameIndex << std::endl;
 				++frameIndex;
