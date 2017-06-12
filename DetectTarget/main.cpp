@@ -14,6 +14,9 @@ const auto SHOW_DELAY = 1;
 const auto TopCount = 5;
 const auto WRITE_FILE_NAME_BUFFER_SIZE = 100;
 
+const auto countX = ceil(static_cast<double>(320) / STEP);
+const auto countY = ceil(static_cast<double>(256) / STEP);
+
 void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects)
 {
 	for (auto i = 0; i < targetRects.size(); ++i)
@@ -57,6 +60,7 @@ void GetMostLiklyTargetsRect(const std::vector<ConfidenceElem>& allConfidence, c
 	{
 		if (searchIndex == 0)
 		{
+			++currentTop;
 			++searchIndex;
 			continue;
 		}
