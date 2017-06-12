@@ -6,11 +6,10 @@
 
 #include "DetectByMaxFilterAndAdptiveThreshHold.hpp"
 #include "ConfidenceElem.hpp"
+#include "SpecialUtil.hpp"
 
 const auto SHOW_DELAY = 1;
 const auto STEP = 10;
-const auto INVALID_PIXEL_ROWS = 2;
-const auto INVALID_PIXEL_COLS = 11;
 
 void InitVideoReader(cv::VideoCapture& video_capture)
 {
@@ -30,13 +29,6 @@ void InitVideoReader(cv::VideoCapture& video_capture)
 	}
 
 	video_capture.open(firstImageList);
-}
-
-void RemoveInvalidPixel(cv::Mat curFrame)
-{
-	for (auto r = 0; r < INVALID_PIXEL_ROWS; ++r)
-		for (auto c = 0; c < INVALID_PIXEL_COLS; ++c)
-			curFrame.at<uchar>(r, c) = 0;
 }
 
 void LostMemory(double countX, double countY, int queueSize, int& currentIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap)
@@ -98,7 +90,7 @@ int main(int argc, char* argv[])
 			video_capture >> curFrame;
 			if (!curFrame.empty())
 			{
-				RemoveInvalidPixel(curFrame);
+				SpecialUtil::RemoveInvalidPixel(curFrame);
 
 				imshow("Current Frame", curFrame);
 				cv::waitKey(SHOW_DELAY);
