@@ -74,6 +74,24 @@ void GetMostLiklyTargetsRect(const std::vector<ConfidenceElem>& allConfidence, c
 	}
 }
 
+void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<ConfidenceElem>& allConfidence, const std::vector<cv::Rect>& targetRects, const int searchIndex)
+{
+	for (auto i = 0; i < targetRects.size(); ++i)
+	{
+		auto rect = targetRects[i];
+		if (ConfidenceMapUtil::CheckIfInTopCount(rect, searchIndex, allConfidence))
+		{
+			rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), cv::Scalar(255, 255, 0));
+		}
+	}
+}
+
+void WriteLastResultToDisk(const cv::Mat& colorFrame, const int frameIndex, const char writeFileNameFormat[], char writeFileName[])
+{
+	sprintf_s(writeFileName, WRITE_FILE_NAME_BUFFER_SIZE, writeFileNameFormat, frameIndex);
+	imwrite(writeFileName, colorFrame);
+}
+
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
@@ -132,21 +150,15 @@ int main(int argc, char* argv[])
 
 				GetMostLiklyTargetsRect(allConfidence, TopCount, searchIndex);
 
-				for (auto i = 0; i < targetRects.size(); ++i)
-				{
-					auto rect = targetRects[i];
-					if (ConfidenceMapUtil::CheckIfInTopCount(rect, searchIndex, allConfidence))
-						rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), cv::Scalar(255, 255, 0));
-				}
+				DrawRectangleForAllCandidateTargets(colorFrame, allConfidence, targetRects, searchIndex);
 
 				ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceMap);
 
 				imshow("last result", colorFrame);
-				sprintf_s(writeFileName, WRITE_FILE_NAME_BUFFER_SIZE, writeFileNameFormat, frameIndex);
-				imwrite(writeFileName, colorFrame);
 
-				std::cout << "Index : " << std::setw(4) << frameIndex << std::endl;
-				++frameIndex;
+				WriteLastResultToDisk(colorFrame, frameIndex, writeFileNameFormat, writeFileName);
+
+				std::cout << "Index : " << std::setw(4) << frameIndex++ << std::endl;
 			}
 		}
 
