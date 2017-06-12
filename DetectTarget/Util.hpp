@@ -6,6 +6,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include "ConfidenceElem.hpp"
 
 const auto WINDOW_WIDTH = 8;
 const auto WINDOW_HEIGHT = 8;
@@ -20,7 +21,7 @@ const auto TARGET_HEIGHT_MIN_LIMIT = 2;
 const auto TARGET_WIDTH_MAX_LIMIT = 16;
 const auto TARGET_HEIGHT_MAX_LIMIT = 16;
 
-const auto AFTER_MAX_FILTER = true;
+const auto AFTER_MAX_FILTER = false;
 
 class Util
 {
@@ -44,9 +45,13 @@ public:
 
 	static uchar MinOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end);
 
-	static bool comp(uchar left, uchar right);
+	static bool UcharCompare(uchar left, uchar right);
+
+	static bool ConfidenceCompare(ConfidenceElem left, ConfidenceElem right);
 
 	static std::vector<cv::Rect> GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects, unsigned char max_value);
+
+	static int Sum(std::vector<int>& valueVec);
 
 private:
 
@@ -215,9 +220,14 @@ inline uchar Util::MinOfVector(const std::vector<uchar>::iterator& begin, const 
 	return minResult;
 }
 
-inline bool Util::comp(uchar left, uchar right)
+inline bool Util::UcharCompare(uchar left, uchar right)
 {
 	return left > right;
+}
+
+inline bool Util::ConfidenceCompare(ConfidenceElem left, ConfidenceElem right)
+{
+	return left.confidenceVal > right.confidenceVal;
 }
 
 inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects, unsigned char max_value)
@@ -246,6 +256,15 @@ inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, 
 	}
 
 	return targetRect;
+}
+
+inline int Util::Sum(std::vector<int>& valueVec)
+{
+	auto result = 0;
+	for (auto val : valueVec)
+		result += val;
+
+	return result;
 }
 
 inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)

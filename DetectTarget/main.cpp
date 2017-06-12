@@ -5,25 +5,12 @@
 #include <iterator>
 
 #include "DetectByMaxFilterAndAdptiveThreshHold.hpp"
+#include "ConfidenceElem.hpp"
 
 const auto SHOW_DELAY = 1;
 const auto STEP = 10;
-
-struct ConfidenceElem
-{
-	ConfidenceElem(): x(-1), y(-1), confidenceVal(0)
-	{
-	}
-
-	int x;
-	int y;
-	int confidenceVal;
-};
-
-bool confCompare(ConfidenceElem left, ConfidenceElem right)
-{
-	return left.confidenceVal > right.confidenceVal;
-}
+const auto INVALID_PIXEL_ROWS = 2;
+const auto INVALID_PIXEL_COLS = 11;
 
 void InitVideoReader(cv::VideoCapture& video_capture)
 {
@@ -32,22 +19,23 @@ void InitVideoReader(cv::VideoCapture& video_capture)
 	if (AFTER_MAX_FILTER)
 	{
 		//		firstImageList = "D:\\Bag\\Code_VS15\\Data\\ir_file_20170531_1000m_1_8bit_maxFilter_discrezated\\Frame_%04d.png";
-		firstImageList = "D:\\Bag\\Code_VS15\\Data\\ir_file_20170531_1000m_2_8bit_maxFilter_discrezated\\Frame_%04d.png";
-		//		firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_1_8bit_maxFilter\\Frame_%04d.png";
-		//		firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_2_8bit_maxFilter\\Frame_%04d.png";
+		//		firstImageList = "D:\\Bag\\Code_VS15\\Data\\ir_file_20170531_1000m_2_8bit_maxFilter_discrezated\\Frame_%04d.png";
+		//				firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_1_8bit_maxFilter_discrezated\\Frame_%04d.png";
+		firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_2_8bit_maxFilter_discrezated\\Frame_%04d.png";
 	}
 	else
 	{
 		// firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_1_8bit\\Frame_%04d.png";
 		firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_2_8bit\\Frame_%04d.png";
 	}
+
 	video_capture.open(firstImageList);
 }
 
-void RemoveUnusedPixel(cv::Mat curFrame)
+void RemoveInvalidPixel(cv::Mat curFrame)
 {
-	for (auto r = 0; r < 2; ++r)
-		for (auto c = 0; c < 11; ++c)
+	for (auto r = 0; r < INVALID_PIXEL_ROWS; ++r)
+		for (auto c = 0; c < INVALID_PIXEL_COLS; ++c)
 			curFrame.at<uchar>(r, c) = 0;
 }
 
@@ -64,15 +52,6 @@ void LostMemory(double countX, double countY, int queueSize, int& currentIndex, 
 	}
 }
 
-int Sum(std::vector<int>& valueVec)
-{
-	auto result = 0;
-	for (auto val : valueVec)
-		result += val;
-
-	return result;
-}
-
 bool CheckIfInTopCount(const cv::Rect& rect, int searchIndex, const std::vector<ConfidenceElem>& confidenceElems)
 {
 	auto x = (rect.x + rect.width / 2) / STEP;
@@ -80,7 +59,7 @@ bool CheckIfInTopCount(const cv::Rect& rect, int searchIndex, const std::vector<
 
 	for (auto i = 0; i < searchIndex;++i)
 	{
-		if (confidenceElems[i].x == x && confidenceElems[i].y == y && confidenceElems[i].confidenceVal >= 60)
+		if (confidenceElems[i].x == x && confidenceElems[i].y == y && confidenceElems[i].confidenceVal >= 40)
 			return true;
 	}
 	return false;
@@ -119,7 +98,7 @@ int main(int argc, char* argv[])
 			video_capture >> curFrame;
 			if (!curFrame.empty())
 			{
-				RemoveUnusedPixel(curFrame);
+				RemoveInvalidPixel(curFrame);
 
 				imshow("Current Frame", curFrame);
 				cv::waitKey(SHOW_DELAY);
@@ -159,11 +138,11 @@ int main(int argc, char* argv[])
 					{
 						allConfidence[confidenceIndex].x = x;
 						allConfidence[confidenceIndex].y = y;
-						allConfidence[confidenceIndex++].confidenceVal = Sum(confidenceMap[y][x]);
+						allConfidence[confidenceIndex++].confidenceVal = Util::Sum(confidenceMap[y][x]);
 					}
 				}
 
-				sort(allConfidence.begin(), allConfidence.end(), confCompare);
+				sort(allConfidence.begin(), allConfidence.end(), Util::ConfidenceCompare);
 
 				const auto topCount = 5;
 				auto searchIndex = 0;

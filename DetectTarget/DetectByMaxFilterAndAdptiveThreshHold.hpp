@@ -25,6 +25,7 @@ private:
 	static void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects);
 
 	static void RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result);
+
 	static void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
 
 	static bool GetTopValues(const cv::Mat filtedFrame, uchar& pixelThreshHold, int topCount);
@@ -47,7 +48,7 @@ inline bool DetectByMaxFilterAndAdptiveThreshHold::GetTopValues(const cv::Mat fi
 		for (auto c = 0; c < filtedFrame.cols; ++c)
 			allValues.push_back(filtedFrame.at<uchar>(r, c));
 
-	sort(allValues.begin(), allValues.end(), Util::comp);
+	sort(allValues.begin(), allValues.end(), Util::UcharCompare);
 
 	auto iterator = unique(allValues.begin(), allValues.end());
 	allValues.resize(distance(allValues.begin(), iterator));
@@ -283,19 +284,21 @@ inline unsigned char DetectByMaxFilterAndAdptiveThreshHold::GetMaxPixelValue(con
 	auto rightBottomX = leftTopX + 2 * radius;
 	auto rightBottomY = leftTopY + 2 * radius;
 
+	uchar maxVal = 0;
+
 	for (auto row = leftTopY; row <= rightBottomY; ++row)
 	{
 		if (row >= 0 && row < curFrame.rows)
 		{
 			for (auto col = leftTopX; col <= rightBottomX; ++col)
 			{
-				if (col >= 0 && col < curFrame.cols)
-					pixelValues.push_back(curFrame.at<uchar>(row, col));
+				if (col >= 0 && col < curFrame.cols && maxVal < curFrame.at<uchar>(row, col))
+					maxVal = curFrame.at<uchar>(row, col);
 			}
 		}
 	}
 
-	return Util::MaxOfVector(pixelValues.begin(), pixelValues.end());
+	return maxVal;
 }
 
 inline int DetectByMaxFilterAndAdptiveThreshHold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
