@@ -3,6 +3,9 @@
 #include "FourLimits.hpp"
 #include "FieldType.hpp"
 #include <stack>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 const auto WINDOW_WIDTH = 8;
 const auto WINDOW_HEIGHT = 8;
@@ -17,6 +20,8 @@ const auto TARGET_HEIGHT_MIN_LIMIT = 2;
 const auto TARGET_WIDTH_MAX_LIMIT = 16;
 const auto TARGET_HEIGHT_MAX_LIMIT = 16;
 
+const auto AFTER_MAX_FILTER = true;
+
 class Util
 {
 public:
@@ -29,7 +34,7 @@ public:
 
 	static void FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, uchar value = 0);
 
-	static void GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject, int totalObject);
+	static void GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject);
 
 	static void ShowAllObject(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject);
 
@@ -88,7 +93,7 @@ inline void Util::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int 
 		std::cout << "FieldType Error!" << std::endl;
 }
 
-inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject, int totalObject)
+inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject)
 {
 	// top
 	for (auto r = 0; r<bitMap.rows; ++r)

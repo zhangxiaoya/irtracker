@@ -3,11 +3,13 @@
 #include <opencv2/core/core.hpp>
 #include "Util.hpp"
 
+const auto CONTIUNITY_THRESHHOLD = 0.4;
+
 class DetectByDiscontinuity
 {
 public:
 
-	static void DetectTarget(cv::Mat curFrame);
+	static void Detect(cv::Mat curFrame);
 
 private:
 
@@ -93,7 +95,7 @@ inline bool DetectByDiscontinuity::CheckDiscontinuity(const cv::Mat& frame, cons
 	//	return static_cast<double>(continuityCount) / totalCount < CONTIUNITY_THRESHHOLD;
 }
 
-inline void DetectByDiscontinuity::DetectTarget(cv::Mat curFrame)
+inline void DetectByDiscontinuity::Detect(cv::Mat curFrame)
 {
 	std::vector<cv::Rect> candidateRects;
 

@@ -8,14 +8,15 @@ class DetectByMultiScaleLocalDifference
 {
 public:
 
-	static void MultiscaleLocalDifferenceContrast(cv::Mat curFrame);
+	static void Detect(cv::Mat curFrame);
 
 private:
+
 	static std::vector<unsigned char>::value_type&& GetAverageGrayValueOfKNeighbor(const cv::Mat& curFrame, int r, int c, int i);
 
 };
 
-inline void DetectByMultiScaleLocalDifference::MultiscaleLocalDifferenceContrast(cv::Mat curFrame)
+inline void DetectByMultiScaleLocalDifference::Detect(cv::Mat curFrame)
 {
 	cv::Mat mldFilterFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1, cv::Scalar(0));
 

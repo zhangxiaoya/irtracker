@@ -6,7 +6,7 @@ class DetectByBinaryBitMap
 {
 public:
 	
-	static void DetectTargetsByBitMap(cv::Mat curFrame);
+	static void Detect(cv::Mat curFrame);
 
 private:
 
@@ -14,7 +14,7 @@ private:
 
 };
 
-inline void DetectByBinaryBitMap::DetectTargetsByBitMap(cv::Mat curFrame)
+inline void DetectByBinaryBitMap::Detect(cv::Mat curFrame)
 {
 	cv::Mat binaryFrame;
 	curFrame.copyTo(binaryFrame);
@@ -24,7 +24,7 @@ inline void DetectByBinaryBitMap::DetectTargetsByBitMap(cv::Mat curFrame)
 	auto totalObject = GetBitMap(binaryFrame, bitMap);
 
 	std::vector<FourLimits> allObjects(totalObject);
-	Util::GetRectangleSize(bitMap, allObjects, totalObject);
+	Util::GetRectangleSize(bitMap, allObjects);
 
 	Util::ShowAllObject(curFrame, allObjects);
 	Util::ShowCandidateTargets(curFrame, allObjects);
