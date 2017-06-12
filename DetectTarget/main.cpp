@@ -78,14 +78,33 @@ void GetMostLiklyTargetsRect(const std::vector<ConfidenceElem>& allConfidence, c
 	}
 }
 
-void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<ConfidenceElem>& allConfidence, const std::vector<cv::Rect>& targetRects, const int searchIndex)
+void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<ConfidenceElem>& allConfidence, const std::vector<cv::Rect>& targetRects, const int searchIndex, std::vector<std::vector<int>>& confidenceValueMap)
 {
+	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
+
 	for (auto i = 0; i < targetRects.size(); ++i)
 	{
 		auto rect = targetRects[i];
 		if (ConfidenceMapUtil::CheckIfInTopCount(rect, searchIndex, allConfidence))
 		{
-			rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), cv::Scalar(255, 255, 0));
+			rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), cv::Scalar(255, 220, 0));
+
+			auto x = (rect.x + rect.width / 2) / STEP;
+			auto y = (rect.y + rect.height / 2) / STEP;
+
+			if(updateFlag[y][x])
+				continue;
+			confidenceValueMap[y][x] += 5;
+			updateFlag[y][x] = true;
+			// neighbor effect
+			if (x - 1 >= 0)
+				confidenceValueMap[y][x - 1] += 4;
+			if (x + 1 < countX)
+				confidenceValueMap[y][x + 1] += 4;
+			if (y - 1 >= 0)
+				confidenceValueMap[y - 1][x] += 4;
+			if (y + 1 < countY)
+				confidenceValueMap[y + 1][x] += 4;
 		}
 	}
 }
@@ -94,6 +113,20 @@ void WriteLastResultToDisk(const cv::Mat& colorFrame, const int frameIndex, cons
 {
 	sprintf_s(writeFileName, WRITE_FILE_NAME_BUFFER_SIZE, writeFileNameFormat, frameIndex);
 	imwrite(writeFileName, colorFrame);
+}
+
+int MaxNeighbor(const std::vector<std::vector<int>>& confidenceValueMap, int y, int x)
+{
+	auto maxResult = 0;
+	if (x - 1 >= 0 && confidenceValueMap[y][x - 1] > maxResult)
+		maxResult = confidenceValueMap[y][x - 1];
+	if (x + 1 < countX && confidenceValueMap[y][x + 1] > maxResult)
+		maxResult = confidenceValueMap[y][x + 1];
+	if (y - 1 >= 0 && confidenceValueMap[y - 1][x] > maxResult)
+		maxResult = confidenceValueMap[y - 1][x];
+	if (y + 1 < countY && confidenceValueMap[y + 1][x] > maxResult)
+		maxResult = confidenceValueMap[y + 1][x];
+	return maxResult;
 }
 
 int main(int argc, char* argv[])
@@ -111,14 +144,16 @@ int main(int argc, char* argv[])
 	char writeFileName[WRITE_FILE_NAME_BUFFER_SIZE];
 
 	
-	auto countX = ceil(static_cast<double>(320) / STEP);
-	auto countY = ceil(static_cast<double>(256) / STEP);
+	
 
 	const auto queueSize = 4;
 	auto queueEndIndex = 0;
 
 	std::vector<std::vector<std::vector<int>>> confidenceQueueMap(countY, std::vector<std::vector<int>>(countX, std::vector<int>(queueSize, 0)));
-	std::vector<ConfidenceElem> allConfidence(countX * countY);
+	std::vector<std::vector<int>> confidenceValueMap(countY, std::vector<int>(countX, 0));
+
+	std::vector<ConfidenceElem> allConfidenceQueue(countX * countY);
+	std::vector<ConfidenceElem> allConfidenceValues(countX * countY);
 
 	if (video_capture.isOpened())
 	{
@@ -146,15 +181,110 @@ int main(int argc, char* argv[])
 
 				UpdateConfidenceMap(queueEndIndex, confidenceQueueMap, targetRects);
 
-				UpdateConfidenceVector(countX, countY, confidenceQueueMap, allConfidence);
+				UpdateConfidenceVector(countX, countY, confidenceQueueMap, allConfidenceQueue);
 
-				sort(allConfidence.begin(), allConfidence.end(), Util::ConfidenceCompare);
+				sort(allConfidenceQueue.begin(), allConfidenceQueue.end(), Util::ConfidenceCompare);
 
 				auto searchIndex = 0;
 
-				GetMostLiklyTargetsRect(allConfidence, TopCount, searchIndex);
+				GetMostLiklyTargetsRect(allConfidenceQueue, TopCount, searchIndex);
 
-				DrawRectangleForAllCandidateTargets(colorFrame, allConfidence, targetRects, searchIndex);
+				DrawRectangleForAllCandidateTargets(colorFrame, allConfidenceQueue, targetRects, searchIndex, confidenceValueMap);
+
+				for (auto y = 0; y < countY; ++y)
+				{
+					for (auto x = 0; x < countX; ++x)
+						std::cout << std::setw(2) << confidenceValueMap[y][x] << " ";
+
+					std::cout << std::endl;
+				}
+
+				if(frameIndex > 5)
+				{
+					const auto maxTargetCount = 2;
+					auto currentTargetCountIndex = 0;
+					std::vector<cv::Point> targetPositions;
+
+					auto index = 0;
+					for (auto x = 0; x < countX; ++x)
+					{
+						for (auto y = 0; y < countY; ++y)
+						{
+							allConfidenceValues[index].x = x;
+							allConfidenceValues[index].y = y;
+							allConfidenceValues[index++].confidenceVal = confidenceValueMap[y][x];
+						}
+					}
+					
+					sort(allConfidenceValues.begin(), allConfidenceValues.end(), Util::ConfidenceCompare);
+
+					std::cout << "x = " << allConfidenceValues[0].x << " y = " << allConfidenceValues[0].y << " max Value = " << allConfidenceValues[0].confidenceVal << std::endl;
+
+					for(auto i =0;i<allConfidenceValues.size();++i)
+					{
+						if(i == 0)
+						{
+							targetPositions.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+							currentTargetCountIndex++;
+							continue;
+						}
+						if(allConfidenceValues[i].confidenceVal > 6 && allConfidenceValues[i].confidenceVal == allConfidenceValues[i-1].confidenceVal)
+						{
+							targetPositions.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+						}
+						else
+						{
+							if(allConfidenceValues[i].confidenceVal > 6)
+							{
+								targetPositions.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+								currentTargetCountIndex++;
+								if (currentTargetCountIndex >= maxTargetCount)
+									break;
+							}
+						}
+					}
+
+					for (auto i = 0; i < targetPositions.size(); ++i)
+					{
+						for (auto j = 0; j < targetRects.size(); ++j)
+						{
+							auto rect = targetRects[j];
+							auto x = (rect.x + rect.width / 2) / STEP;
+							auto y = (rect.y + rect.height / 2) / STEP;
+
+							if(x == targetPositions[i].x && y == targetPositions[i].y)
+								rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
+							// check neighbor
+							if (
+								(x - 1 >= 0 && x - 1 == targetPositions[i].x && y == targetPositions[i].y) ||
+								(y - 1 >= 0 && x == targetPositions[i].x && y - 1 == targetPositions[i].y) ||
+								(x + 1 < countX && x - 1 == targetPositions[i].x && y == targetPositions[i].y) ||
+								(y + 1 < countY && x == targetPositions[i].x && y + 1 == targetPositions[i].y))
+							{
+//								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap,y,x);
+								confidenceValueMap[y][x] /= 2;
+								rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
+							}
+							else
+							{
+//								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap, y, x);
+								confidenceValueMap[y][x] /= 2;
+							}
+
+						}
+					}
+
+					for (auto x = 0; x < countX; ++x)
+					{
+						for (auto y = 0; y < countY; ++y)
+						{
+							if (confidenceValueMap[y][x] > 0)
+								confidenceValueMap[y][x] -= 3;
+							else
+								confidenceValueMap[y][x] = 0;
+						}
+					}
+				}
 
 				ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
 
