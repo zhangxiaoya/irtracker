@@ -33,6 +33,20 @@ void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<
 	}
 }
 
+void UpdateConfidenceVector(double countX, double countY, const std::vector<std::vector<std::vector<int>>>& confidenceMap, std::vector<ConfidenceElem>& allConfidence)
+{
+	auto confidenceIndex = 0;
+	for (auto x = 0; x < countX; ++x)
+	{
+		for (auto y = 0; y < countY; ++y)
+		{
+			allConfidence[confidenceIndex].x = x;
+			allConfidence[confidenceIndex].y = y;
+			allConfidence[confidenceIndex++].confidenceVal = Util::Sum(confidenceMap[y][x]);
+		}
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
@@ -84,16 +98,7 @@ int main(int argc, char* argv[])
 
 				UpdateConfidenceMap(queueEndIndex, confidenceMap, targetRects);
 
-				auto confidenceIndex = 0;
-				for (auto x = 0; x < countX; ++x)
-				{
-					for (auto y = 0; y < countY; ++y)
-					{
-						allConfidence[confidenceIndex].x = x;
-						allConfidence[confidenceIndex].y = y;
-						allConfidence[confidenceIndex++].confidenceVal = Util::Sum(confidenceMap[y][x]);
-					}
-				}
+				UpdateConfidenceVector(countX, countY, confidenceMap, allConfidence);
 
 				sort(allConfidence.begin(), allConfidence.end(), Util::ConfidenceCompare);
 

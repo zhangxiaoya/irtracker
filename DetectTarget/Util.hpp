@@ -51,7 +51,7 @@ public:
 
 	static std::vector<cv::Rect> GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects, unsigned char max_value);
 
-	static int Sum(std::vector<int>& valueVec);
+	static int Sum(const std::vector<int>& valueVec);
 
 private:
 
@@ -258,7 +258,7 @@ inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, 
 	return targetRect;
 }
 
-inline int Util::Sum(std::vector<int>& valueVec)
+inline int Util::Sum(const std::vector<int>& valueVec)
 {
 	auto result = 0;
 	for (auto val : valueVec)
