@@ -7,59 +7,15 @@
 #include "DetectByMaxFilterAndAdptiveThreshHold.hpp"
 #include "ConfidenceElem.hpp"
 #include "SpecialUtil.hpp"
+#include "ConfidenceMapUtil.hpp"
+#include "GlobalInitialUtil.hpp"
 
 const auto SHOW_DELAY = 1;
-const auto STEP = 10;
-
-void InitVideoReader(cv::VideoCapture& video_capture)
-{
-	const char* firstImageList;
-
-	if (AFTER_MAX_FILTER)
-	{
-		//		firstImageList = "D:\\Bag\\Code_VS15\\Data\\ir_file_20170531_1000m_1_8bit_maxFilter_discrezated\\Frame_%04d.png";
-		//		firstImageList = "D:\\Bag\\Code_VS15\\Data\\ir_file_20170531_1000m_2_8bit_maxFilter_discrezated\\Frame_%04d.png";
-		//				firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_1_8bit_maxFilter_discrezated\\Frame_%04d.png";
-		firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_2_8bit_maxFilter_discrezated\\Frame_%04d.png";
-	}
-	else
-	{
-		// firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_1_8bit\\Frame_%04d.png";
-		firstImageList = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_2_8bit\\Frame_%04d.png";
-	}
-
-	video_capture.open(firstImageList);
-}
-
-void LostMemory(double countX, double countY, int queueSize, int& currentIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap)
-{
-	currentIndex ++;
-	currentIndex %= queueSize;
-	for (auto x = 0; x < countX; ++x)
-	{
-		for (auto y = 0; y < countY; ++y)
-		{
-			confidenceMap[y][x][currentIndex] = 0;
-		}
-	}
-}
-
-bool CheckIfInTopCount(const cv::Rect& rect, int searchIndex, const std::vector<ConfidenceElem>& confidenceElems)
-{
-	auto x = (rect.x + rect.width / 2) / STEP;
-	auto y = (rect.y + rect.height / 2) / STEP;
-
-	for (auto i = 0; i < searchIndex;++i)
-	{
-		if (confidenceElems[i].x == x && confidenceElems[i].y == y && confidenceElems[i].confidenceVal >= 40)
-			return true;
-	}
-	return false;
-}
 
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
+
 	InitVideoReader(video_capture);
 
 	cv::Mat curFrame;
@@ -163,11 +119,11 @@ int main(int argc, char* argv[])
 				for (auto i = 0; i < targetRects.size(); ++i)
 				{
 					auto rect = targetRects[i];
-					if (CheckIfInTopCount(rect, searchIndex, allConfidence))
+					if (ConfidenceMapUtil::CheckIfInTopCount(rect, searchIndex, allConfidence))
 						rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), cv::Scalar(255, 255, 0));
 				}
 
-				LostMemory(countX, countY, queueSize, queueEndIndex, confidenceMap);
+				ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceMap);
 
 				imshow("last result", colorFrame);
 				sprintf_s(fileName, bufferSize, fileNameFormat, frameIndex);

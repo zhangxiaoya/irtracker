@@ -119,6 +119,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ConfidenceMapUtil.hpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +130,8 @@
     <ClInclude Include="DetectByMultiscaleLocalDifference.hpp" />
     <ClInclude Include="FieldType.hpp" />
     <ClInclude Include="FourLimits.hpp" />
+    <ClInclude Include="GlobalInitialUtil.hpp" />
+    <ClInclude Include="SpecialUtil.hpp" />
     <ClInclude Include="Util.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
