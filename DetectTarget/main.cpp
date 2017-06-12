@@ -12,6 +12,27 @@
 
 const auto SHOW_DELAY = 1;
 
+void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects)
+{
+	for (auto i = 0; i < targetRects.size(); ++i)
+	{
+		auto rect = targetRects[i];
+		auto x = (rect.x + rect.width / 2) / STEP;
+		auto y = (rect.y + rect.height / 2) / STEP;
+
+		// center
+		confidenceMap[y][x][queueEndIndex] += 20;
+		// up
+		confidenceMap[rect.y / STEP][x][queueEndIndex] += 1;
+		// down
+		confidenceMap[(rect.y + rect.height - 1) / STEP][x][queueEndIndex] += 1;
+		// left
+		confidenceMap[y][rect.x / STEP][queueEndIndex] += 1;
+		// right
+		confidenceMap[y][(rect.x + rect.width - 1) / STEP][queueEndIndex] += 1;
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
@@ -61,23 +82,7 @@ int main(int argc, char* argv[])
 
 				auto targetRects = DetectByMaxFilterAndAdptiveThreshHold::Detect(curFrame);
 
-				for (auto i = 0; i < targetRects.size(); ++i)
-				{
-					auto rect = targetRects[i];
-					auto x = (rect.x + rect.width / 2) / STEP;
-					auto y = (rect.y + rect.height / 2) / STEP;
-
-					// center
-					confidenceMap[y][x][queueEndIndex] += 20;
-					// up
-					confidenceMap[rect.y / STEP][x][queueEndIndex] += 1;
-					// down
-					confidenceMap[(rect.y + rect.height - 1) / STEP][x][queueEndIndex] += 1;
-					// left
-					confidenceMap[y][rect.x / STEP][queueEndIndex] += 1;
-					// right
-					confidenceMap[y][(rect.x + rect.width - 1) / STEP][queueEndIndex] += 1;
-				}
+				UpdateConfidenceMap(queueEndIndex, confidenceMap, targetRects);
 
 				auto confidenceIndex = 0;
 				for (auto x = 0; x < countX; ++x)
