@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 	const auto queueSize = 4;
 	auto queueEndIndex = 0;
 
-	std::vector<std::vector<std::vector<int>>> confidenceMap(countY, std::vector<std::vector<int>>(countX, std::vector<int>(queueSize, 0)));
+	std::vector<std::vector<std::vector<int>>> confidenceQueueMap(countY, std::vector<std::vector<int>>(countX, std::vector<int>(queueSize, 0)));
 	std::vector<ConfidenceElem> allConfidence(countX * countY);
 
 	if (video_capture.isOpened())
@@ -140,9 +140,9 @@ int main(int argc, char* argv[])
 
 				auto targetRects = DetectByMaxFilterAndAdptiveThreshHold::Detect(curFrame);
 
-				UpdateConfidenceMap(queueEndIndex, confidenceMap, targetRects);
+				UpdateConfidenceMap(queueEndIndex, confidenceQueueMap, targetRects);
 
-				UpdateConfidenceVector(countX, countY, confidenceMap, allConfidence);
+				UpdateConfidenceVector(countX, countY, confidenceQueueMap, allConfidence);
 
 				sort(allConfidence.begin(), allConfidence.end(), Util::ConfidenceCompare);
 
@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 
 				DrawRectangleForAllCandidateTargets(colorFrame, allConfidence, targetRects, searchIndex);
 
-				ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceMap);
+				ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
 
 				imshow("last result", colorFrame);
 
