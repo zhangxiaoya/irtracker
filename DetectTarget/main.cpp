@@ -9,6 +9,7 @@
 #include "SpecialUtil.hpp"
 #include "ConfidenceMapUtil.hpp"
 #include "GlobalInitialUtil.hpp"
+#include "WarningBox.hpp"
 
 const auto SHOW_DELAY = 1;
 const auto TopCount = 5;
@@ -191,6 +192,7 @@ int main(int argc, char* argv[])
 
 				DrawRectangleForAllCandidateTargets(colorFrame, allConfidenceQueue, targetRects, searchIndex, confidenceValueMap);
 
+				std::cout << "Before Draw Rect" <<std::endl;
 				for (auto y = 0; y < countY; ++y)
 				{
 					for (auto x = 0; x < countX; ++x)
@@ -246,6 +248,8 @@ int main(int argc, char* argv[])
 
 					for (auto i = 0; i < blocksContainTargets.size(); ++i)
 					{
+						auto findTargetFlag = false;
+
 						for (auto j = 0; j < targetRects.size(); ++j)
 						{
 							auto rect = targetRects[j];
@@ -253,7 +257,11 @@ int main(int argc, char* argv[])
 							auto y = (rect.y + rect.height / 2) / STEP;
 
 							if(x == blocksContainTargets[i].x && y == blocksContainTargets[i].y)
+							{
 								rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
+
+								findTargetFlag = true;
+							}
 							// check neighbor
 							else if (
 								(x - 1 >= 0 && x - 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
@@ -261,14 +269,27 @@ int main(int argc, char* argv[])
 								(x + 1 < countX && x + 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
 								(y + 1 < countY && x == blocksContainTargets[i].x && y + 1 == blocksContainTargets[i].y))
 							{
-								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap,y,x);
+								confidenceValueMap[blocksContainTargets[i].y][blocksContainTargets[i].x] = MaxNeighbor(confidenceValueMap, y, x);
+
 								rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
-							}
-							else
-							{
-								confidenceValueMap[y][x] /= 2;
+
+								findTargetFlag = true;
 							}
 						}
+
+						if(!findTargetFlag)
+						{
+							confidenceValueMap[blocksContainTargets[i].y][blocksContainTargets[i].x] /= 2;
+						}
+					}
+
+					std::cout << "After Draw Rect" << std::endl;
+					for (auto y = 0; y < countY; ++y)
+					{
+						for (auto x = 0; x < countX; ++x)
+							std::cout << std::setw(2) << confidenceValueMap[y][x] << " ";
+
+						std::cout << std::endl;
 					}
 
 					for (auto x = 0; x < countX; ++x)
