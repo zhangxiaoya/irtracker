@@ -96,7 +96,7 @@ void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<
 			auto x = (rect.x + rect.width / 2) / STEP;
 			auto y = (rect.y + rect.height / 2) / STEP;
 
-			if(updateFlag[y][x])
+			if (updateFlag[y][x])
 				continue;
 			confidenceValueMap[y][x] += 5;
 			updateFlag[y][x] = true;
