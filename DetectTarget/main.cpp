@@ -91,7 +91,7 @@ void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<
 		auto rect = targetRects[i];
 		if (ConfidenceMapUtil::CheckIfInTopCount(rect, searchIndex, allConfidence))
 		{
-			rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), cv::Scalar(0, 255, 255));
+			rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), BLUECOLOR);
 
 			auto x = (rect.x + rect.width / 2) / STEP;
 			auto y = (rect.y + rect.height / 2) / STEP;

@@ -1,25 +1,15 @@
 #pragma once
 
-#include "FourLimits.hpp"
-#include "FieldType.hpp"
 #include <stack>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+
+#include "FourLimits.hpp"
+#include "FieldType.hpp"
 #include "ConfidenceElem.hpp"
+#include "GlobalInitialUtil.hpp"
 
-const auto WINDOW_WIDTH = 8;
-const auto WINDOW_HEIGHT = 8;
-const auto THRESHHOLD = 25;
-
-auto const REDCOLOR = cv::Scalar(0, 0, 255);
-auto const BLUECOLOR = cv::Scalar(255, 0, 0);
-auto const GREENCOLOR = cv::Scalar(0, 255, 0);
-
-const auto TARGET_WIDTH_MIN_LIMIT = 2;
-const auto TARGET_HEIGHT_MIN_LIMIT = 2;
-const auto TARGET_WIDTH_MAX_LIMIT = 16;
-const auto TARGET_HEIGHT_MAX_LIMIT = 16;
 
 class Util
 {
