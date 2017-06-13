@@ -19,14 +19,18 @@ const auto countY = ceil(static_cast<double>(256) / STEP);
 
 void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects)
 {
+	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
 	for (auto i = 0; i < targetRects.size(); ++i)
 	{
 		auto rect = targetRects[i];
 		auto x = (rect.x + rect.width / 2) / STEP;
 		auto y = (rect.y + rect.height / 2) / STEP;
 
+		if (updateFlag[y][x])
+			continue;
 		// center
 		confidenceMap[y][x][queueEndIndex] += 20;
+		updateFlag[y][x] = true;
 		// up
 		confidenceMap[rect.y / STEP][x][queueEndIndex] += 1;
 		// down
