@@ -4,7 +4,7 @@
 
 struct TargetTracker
 {
-	TargetTracker() : blockX(-1), blockY(-1), timeLeft(0), targetRect(0, 0, 0, 0)
+	TargetTracker() : blockX(-1), blockY(-1), timeLeft(0), targetRect(0, 0, 0, 0), leftTopX(-1), leftTopY(-1)
 	{
 	}
 
@@ -12,6 +12,8 @@ struct TargetTracker
 	int blockY;
 	uint32_t timeLeft;
 	cv::Rect targetRect;
+	int leftTopX;
+	int leftTopY;
 
 };
 
