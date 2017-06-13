@@ -144,7 +144,6 @@ int main(int argc, char* argv[])
 
 	auto frameIndex = 0;
 
-	char writeFileNameFormat[] = ".\\ir_file_20170531_1000m_1\\Frame_%04d.png";
 	char writeFileName[WRITE_FILE_NAME_BUFFER_SIZE];
 
 	const auto queueSize = 4;
@@ -291,7 +290,7 @@ int main(int argc, char* argv[])
 
 				imshow("last result", colorFrame);
 
-				WriteLastResultToDisk(colorFrame, frameIndex, writeFileNameFormat, writeFileName);
+				WriteLastResultToDisk(colorFrame, frameIndex, GlobalWriteFileNameFormat, writeFileName);
 
 				std::cout << "Index : " << std::setw(4) << frameIndex++ << std::endl;
 			}
