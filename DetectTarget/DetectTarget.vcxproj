@@ -133,7 +133,7 @@
     <ClInclude Include="GlobalInitialUtil.hpp" />
     <ClInclude Include="SpecialUtil.hpp" />
     <ClInclude Include="Util.hpp" />
-    <ClInclude Include="WarningBox.hpp" />
+    <ClInclude Include="TargetTracker.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

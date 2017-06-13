@@ -9,7 +9,7 @@
 #include "SpecialUtil.hpp"
 #include "ConfidenceMapUtil.hpp"
 #include "GlobalInitialUtil.hpp"
-#include "WarningBox.hpp"
+#include "TargetTracker.hpp"
 
 const auto SHOW_DELAY = 1;
 const auto TopCount = 5;
