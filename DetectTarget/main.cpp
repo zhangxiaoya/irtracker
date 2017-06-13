@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
 					std::cout << std::endl;
 				}
 
-				if(frameIndex > 5)
+				if(frameIndex > 6)
 				{
 					const auto maxTargetCount = 2;
 					auto currentTargetCountIndex = 0;
@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
 							if (
 								(x - 1 >= 0 && x - 1 == targetPositions[i].x && y == targetPositions[i].y) ||
 								(y - 1 >= 0 && x == targetPositions[i].x && y - 1 == targetPositions[i].y) ||
-								(x + 1 < countX && x - 1 == targetPositions[i].x && y == targetPositions[i].y) ||
+								(x + 1 < countX && x + 1 == targetPositions[i].x && y == targetPositions[i].y) ||
 								(y + 1 < countY && x == targetPositions[i].x && y + 1 == targetPositions[i].y))
 							{
 								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap,y,x);
