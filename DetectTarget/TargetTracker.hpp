@@ -17,8 +17,7 @@ struct TargetTracker
 
 };
 
-const auto MaxWarningBoxCount = 2;
+const auto MaxTrackingTargetCount = 2;
+const auto TimeLeftLimit = 5;
 
-TargetTracker GlobalWarningBoxs[MaxWarningBoxCount];
-
-const auto TimeLeftLimie = 5;
+TargetTracker GlobalTrackerList[MaxTrackingTargetCount];
