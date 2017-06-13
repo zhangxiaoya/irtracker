@@ -276,9 +276,11 @@ int main(int argc, char* argv[])
 						for (auto y = 0; y < countY; ++y)
 						{
 							if (confidenceValueMap[y][x] > 0)
+							{
 								confidenceValueMap[y][x] -= 3;
-							else
-								confidenceValueMap[y][x] = 0;
+								if(confidenceValueMap[y][x] < 0)
+									confidenceValueMap[y][x] = 0;
+							}
 						}
 					}
 				}
