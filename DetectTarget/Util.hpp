@@ -21,8 +21,6 @@ const auto TARGET_HEIGHT_MIN_LIMIT = 2;
 const auto TARGET_WIDTH_MAX_LIMIT = 16;
 const auto TARGET_HEIGHT_MAX_LIMIT = 16;
 
-const auto AFTER_MAX_FILTER = false;
-
 class Util
 {
 public:

@@ -143,9 +143,6 @@ int main(int argc, char* argv[])
 	char writeFileNameFormat[] = ".\\ir_file_20170531_1000m_1\\Frame_%04d.png";
 	char writeFileName[WRITE_FILE_NAME_BUFFER_SIZE];
 
-	
-	
-
 	const auto queueSize = 4;
 	auto queueEndIndex = 0;
 

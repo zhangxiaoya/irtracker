@@ -219,14 +219,7 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::M
  	cv::Mat filtedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
 	auto kernelSize = 3;
 
-	if(AFTER_MAX_FILTER)
-	{
-		curFrame.copyTo(filtedFrame);
-	}
-	else
-	{
-		MaxFilter(curFrame, filtedFrame, kernelSize);
-	}
+	MaxFilter(curFrame, filtedFrame, kernelSize);
 
 	imshow("Max Filter", filtedFrame);
 
