@@ -15,7 +15,6 @@ public:
 
 private:
 
-
 	static void MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize);
 
 	static unsigned char GetMaxPixelValue(const cv::Mat& curFrame, std::vector<uchar>& pixelValues, int r, int c, int kernelSize);
@@ -200,7 +199,7 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::RefreshMask(cv::Mat curFrame,
 		FillRectToFrame(result[i]);
 }
 
-void DetectByMaxFilterAndAdptiveThreshHold::FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result)
+inline void DetectByMaxFilterAndAdptiveThreshHold::FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result)
 {
 	for (auto it = rects.begin(); it != rects.end(); ++it)
 	{

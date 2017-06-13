@@ -11,6 +11,8 @@
 #include "GlobalInitialUtil.hpp"
 
 
+const auto AFTER_MAX_FILTER = true;
+
 class Util
 {
 public:

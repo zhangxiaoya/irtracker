@@ -292,6 +292,7 @@ int main(int argc, char* argv[])
 				WriteLastResultToDisk(colorFrame, frameIndex, GlobalWriteFileNameFormat, writeFileName);
 
 				std::cout << "Index : " << std::setw(4) << frameIndex++ << std::endl;
+
 			}
 		}
 
