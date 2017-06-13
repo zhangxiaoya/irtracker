@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
 				{
 					const auto maxTargetCount = 2;
 					auto currentTargetCountIndex = 0;
-					std::vector<cv::Point> targetPositions;
+					std::vector<cv::Point> blocksContainTargets;
 
 					auto index = 0;
 					for (auto x = 0; x < countX; ++x)
@@ -224,19 +224,19 @@ int main(int argc, char* argv[])
 					{
 						if(i == 0)
 						{
-							targetPositions.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+							blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
 							currentTargetCountIndex++;
 							continue;
 						}
-						if(allConfidenceValues[i].confidenceVal > 6 && allConfidenceValues[i].confidenceVal == allConfidenceValues[i-1].confidenceVal)
+						if(allConfidenceValues[i].confidenceVal > 5 && allConfidenceValues[i].confidenceVal == allConfidenceValues[i-1].confidenceVal)
 						{
-							targetPositions.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+							blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
 						}
 						else
 						{
 							if(allConfidenceValues[i].confidenceVal >= 5)
 							{
-								targetPositions.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+								blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
 								currentTargetCountIndex++;
 								if (currentTargetCountIndex >= maxTargetCount)
 									break;
@@ -244,7 +244,7 @@ int main(int argc, char* argv[])
 						}
 					}
 
-					for (auto i = 0; i < targetPositions.size(); ++i)
+					for (auto i = 0; i < blocksContainTargets.size(); ++i)
 					{
 						for (auto j = 0; j < targetRects.size(); ++j)
 						{
@@ -252,14 +252,14 @@ int main(int argc, char* argv[])
 							auto x = (rect.x + rect.width / 2) / STEP;
 							auto y = (rect.y + rect.height / 2) / STEP;
 
-							if(x == targetPositions[i].x && y == targetPositions[i].y)
+							if(x == blocksContainTargets[i].x && y == blocksContainTargets[i].y)
 								rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
 							// check neighbor
-							if (
-								(x - 1 >= 0 && x - 1 == targetPositions[i].x && y == targetPositions[i].y) ||
-								(y - 1 >= 0 && x == targetPositions[i].x && y - 1 == targetPositions[i].y) ||
-								(x + 1 < countX && x + 1 == targetPositions[i].x && y == targetPositions[i].y) ||
-								(y + 1 < countY && x == targetPositions[i].x && y + 1 == targetPositions[i].y))
+							else if (
+								(x - 1 >= 0 && x - 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
+								(y - 1 >= 0 && x == blocksContainTargets[i].x && y - 1 == blocksContainTargets[i].y) ||
+								(x + 1 < countX && x + 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
+								(y + 1 < countY && x == blocksContainTargets[i].x && y + 1 == blocksContainTargets[i].y))
 							{
 								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap,y,x);
 								rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
