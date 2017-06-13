@@ -261,16 +261,13 @@ int main(int argc, char* argv[])
 								(x + 1 < countX && x - 1 == targetPositions[i].x && y == targetPositions[i].y) ||
 								(y + 1 < countY && x == targetPositions[i].x && y + 1 == targetPositions[i].y))
 							{
-								// confidenceValueMap[y][x] /= 2;
 								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap,y,x);
 								rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
 							}
 							else
 							{
-//								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap, y, x);
 								confidenceValueMap[y][x] /= 2;
 							}
-
 						}
 					}
 
