@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
 						}
 						else
 						{
-							if(allConfidenceValues[i].confidenceVal > 6)
+							if(allConfidenceValues[i].confidenceVal >= 5)
 							{
 								targetPositions.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
 								currentTargetCountIndex++;
