@@ -311,18 +311,11 @@ int main(int argc, char* argv[])
 
 				cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
 
-				//				DetectByDiscontinuity::Detect(curFrame);
-
-				//				DetectByBinaryBitMap::Detect(curFrame);
-
-				//				DetectByMultiScaleLocalDifference::Detect(curFrame);
-
 				auto targetRects = DetectByMaxFilterAndAdptiveThreshHold::Detect(curFrame);
 
 				UpdateConfidenceMap(queueEndIndex, confidenceQueueMap, targetRects);
 
 				UpdateConfidenceVector(countX, countY, confidenceQueueMap, allConfidenceQueue);
-
 
 				auto searchIndex = 0;
 
@@ -337,9 +330,6 @@ int main(int argc, char* argv[])
 					const auto maxTargetCount = 2;
 					std::vector<cv::Point> blocksContainTargets;
 
-					std::vector<cv::Rect> detectReult;
-
-
 					UpdateConfidenceValueVector(confidenceValueMap, allConfidenceValues);
 
 					GetTopCountBlocksWhichContainsTargets(allConfidenceValues, maxTargetCount, blocksContainTargets);
@@ -348,7 +338,6 @@ int main(int argc, char* argv[])
 					for (auto target : targetRects)
 						std::cout << "LeftTopX = " << target.x << " LeftTopY = " << target.y << " Width = " << target.width << " Height = " << target.height
 							<< " X = " << (target.x + target.width / 2) / STEP << " Y = " << (target.y + target.height) / STEP << std::endl;
-
 
 					for (auto i = 0; i < blocksContainTargets.size(); ++i)
 					{
@@ -367,7 +356,7 @@ int main(int argc, char* argv[])
 							{
 								if (GlobalTrackerList.empty())
 								{
-									CreateNewTrackerForThisBlock(blocksContainTargets[i], rect); //									rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
+									CreateNewTrackerForThisBlock(blocksContainTargets[i], rect);
 								}
 								else
 								{
