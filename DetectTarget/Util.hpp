@@ -9,8 +9,9 @@
 #include "FieldType.hpp"
 #include "ConfidenceElem.hpp"
 #include "GlobalInitialUtil.hpp"
+#include "TargetTracker.hpp"
 
-
+struct TargetTracker;
 const auto AFTER_MAX_FILTER = true;
 
 class Util
@@ -35,9 +36,11 @@ public:
 
 	static uchar MinOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end);
 
-	static bool UcharCompare(uchar left, uchar right);
+	static bool CompareUchar(uchar left, uchar right);
 
-	static bool ConfidenceCompare(ConfidenceElem left, ConfidenceElem right);
+	static bool CompareConfidenceValue(ConfidenceElem left, ConfidenceElem right);
+
+	static bool CompareTracker(TargetTracker left, TargetTracker right);
 
 	static std::vector<cv::Rect> GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects, unsigned char max_value);
 
@@ -210,14 +213,19 @@ inline uchar Util::MinOfVector(const std::vector<uchar>::iterator& begin, const 
 	return minResult;
 }
 
-inline bool Util::UcharCompare(uchar left, uchar right)
+inline bool Util::CompareUchar(uchar left, uchar right)
 {
 	return left > right;
 }
 
-inline bool Util::ConfidenceCompare(ConfidenceElem left, ConfidenceElem right)
+inline bool Util::CompareConfidenceValue(ConfidenceElem left, ConfidenceElem right)
 {
 	return left.confidenceVal > right.confidenceVal;
+}
+
+inline bool Util::CompareTracker(TargetTracker left, TargetTracker right)
+{
+	return left.timeLeft > right.timeLeft;
 }
 
 inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects, unsigned char max_value)

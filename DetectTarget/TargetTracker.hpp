@@ -10,7 +10,7 @@ struct TargetTracker
 
 	int blockX;
 	int blockY;
-	uint32_t timeLeft;
+	int timeLeft;
 	cv::Rect targetRect;
 	int leftTopX;
 	int leftTopY;
@@ -20,4 +20,4 @@ struct TargetTracker
 const auto MaxTrackingTargetCount = 2;
 const auto TimeLeftLimit = 5;
 
-TargetTracker GlobalTrackerList[MaxTrackingTargetCount];
+std::vector<TargetTracker> GlobalTrackerList;

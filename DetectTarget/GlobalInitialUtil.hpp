@@ -9,6 +9,8 @@ const auto WINDOW_WIDTH = 8;
 const auto WINDOW_HEIGHT = 8;
 const auto THRESHHOLD = 25;
 
+const auto ThinkingTime = 6;
+
 const auto TARGET_WIDTH_MIN_LIMIT = 2;
 const auto TARGET_HEIGHT_MIN_LIMIT = 2;
 const auto TARGET_WIDTH_MAX_LIMIT = 16;

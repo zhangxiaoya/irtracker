@@ -47,7 +47,7 @@ inline bool DetectByMaxFilterAndAdptiveThreshHold::GetTopValues(const cv::Mat fi
 		for (auto c = 0; c < filtedFrame.cols; ++c)
 			allValues.push_back(filtedFrame.at<uchar>(r, c));
 
-	sort(allValues.begin(), allValues.end(), Util::UcharCompare);
+	sort(allValues.begin(), allValues.end(), Util::CompareUchar);
 
 	auto iterator = unique(allValues.begin(), allValues.end());
 	allValues.resize(distance(allValues.begin(), iterator));

@@ -55,6 +55,8 @@ void UpdateConfidenceVector(double countX, double countY, const std::vector<std:
 			allConfidence[confidenceIndex++].confidenceVal = Util::Sum(confidenceMap[y][x]);
 		}
 	}
+
+	sort(allConfidence.begin(), allConfidence.end(), Util::CompareConfidenceValue);
 }
 
 void GetMostLiklyTargetsRect(const std::vector<ConfidenceElem>& allConfidence, const int topCount, int& searchIndex)
@@ -134,6 +136,143 @@ int MaxNeighbor(const std::vector<std::vector<int>>& confidenceValueMap, int y, 
 	return maxResult;
 }
 
+int MinNeighbor(const std::vector<std::vector<int>>& confidenceValueMap, int y, int x)
+{
+	auto minResult = 10000;
+	if (x - 1 >= 0 && confidenceValueMap[y][x - 1] < minResult)
+		minResult = confidenceValueMap[y][x - 1];
+	if (x + 1 < countX && confidenceValueMap[y][x + 1] < minResult)
+		minResult = confidenceValueMap[y][x + 1];
+	if (y - 1 >= 0 && confidenceValueMap[y - 1][x] < minResult)
+		minResult = confidenceValueMap[y - 1][x];
+	if (y + 1 < countY && confidenceValueMap[y + 1][x] < minResult)
+		minResult = confidenceValueMap[y + 1][x];
+	return minResult;
+}
+
+bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex)
+{
+	if (trackerIndex != 0)
+	{
+		if (GlobalTrackerList[trackerIndex - 1].blockX != x)
+			GlobalTrackerList[trackerIndex - 1].blockX = x;
+		if (GlobalTrackerList[trackerIndex - 1].blockY != y)
+			GlobalTrackerList[trackerIndex - 1].blockY = y;
+
+		GlobalTrackerList[trackerIndex - 1].leftTopX = rect.x;
+		GlobalTrackerList[trackerIndex - 1].leftTopY = rect.y;
+		GlobalTrackerList[trackerIndex - 1].targetRect = rect;
+		GlobalTrackerList[trackerIndex - 1].timeLeft++;
+		return true;
+	}
+	return false;
+}
+
+void PrintConfidenceValueMap(const std::vector<std::vector<int>>& confidenceValueMap, char* text)
+{
+	std::cout << text << std::endl;
+	for (auto y = 0; y < countY; ++y)
+	{
+		for (auto x = 0; x < countX; ++x)
+			std::cout << std::setw(2) << confidenceValueMap[y][x] << " ";
+
+		std::cout << std::endl;
+	}
+}
+
+void UpdateConfidenceValueVector(const std::vector<std::vector<int>>& confidenceValueMap, std::vector<ConfidenceElem>& allConfidenceValues)
+{
+	auto index = 0;
+	for (auto x = 0; x < countX; ++x)
+	{
+		for (auto y = 0; y < countY; ++y)
+		{
+			allConfidenceValues[index].x = x;
+			allConfidenceValues[index].y = y;
+			allConfidenceValues[index++].confidenceVal = confidenceValueMap[y][x];
+		}
+	}
+
+	sort(allConfidenceValues.begin(), allConfidenceValues.end(), Util::CompareConfidenceValue);
+
+	std::cout << "x = " << allConfidenceValues[0].x << " y = " << allConfidenceValues[0].y << " max Value = " << allConfidenceValues[0].confidenceVal << std::endl;
+}
+
+void GetTopCountBlocksWhichContainsTargets(const std::vector<ConfidenceElem>& allConfidenceValues, const int maxTargetCount, std::vector<cv::Point>& blocksContainTargets)
+{
+	auto currentTargetCountIndex = 0;
+
+	for (auto i = 0; i < allConfidenceValues.size(); ++i)
+	{
+		if (i == 0)
+		{
+			blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+			currentTargetCountIndex++;
+			continue;
+		}
+		if (allConfidenceValues[i].confidenceVal > 5 && allConfidenceValues[i].confidenceVal == allConfidenceValues[i - 1].confidenceVal)
+		{
+			blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+		}
+		else
+		{
+			if (allConfidenceValues[i].confidenceVal >= 5)
+			{
+				blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+				currentTargetCountIndex++;
+				if (currentTargetCountIndex >= maxTargetCount)
+					break;
+			}
+		}
+	}
+
+	std::cout << "All Blocks:" << std::endl;
+	for (auto point : blocksContainTargets)
+		std::cout << "X = " << point.x << " Y = " << point.y << std::endl;
+}
+
+void CheckTrackerForThisBlock(cv::Point blockPos, int& trackerIndex)
+{
+	for (auto j = 0; j < GlobalTrackerList.size(); ++j)
+	{
+		if (GlobalTrackerList[j].blockX == blockPos.x && GlobalTrackerList[j].blockY == blockPos.y)
+		{
+			trackerIndex = j + 1;
+			break;
+		}
+	}
+}
+
+void CreateNewTrackerForThisBlock(cv::Point blockPos, cv::Rect rect)
+{
+	TargetTracker tracker;
+	tracker.blockX = blockPos.x;
+	tracker.blockY = blockPos.y;
+	tracker.leftTopX = rect.x;
+	tracker.leftTopY = rect.y;
+	tracker.targetRect = rect;
+	tracker.timeLeft = 1;
+
+	GlobalTrackerList.push_back(tracker);
+}
+
+void ConfidenceValueLost(std::vector<std::vector<int>> confidenceValueMap)
+{
+	for (auto x = 0; x < countX; ++x)
+	{
+		for (auto y = 0; y < countY; ++y)
+		{
+			if (confidenceValueMap[y][x] > 0)
+			{
+				confidenceValueMap[y][x] -= 3;
+				if (confidenceValueMap[y][x] < 0)
+					confidenceValueMap[y][x] = 0;
+			}
+		}
+	}
+}
+
+
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
@@ -184,7 +323,6 @@ int main(int argc, char* argv[])
 
 				UpdateConfidenceVector(countX, countY, confidenceQueueMap, allConfidenceQueue);
 
-				sort(allConfidenceQueue.begin(), allConfidenceQueue.end(), Util::ConfidenceCompare);
 
 				auto searchIndex = 0;
 
@@ -192,63 +330,32 @@ int main(int argc, char* argv[])
 
 				DrawRectangleForAllCandidateTargets(colorFrame, allConfidenceQueue, targetRects, searchIndex, confidenceValueMap);
 
-				std::cout << "Before Draw Rect" <<std::endl;
-				for (auto y = 0; y < countY; ++y)
-				{
-					for (auto x = 0; x < countX; ++x)
-						std::cout << std::setw(2) << confidenceValueMap[y][x] << " ";
+				PrintConfidenceValueMap(confidenceValueMap, "Before Draw Rect");
 
-					std::cout << std::endl;
-				}
-
-				if(frameIndex > 6)
+				if (frameIndex > ThinkingTime)
 				{
 					const auto maxTargetCount = 2;
-					auto currentTargetCountIndex = 0;
 					std::vector<cv::Point> blocksContainTargets;
 
-					auto index = 0;
-					for (auto x = 0; x < countX; ++x)
-					{
-						for (auto y = 0; y < countY; ++y)
-						{
-							allConfidenceValues[index].x = x;
-							allConfidenceValues[index].y = y;
-							allConfidenceValues[index++].confidenceVal = confidenceValueMap[y][x];
-						}
-					}
-					
-					sort(allConfidenceValues.begin(), allConfidenceValues.end(), Util::ConfidenceCompare);
+					std::vector<cv::Rect> detectReult;
 
-					std::cout << "x = " << allConfidenceValues[0].x << " y = " << allConfidenceValues[0].y << " max Value = " << allConfidenceValues[0].confidenceVal << std::endl;
 
-					for(auto i =0;i<allConfidenceValues.size();++i)
-					{
-						if(i == 0)
-						{
-							blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
-							currentTargetCountIndex++;
-							continue;
-						}
-						if(allConfidenceValues[i].confidenceVal > 5 && allConfidenceValues[i].confidenceVal == allConfidenceValues[i-1].confidenceVal)
-						{
-							blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
-						}
-						else
-						{
-							if(allConfidenceValues[i].confidenceVal >= 5)
-							{
-								blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
-								currentTargetCountIndex++;
-								if (currentTargetCountIndex >= maxTargetCount)
-									break;
-							}
-						}
-					}
+					UpdateConfidenceValueVector(confidenceValueMap, allConfidenceValues);
+
+					GetTopCountBlocksWhichContainsTargets(allConfidenceValues, maxTargetCount, blocksContainTargets);
+
+					std::cout << "All candidate targets" << std::endl;;
+					for (auto target : targetRects)
+						std::cout << "LeftTopX = " << target.x << " LeftTopY = " << target.y << " Width = " << target.width << " Height = " << target.height
+							<< " X = " << (target.x + target.width / 2) / STEP << " Y = " << (target.y + target.height) / STEP << std::endl;
+
 
 					for (auto i = 0; i < blocksContainTargets.size(); ++i)
 					{
 						auto findTargetFlag = false;
+						auto trackerIndex = 0;
+
+						CheckTrackerForThisBlock(blocksContainTargets[i], trackerIndex);
 
 						for (auto j = 0; j < targetRects.size(); ++j)
 						{
@@ -256,56 +363,86 @@ int main(int argc, char* argv[])
 							auto x = (rect.x + rect.width / 2) / STEP;
 							auto y = (rect.y + rect.height / 2) / STEP;
 
-							if(x == blocksContainTargets[i].x && y == blocksContainTargets[i].y)
+							if (x == blocksContainTargets[i].x && y == blocksContainTargets[i].y)
 							{
-								rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
+								if (GlobalTrackerList.empty())
+								{
+									CreateNewTrackerForThisBlock(blocksContainTargets[i], rect); //									rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
+								}
+								else
+								{
+									if (!TrackerDecited(rect, x, y, trackerIndex))
+									{
+										CreateNewTrackerForThisBlock(blocksContainTargets[i], rect);
+									}
+								}
 
 								findTargetFlag = true;
 							}
-							// check neighbor
-							else if (
-								(x - 1 >= 0 && x - 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
+							else if ((x - 1 >= 0 && x - 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
 								(y - 1 >= 0 && x == blocksContainTargets[i].x && y - 1 == blocksContainTargets[i].y) ||
 								(x + 1 < countX && x + 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
 								(y + 1 < countY && x == blocksContainTargets[i].x && y + 1 == blocksContainTargets[i].y))
 							{
-								confidenceValueMap[blocksContainTargets[i].y][blocksContainTargets[i].x] = MaxNeighbor(confidenceValueMap, y, x);
+								confidenceValueMap[blocksContainTargets[i].y][blocksContainTargets[i].x] = MinNeighbor(confidenceValueMap, blocksContainTargets[i].y, blocksContainTargets[i].x);
+								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap, blocksContainTargets[i].y, blocksContainTargets[i].x);
 
-								rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), REDCOLOR);
+								if (GlobalTrackerList.empty())
+								{
+									CreateNewTrackerForThisBlock(blocksContainTargets[i], rect);
+								}
+								else
+								{
+									if (!TrackerDecited(rect, x, y, trackerIndex))
+									{
+										CreateNewTrackerForThisBlock(blocksContainTargets[i], rect);
+									}
 
-								findTargetFlag = true;
+									findTargetFlag = true;
+								}
 							}
-						}
 
-						if(!findTargetFlag)
-						{
-							confidenceValueMap[blocksContainTargets[i].y][blocksContainTargets[i].x] /= 2;
-						}
-					}
-
-					std::cout << "After Draw Rect" << std::endl;
-					for (auto y = 0; y < countY; ++y)
-					{
-						for (auto x = 0; x < countX; ++x)
-							std::cout << std::setw(2) << confidenceValueMap[y][x] << " ";
-
-						std::cout << std::endl;
-					}
-
-					for (auto x = 0; x < countX; ++x)
-					{
-						for (auto y = 0; y < countY; ++y)
-						{
-							if (confidenceValueMap[y][x] > 0)
+							if (!findTargetFlag)
 							{
-								confidenceValueMap[y][x] -= 3;
-								if(confidenceValueMap[y][x] < 0)
-									confidenceValueMap[y][x] = 0;
+								if (trackerIndex > 0)
+								{
+									GlobalTrackerList[trackerIndex - 1].timeLeft--;
+									if (GlobalTrackerList[trackerIndex - 1].timeLeft == 0)
+									{
+										auto it = GlobalTrackerList.begin() + (trackerIndex - 1);
+										GlobalTrackerList.erase(it);
+									}
+								}
+								else
+								{
+									auto col = blocksContainTargets[i].x;
+									auto row = blocksContainTargets[i].y;
+
+									confidenceValueMap[row][col] /= 2;
+									if (col - 1 >= 0)
+										confidenceValueMap[row][col - 1] /= 2;
+									if (col + 1 < countX)
+										confidenceValueMap[row][col + 1] /= 2;
+									if (row - 1 >= 0)
+										confidenceValueMap[row - 1][col] /= 2;
+									if (row + 1 < countY)
+										confidenceValueMap[row + 1][col] /= 2;
+								}
 							}
 						}
+
+						PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
+
+						ConfidenceValueLost(confidenceValueMap);
+					}
+
+					sort(GlobalTrackerList.begin(), GlobalTrackerList.end(), Util::CompareTracker);
+					for (auto tracker : GlobalTrackerList)
+					{
+						if (tracker.timeLeft > 1)
+							rectangle(colorFrame, tracker.targetRect, REDCOLOR);
 					}
 				}
-
 				ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
 
 				imshow("last result", colorFrame);
@@ -313,12 +450,12 @@ int main(int argc, char* argv[])
 				WriteLastResultToDisk(colorFrame, frameIndex, writeFileName);
 
 				std::cout << "Index : " << std::setw(4) << frameIndex++ << std::endl;
-
 			}
 		}
 
 		cv::destroyAllWindows();
 	}
+
 	else
 	{
 		std::cout << "Open Image List Failed" << std::endl;
