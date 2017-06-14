@@ -378,34 +378,31 @@ int main(int argc, char* argv[])
 
 								if (GlobalTrackerList.empty())
 								{
-									CreateNewTrackerForThisBlock(blocksContainTargets[i], rect);
+									CreateNewTrackerForThisBlock(cv::Point(x,y), rect);
 								}
 								else
 								{
 									if (!TrackerDecited(rect, x, y, trackerIndex))
 									{
-										CreateNewTrackerForThisBlock(blocksContainTargets[i], rect);
+										CreateNewTrackerForThisBlock(cv::Point(x, y), rect);
 									}
 
 									findTargetFlag = true;
 								}
 							}
+						}
 
-							if (!findTargetFlag)
+						if (!findTargetFlag)
+						{
+							if (trackerIndex > 0)
 							{
-								if (trackerIndex > 0)
+								GlobalTrackerList[trackerIndex - 1].timeLeft--;
+								if (GlobalTrackerList[trackerIndex - 1].timeLeft == 0)
 								{
-									GlobalTrackerList[trackerIndex - 1].timeLeft--;
-									if (GlobalTrackerList[trackerIndex - 1].timeLeft == 0)
-									{
-										auto it = GlobalTrackerList.begin() + (trackerIndex - 1);
-										GlobalTrackerList.erase(it);
-									}
-								}
-								else
-								{
-									auto col = blocksContainTargets[i].x;
-									auto row = blocksContainTargets[i].y;
+									auto it = GlobalTrackerList.begin() + (trackerIndex - 1);
+
+									auto col = it->blockX;
+									auto row = it->blockY;
 
 									confidenceValueMap[row][col] /= 2;
 									if (col - 1 >= 0)
@@ -416,24 +413,86 @@ int main(int argc, char* argv[])
 										confidenceValueMap[row - 1][col] /= 2;
 									if (row + 1 < countY)
 										confidenceValueMap[row + 1][col] /= 2;
+
+									GlobalTrackerList.erase(it);
 								}
 							}
+							else
+							{
+								auto col = blocksContainTargets[i].x;
+								auto row = blocksContainTargets[i].y;
+
+								confidenceValueMap[row][col] /= 2;
+								if (col - 1 >= 0)
+									confidenceValueMap[row][col - 1] /= 2;
+								if (col + 1 < countX)
+									confidenceValueMap[row][col + 1] /= 2;
+								if (row - 1 >= 0)
+									confidenceValueMap[row - 1][col] /= 2;
+								if (row + 1 < countY)
+									confidenceValueMap[row + 1][col] /= 2;
+							}
+						}
+					}
+
+					std::cout << "All Tracker" << std::endl;
+					for (auto tracker : GlobalTrackerList)
+					{
+						std::cout << "X = " << tracker.blockX << " Y = " << tracker.blockY << " Time Left = " << tracker.timeLeft << std::endl;
+					}
+
+					for (auto it = GlobalTrackerList.begin(); it != GlobalTrackerList.end(); ++it)
+					{
+						std::cout << "Test Tracker" << std::endl;
+						std::cout << "X = "<< it->blockX<<" Y = "<<it->blockY<<std::endl;
+
+						auto existFlag = false;
+						for (auto target : blocksContainTargets)
+						{
+							std::cout << "Current X = " << target.x << " Current Y = " << target.y << std::endl;
+							if (it->blockX == target.x && it->blockY == target.y)
+								existFlag = true;
 						}
 
-						PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
+						if(!existFlag)
+						{
+							it->timeLeft--;
+							if(it->timeLeft == 0)
+							{
+								auto col = it->blockX;
+								auto row = it->blockY;
 
-						ConfidenceValueLost(confidenceValueMap);
+								confidenceValueMap[row][col] /= 2;
+								if (col - 1 >= 0)
+									confidenceValueMap[row][col - 1] /= 2;
+								if (col + 1 < countX)
+									confidenceValueMap[row][col + 1] /= 2;
+								if (row - 1 >= 0)
+									confidenceValueMap[row - 1][col] /= 2;
+								if (row + 1 < countY)
+									confidenceValueMap[row + 1][col] /= 2;
+
+								it = GlobalTrackerList.erase(it);
+								if(it == GlobalTrackerList.end())
+									break;
+							}
+						}
 					}
+
+//					PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
+
+					ConfidenceValueLost(confidenceValueMap);
 
 					sort(GlobalTrackerList.begin(), GlobalTrackerList.end(), Util::CompareTracker);
 					for (auto tracker : GlobalTrackerList)
 					{
 						if (tracker.timeLeft > 1)
-							rectangle(colorFrame, tracker.targetRect, REDCOLOR);
+							rectangle(colorFrame, cv::Rect(tracker.targetRect.x - 2, tracker.targetRect.y - 2, tracker.targetRect.width + 4, tracker.targetRect.height + 4), REDCOLOR);
 					}
-				}
-				ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
+					ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
 
+
+				}
 				imshow("last result", colorFrame);
 
 				WriteLastResultToDisk(colorFrame, frameIndex, writeFileName);
