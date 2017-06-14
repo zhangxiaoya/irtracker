@@ -114,9 +114,9 @@ void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<
 	}
 }
 
-void WriteLastResultToDisk(const cv::Mat& colorFrame, const int frameIndex, const char writeFileNameFormat[], char writeFileName[])
+void WriteLastResultToDisk(const cv::Mat& colorFrame, const int frameIndex, char writeFileName[])
 {
-	sprintf_s(writeFileName, WRITE_FILE_NAME_BUFFER_SIZE, writeFileNameFormat, frameIndex);
+	sprintf_s(writeFileName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalWriteFileNameFormat, frameIndex);
 	imwrite(writeFileName, colorFrame);
 }
 
@@ -310,7 +310,7 @@ int main(int argc, char* argv[])
 
 				imshow("last result", colorFrame);
 
-				WriteLastResultToDisk(colorFrame, frameIndex, GlobalWriteFileNameFormat, writeFileName);
+				WriteLastResultToDisk(colorFrame, frameIndex, writeFileName);
 
 				std::cout << "Index : " << std::setw(4) << frameIndex++ << std::endl;
 
