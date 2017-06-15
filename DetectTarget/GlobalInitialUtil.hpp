@@ -33,7 +33,7 @@ inline void InitVideoReader(cv::VideoCapture& video_capture)
 	GlobalImageListFolder = inFullStr.c_str();
 
 	std::string outPrefix = ".\\ir_file_20170531_1000m_";
-	std::string outBackend = "\\Frame_ % 04d.png";
+	std::string outBackend = "\\Frame_%04d.png";
 	outFullStr = outPrefix + listNum + outBackend;
 
 	GlobalWriteFileNameFormat = outFullStr.c_str();
