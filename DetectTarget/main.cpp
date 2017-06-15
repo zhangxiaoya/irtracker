@@ -344,7 +344,9 @@ int main(int argc, char* argv[])
 						auto findTargetFlag = false;
 						auto trackerIndex = 0;
 
-						CheckTrackerForThisBlock(blocksContainTargets[i], trackerIndex);
+						auto currentBlock = blocksContainTargets[i];
+
+						CheckTrackerForThisBlock(currentBlock, trackerIndex);
 
 						for (auto j = 0; j < targetRects.size(); ++j)
 						{
@@ -352,33 +354,33 @@ int main(int argc, char* argv[])
 							auto x = (rect.x + rect.width / 2) / STEP;
 							auto y = (rect.y + rect.height / 2) / STEP;
 
-							if (x == blocksContainTargets[i].x && y == blocksContainTargets[i].y)
+							if (x == currentBlock.x && y == currentBlock.y)
 							{
 								if (GlobalTrackerList.empty())
 								{
-									CreateNewTrackerForThisBlock(blocksContainTargets[i], rect);
+									CreateNewTrackerForThisBlock(currentBlock, rect);
 								}
 								else
 								{
 									if (!TrackerDecited(rect, x, y, trackerIndex))
 									{
-										CreateNewTrackerForThisBlock(blocksContainTargets[i], rect);
+										CreateNewTrackerForThisBlock(currentBlock, rect);
 									}
 								}
 
 								findTargetFlag = true;
 							}
-							else if ((x - 1 >= 0 && x - 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
-								(y - 1 >= 0 && x == blocksContainTargets[i].x && y - 1 == blocksContainTargets[i].y) ||
-								(x + 1 < countX && x + 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
-								(y + 1 < countY && x == blocksContainTargets[i].x && y + 1 == blocksContainTargets[i].y) ||
-								(y + 1 < countY && x + 1 < countX && x + 1 == blocksContainTargets[i].x && y + 1 == blocksContainTargets[i].y) ||
-								(y + 1 < countY && x - 1 >= 0 && x - 1 == blocksContainTargets[i].x && y + 1 == blocksContainTargets[i].y) ||
-								(y - 1 < countY && x + 1 < countX && x + 1 == blocksContainTargets[i].x && y - 1 == blocksContainTargets[i].y) ||
-								(y - 1 < countY && x - 1 >= 0 && x - 1 == blocksContainTargets[i].x && y - 1 == blocksContainTargets[i].y))
+							else if ((x - 1 >= 0 && x - 1 == currentBlock.x && y == currentBlock.y) ||
+								(y - 1 >= 0 && x == currentBlock.x && y - 1 == currentBlock.y) ||
+								(x + 1 < countX && x + 1 == currentBlock.x && y == currentBlock.y) ||
+								(y + 1 < countY && x == currentBlock.x && y + 1 == currentBlock.y) ||
+								(y + 1 < countY && x + 1 < countX && x + 1 == currentBlock.x && y + 1 == currentBlock.y) ||
+								(y + 1 < countY && x - 1 >= 0 && x - 1 == currentBlock.x && y + 1 == currentBlock.y) ||
+								(y - 1 < countY && x + 1 < countX && x + 1 == currentBlock.x && y - 1 == currentBlock.y) ||
+								(y - 1 < countY && x - 1 >= 0 && x - 1 == currentBlock.x && y - 1 == currentBlock.y))
 							{
-								confidenceValueMap[blocksContainTargets[i].y][blocksContainTargets[i].x] = MinNeighbor(confidenceValueMap, blocksContainTargets[i].y, blocksContainTargets[i].x);
-								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap, blocksContainTargets[i].y, blocksContainTargets[i].x);
+								confidenceValueMap[currentBlock.y][currentBlock.x] = MinNeighbor(confidenceValueMap, currentBlock.y, currentBlock.x);
+								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap, currentBlock.y, currentBlock.x);
 
 								if (GlobalTrackerList.empty())
 								{
@@ -425,8 +427,8 @@ int main(int argc, char* argv[])
 							}
 							else
 							{
-								auto col = blocksContainTargets[i].x;
-								auto row = blocksContainTargets[i].y;
+								auto col = currentBlock.x;
+								auto row = currentBlock.y;
 
 								confidenceValueMap[row][col] /= 2;
 								if (col - 1 >= 0)
