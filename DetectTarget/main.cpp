@@ -384,7 +384,9 @@ int main(int argc, char* argv[])
 								{
 									if (!TrackerDecited(rect, x, y, trackerIndex))
 									{
-										CreateNewTrackerForThisBlock(cv::Point(x, y), rect);
+										CheckTrackerForThisBlock(cv::Point(x, y), trackerIndex);
+										if(!TrackerDecited(rect, x, y, trackerIndex))
+											CreateNewTrackerForThisBlock(cv::Point(x, y), rect);
 									}
 
 									findTargetFlag = true;
@@ -494,6 +496,8 @@ int main(int argc, char* argv[])
 
 				}
 				imshow("last result", colorFrame);
+				if(frameIndex == 0)
+					cv::waitKey(0);
 
 				WriteLastResultToDisk(colorFrame, frameIndex, writeFileName);
 

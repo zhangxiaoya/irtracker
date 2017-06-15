@@ -23,7 +23,7 @@ std::string outFullStr;
 
 inline void InitVideoReader(cv::VideoCapture& video_capture)
 {
-	std::string listNum = "1";
+	std::string listNum = "2";
 	// GlobalImageListFolder = "D:\\Bag\\Code_VS15\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_2_8bit_maxFilter_discrezated\\Frame_%04d.png";
 
 	std::string inPrefix = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_";
