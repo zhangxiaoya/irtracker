@@ -162,7 +162,7 @@ bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex)
 		GlobalTrackerList[trackerIndex - 1].leftTopX = rect.x;
 		GlobalTrackerList[trackerIndex - 1].leftTopY = rect.y;
 		GlobalTrackerList[trackerIndex - 1].targetRect = rect;
-		GlobalTrackerList[trackerIndex - 1].timeLeft++;
+		GlobalTrackerList[trackerIndex - 1].ExtendLifeTime();
 		return true;
 	}
 	return false;
@@ -496,7 +496,6 @@ int main(int argc, char* argv[])
 							rectangle(colorFrame, cv::Rect(tracker.targetRect.x - 2, tracker.targetRect.y - 2, tracker.targetRect.width + 4, tracker.targetRect.height + 4), tracker.Color());
 					}
 					ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
-
 
 				}
 				imshow("last result", colorFrame);
