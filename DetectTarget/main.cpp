@@ -493,7 +493,7 @@ int main(int argc, char* argv[])
 					for (auto tracker : GlobalTrackerList)
 					{
 						if (tracker.timeLeft > 1)
-							rectangle(colorFrame, cv::Rect(tracker.targetRect.x - 2, tracker.targetRect.y - 2, tracker.targetRect.width + 4, tracker.targetRect.height + 4), REDCOLOR);
+							rectangle(colorFrame, cv::Rect(tracker.targetRect.x - 2, tracker.targetRect.y - 2, tracker.targetRect.width + 4, tracker.targetRect.height + 4), tracker.Color());
 					}
 					ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
 

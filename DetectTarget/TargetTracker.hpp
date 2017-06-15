@@ -1,11 +1,17 @@
 #pragma once
-#include <cstdint>
 #include <core/core.hpp>
 
 struct TargetTracker
 {
 	TargetTracker() : blockX(-1), blockY(-1), timeLeft(0), targetRect(0, 0, 0, 0), leftTopX(-1), leftTopY(-1)
 	{
+	}
+
+	cv::Scalar Color() const
+	{
+		if (timeLeft >= 5)
+			return REDCOLOR;
+		return YELLOWCOLOR;
 	}
 
 	int blockX;
