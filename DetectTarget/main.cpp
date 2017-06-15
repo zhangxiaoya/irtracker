@@ -371,7 +371,11 @@ int main(int argc, char* argv[])
 							else if ((x - 1 >= 0 && x - 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
 								(y - 1 >= 0 && x == blocksContainTargets[i].x && y - 1 == blocksContainTargets[i].y) ||
 								(x + 1 < countX && x + 1 == blocksContainTargets[i].x && y == blocksContainTargets[i].y) ||
-								(y + 1 < countY && x == blocksContainTargets[i].x && y + 1 == blocksContainTargets[i].y))
+								(y + 1 < countY && x == blocksContainTargets[i].x && y + 1 == blocksContainTargets[i].y) ||
+								(y + 1 < countY && x + 1 < countX && x + 1 == blocksContainTargets[i].x && y + 1 == blocksContainTargets[i].y) ||
+								(y + 1 < countY && x - 1 >= 0 && x - 1 == blocksContainTargets[i].x && y + 1 == blocksContainTargets[i].y) ||
+								(y - 1 < countY && x + 1 < countX && x + 1 == blocksContainTargets[i].x && y - 1 == blocksContainTargets[i].y) ||
+								(y - 1 < countY && x - 1 >= 0 && x - 1 == blocksContainTargets[i].x && y - 1 == blocksContainTargets[i].y))
 							{
 								confidenceValueMap[blocksContainTargets[i].y][blocksContainTargets[i].x] = MinNeighbor(confidenceValueMap, blocksContainTargets[i].y, blocksContainTargets[i].x);
 								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap, blocksContainTargets[i].y, blocksContainTargets[i].x);
