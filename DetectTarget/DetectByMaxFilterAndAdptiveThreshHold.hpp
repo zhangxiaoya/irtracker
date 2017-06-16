@@ -33,7 +33,7 @@ private:
 
 	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
 
-	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame, uchar threshHold);
+	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame, uchar& threshHold);
 
 	static void FillRectToFrame(cv::Rect& rect);
 
@@ -84,7 +84,7 @@ inline bool DetectByMaxFilterAndAdptiveThreshHold::CheckCross(const FourLimits& 
 	return false;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshHold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame, uchar threshHold)
+inline void DetectByMaxFilterAndAdptiveThreshHold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame, uchar& threshHold)
 {
 	for (auto it = allObjects.begin(); it != allObjects.end();)
 	{
@@ -265,8 +265,6 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::M
 
 	imshow("Max Filter and Discrezated", discrezatedFrame);
 
-	const auto topCount = 8;
-	uchar pixelThreshHold = 0;
 
 	cv::Mat blockMap(cv::Size(discrezatedFrame.cols, discrezatedFrame.rows), CV_32SC1, cv::Scalar(-1));
 	auto totalObject = GetBlocks(discrezatedFrame, blockMap);
@@ -274,9 +272,12 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::M
 	std::vector<FourLimits> allObjects(totalObject);
 	Util::GetRectangleSize(blockMap, allObjects);
 
-	std::vector<cv::Rect> falseResult;
-	if (!GetTopValues(discrezatedFrame, pixelThreshHold, topCount))
-		return falseResult;
+//	const auto topCount = 8;
+	uchar pixelThreshHold = 0;
+
+//	std::vector<cv::Rect> falseResult;
+//	if (!GetTopValues(discrezatedFrame, pixelThreshHold, topCount))
+//		return falseResult;
 
 	RemoveSmallAndBigObjects(allObjects, discrezatedFrame, pixelThreshHold);
 
