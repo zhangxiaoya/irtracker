@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <iterator>
 
-#include "DetectByMaxFilterAndAdptiveThreshHold.hpp"
+#include "DetectByMaxFilterAndAdptiveThreshold.hpp"
 #include "ConfidenceElem.hpp"
 #include "SpecialUtil.hpp"
 #include "ConfidenceMapUtil.hpp"
@@ -376,7 +376,7 @@ int main(int argc, char* argv[])
 
 				cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
 
-				auto targetRects = DetectByMaxFilterAndAdptiveThreshHold::Detect(curFrame);
+				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(curFrame);
 
 				UpdateConfidenceMap(queueEndIndex, confidenceQueueMap, targetRects);
 

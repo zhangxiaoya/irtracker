@@ -126,7 +126,7 @@
     <ClInclude Include="ConfidenceElem.hpp" />
     <ClInclude Include="DetectByBinaryBitMap.hpp" />
     <ClInclude Include="DetectByDiscontinuity.hpp" />
-    <ClInclude Include="DetectByMaxFilterAndAdptiveThreshHold.hpp" />
+    <ClInclude Include="DetectByMaxFilterAndAdptiveThreshold.hpp" />
     <ClInclude Include="DetectByMultiscaleLocalDifference.hpp" />
     <ClInclude Include="FieldType.hpp" />
     <ClInclude Include="FourLimits.hpp" />

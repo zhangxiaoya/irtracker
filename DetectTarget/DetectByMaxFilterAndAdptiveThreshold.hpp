@@ -33,7 +33,7 @@ private:
 
 	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
 
-	static void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
+	static void CalculateThreshold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
 	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame);
 
@@ -85,7 +85,7 @@ inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& o
 	return false;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+inline void DetectByMaxFilterAndAdptiveThreshold::CalculateThreshold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
 	auto sumAll = 0;
 	for (auto r = leftTopY; r < rightBottomY; ++ r)
@@ -134,7 +134,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::
 		if (rightBottomY > frame.rows)
 			rightBottomY = frame.rows;
 
-		CalculateThreshHold(frame, threshHold, leftTopX, leftTopY, rightBottomX, rightBottomY);
+		CalculateThreshold(frame, threshHold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
 		if (width < 3 || height < 3 || width > 10 || height > 10 || frame.at<uchar>(it->top + 1, it->left + 1) < threshHold)
 			it = allObjects.erase(it);
