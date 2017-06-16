@@ -113,12 +113,12 @@ void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<
 			if (y + 1 < countY)
 				confidenceValueMap[y + 1][x] += 4;
 		}
-//		else
-//		{
-//			it = targetRects.erase(it);
-//			if(it == targetRects.end())
-//				break;
-//		}
+		else
+		{
+			it = targetRects.erase(it);
+			if(it == targetRects.end())
+				break;
+		}
 	}
 }
 

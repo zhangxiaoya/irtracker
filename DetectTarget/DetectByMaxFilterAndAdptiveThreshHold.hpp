@@ -21,6 +21,8 @@ private:
 
 	static int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
 
+	static void Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame, uint8_t bin);
+
 	static void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects);
 
 	static void RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result);
@@ -88,6 +90,42 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::RemoveSmallAndBigObjects(std:
 	{
 		auto width = it->right - it->left + 1;
 		auto height = it->bottom - it->top + 1;
+
+		auto surroundBoxWidth = 2 * width;
+		auto surroundBoxHeight = 2 * height;
+
+		auto centerX = (it->right + it->left) / 2;
+		auto centerY = (it->bottom + it->top) / 2;
+
+		auto leftTopX = centerX - surroundBoxWidth / 2;
+		if (leftTopX < 0)
+			leftTopX = 0;
+
+		auto leftTopY = centerY - surroundBoxHeight / 2;
+		if (leftTopY < 0)
+			leftTopY = 0;
+
+		auto rightBottomX = leftTopX + surroundBoxWidth;
+		if (rightBottomX > frame.cols)
+			rightBottomX = frame.cols;
+
+		auto rightBottomY = leftTopY + surroundBoxHeight;
+		if (rightBottomY > frame.rows)
+			rightBottomY = frame.rows;
+
+		int sumAll = 0;
+		for (auto r = leftTopY; r < rightBottomY; ++ r)
+		{
+			int sumRow = 0;
+			for (auto c = leftTopX; c < rightBottomX; ++c)
+			{
+				sumRow += frame.at<uchar>(r, c);
+			}
+			sumAll += (sumRow / surroundBoxWidth);
+		}
+
+		threshHold = sumAll / surroundBoxHeight;
+
 		if (width < 3 || height < 3 || width > 10 || height > 10 || frame.at<uchar>(it->top+1, it->left+1) < threshHold)
 			it = allObjects.erase(it);
 		else
@@ -220,22 +258,27 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::M
 
 	MaxFilter(curFrame, filtedFrame, kernelSize);
 
-	imshow("Max Filter", filtedFrame);
+	cv::Mat discrezatedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
+	auto bin = 15;
+
+	Discretization(filtedFrame, discrezatedFrame,bin);
+
+	imshow("Max Filter and Discrezated", discrezatedFrame);
 
 	const auto topCount = 8;
 	uchar pixelThreshHold = 0;
 
-	cv::Mat blockMap(cv::Size(filtedFrame.cols, filtedFrame.rows), CV_32SC1, cv::Scalar(-1));
-	auto totalObject = GetBlocks(filtedFrame, blockMap);
+	cv::Mat blockMap(cv::Size(discrezatedFrame.cols, discrezatedFrame.rows), CV_32SC1, cv::Scalar(-1));
+	auto totalObject = GetBlocks(discrezatedFrame, blockMap);
 
 	std::vector<FourLimits> allObjects(totalObject);
 	Util::GetRectangleSize(blockMap, allObjects);
 
 	std::vector<cv::Rect> falseResult;
-	if (!GetTopValues(filtedFrame, pixelThreshHold, topCount))
+	if (!GetTopValues(discrezatedFrame, pixelThreshHold, topCount))
 		return falseResult;
 
-	RemoveSmallAndBigObjects(allObjects,filtedFrame, pixelThreshHold);
+	RemoveSmallAndBigObjects(allObjects, discrezatedFrame, pixelThreshHold);
 
 	std::vector<FourLimits> afterMergeObjects;
 	MergeCrossedRectangles(allObjects,afterMergeObjects);
@@ -308,4 +351,11 @@ inline int DetectByMaxFilterAndAdptiveThreshHold::GetBlocks(const cv::Mat& filte
 		}
 	}
 	return currentIndex;
+}
+
+inline void DetectByMaxFilterAndAdptiveThreshHold::Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame, uint8_t bin)
+{
+	for (auto r = 0; r < filtedFrame.rows; ++r)
+		for (auto c = 0; c < filtedFrame.cols; ++c)
+			discretizatedFrame.at<uint8_t>(r, c) = (filtedFrame.at<uint8_t>(r, c) / bin) * bin;
 }
