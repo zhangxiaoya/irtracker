@@ -7,7 +7,7 @@
 
 cv::Mat previousFrame = cv::Mat(cv::Size(320, 256), CV_32SC1, cv::Scalar(1));
 
-class DetectByMaxFilterAndAdptiveThreshHold
+class DetectByMaxFilterAndAdptiveThreshold
 {
 public:
 
@@ -42,7 +42,7 @@ private:
 	static bool CheckRect(cv::Rect& rect);
 };
 
-inline bool DetectByMaxFilterAndAdptiveThreshHold::GetTopValues(const cv::Mat filtedFrame, uchar& pixelThreshHold, int topCount)
+inline bool DetectByMaxFilterAndAdptiveThreshold::GetTopValues(const cv::Mat filtedFrame, uchar& pixelThreshHold, int topCount)
 {
 	std::vector<uchar> allValues;
 
@@ -62,7 +62,7 @@ inline bool DetectByMaxFilterAndAdptiveThreshHold::GetTopValues(const cv::Mat fi
 	return true;
 }
 
-inline bool DetectByMaxFilterAndAdptiveThreshHold::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond)
+inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond)
 {
 	auto firstCenterX = (objectFirst.right + objectFirst.left) / 2;
 	auto firstCenterY = (objectFirst.bottom + objectFirst.top) / 2;
@@ -85,7 +85,7 @@ inline bool DetectByMaxFilterAndAdptiveThreshHold::CheckCross(const FourLimits& 
 	return false;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshHold::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+inline void DetectByMaxFilterAndAdptiveThreshold::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
 	auto sumAll = 0;
 	for (auto r = leftTopY; r < rightBottomY; ++ r)
@@ -103,7 +103,7 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::CalculateThreshHold(const cv:
 	threshHold += (threshHold) / 4;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshHold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame)
+inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame)
 {
 	for (auto it = allObjects.begin(); it != allObjects.end();)
 	{
@@ -143,7 +143,7 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::RemoveSmallAndBigObjects(std:
 	}
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshHold::FillRectToFrame(cv::Rect& rect)
+inline void DetectByMaxFilterAndAdptiveThreshold::FillRectToFrame(cv::Rect& rect)
 {
 	for (auto r = rect.y; r < rect.y + rect.height; ++r)
 	{
@@ -154,7 +154,7 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::FillRectToFrame(cv::Rect& rec
 	}
 }
 
-inline bool DetectByMaxFilterAndAdptiveThreshHold::CheckRect(cv::Rect& rect)
+inline bool DetectByMaxFilterAndAdptiveThreshold::CheckRect(cv::Rect& rect)
 {
 	auto leftTopX = rect.x - rect.width > 0 ? rect.x - rect.width > 0 : 0;
 	auto leftTopY = rect.y - rect.height > 0 ? rect.y - rect.height > 0 : 0;
@@ -176,7 +176,7 @@ inline bool DetectByMaxFilterAndAdptiveThreshHold::CheckRect(cv::Rect& rect)
 	return false;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshHold::MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects)
+inline void DetectByMaxFilterAndAdptiveThreshold::MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects)
 {
 	for (auto i = 0; i < allObjects.size(); ++i)
 	{
@@ -239,7 +239,7 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::MergeCrossedRectangles(std::v
 	}
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshHold::RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result)
+inline void DetectByMaxFilterAndAdptiveThreshold::RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result)
 {
 	previousFrame.release();
 	previousFrame = cv::Mat(cv::Size(curFrame.cols, curFrame.rows), CV_32SC1, cv::Scalar(-1));
@@ -247,7 +247,7 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::RefreshMask(cv::Mat curFrame,
 		FillRectToFrame(result[i]);
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshHold::FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result)
+inline void DetectByMaxFilterAndAdptiveThreshold::FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result)
 {
 	for (auto it = rects.begin(); it != rects.end(); ++it)
 	{
@@ -261,7 +261,7 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::FilterRectByContinuty(cv::Mat
 		RefreshMask(curFrame, rects);
 }
 
-inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::Mat curFrame)
+inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat curFrame)
 {
 	cv::Mat filtedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
 	auto kernelSize = 3;
@@ -297,7 +297,7 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::M
 	return rects;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshHold::MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize)
+inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize)
 {
 	std::vector<uchar> pixelVector;
 
@@ -311,7 +311,7 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::MaxFilter(const cv::Mat& curF
 	}
 }
 
-inline unsigned char DetectByMaxFilterAndAdptiveThreshHold::GetMaxPixelValue(const cv::Mat& curFrame, std::vector<uchar>& pixelValues, int r, int c, int kernelSize)
+inline unsigned char DetectByMaxFilterAndAdptiveThreshold::GetMaxPixelValue(const cv::Mat& curFrame, std::vector<uchar>& pixelValues, int r, int c, int kernelSize)
 {
 	auto radius = kernelSize / 2;
 	auto leftTopX = c - radius;
@@ -337,7 +337,7 @@ inline unsigned char DetectByMaxFilterAndAdptiveThreshHold::GetMaxPixelValue(con
 	return maxVal;
 }
 
-inline int DetectByMaxFilterAndAdptiveThreshHold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
+inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
 {
 	auto currentIndex = 0;
 	for (auto r = 0; r < filtedFrame.rows; ++r)
@@ -354,7 +354,7 @@ inline int DetectByMaxFilterAndAdptiveThreshHold::GetBlocks(const cv::Mat& filte
 	return currentIndex;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshHold::Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame, uint8_t bin)
+inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame, uint8_t bin)
 {
 	for (auto r = 0; r < filtedFrame.rows; ++r)
 		for (auto c = 0; c < filtedFrame.cols; ++c)
