@@ -85,7 +85,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::
 {
 	for (auto it = allObjects.begin(); it != allObjects.end();)
 	{
-		uchar threshHold = 0;
+		uchar threshold = 0;
 
 		auto width = it->right - it->left + 1;
 		auto height = it->bottom - it->top + 1;
@@ -112,9 +112,11 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::
 		if (rightBottomY > frame.rows)
 			rightBottomY = frame.rows;
 
-		CalculateThreshold(frame, threshHold, leftTopX, leftTopY, rightBottomX, rightBottomY);
+		CalculateThreshold(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
-		if (width < 3 || height < 3 || width > 10 || height > 10 || frame.at<uchar>(it->top + 1, it->left + 1) < threshHold)
+		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
+			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT) ||
+			frame.at<uchar>(it->top + 1, it->left + 1) < threshold)
 			it = allObjects.erase(it);
 		else
 			++it;
