@@ -29,8 +29,6 @@ private:
 
 	static void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
 
-	static bool GetTopValues(const cv::Mat filtedFrame, uchar& pixelThreshHold, int topCount);
-
 	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
 
 	static void CalculateThreshold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
@@ -41,26 +39,6 @@ private:
 
 	static bool CheckRect(cv::Rect& rect);
 };
-
-inline bool DetectByMaxFilterAndAdptiveThreshold::GetTopValues(const cv::Mat filtedFrame, uchar& pixelThreshHold, int topCount)
-{
-	std::vector<uchar> allValues;
-
-	for (auto r = 0; r < filtedFrame.rows; ++r)
-		for (auto c = 0; c < filtedFrame.cols; ++c)
-			allValues.push_back(filtedFrame.at<uchar>(r, c));
-
-	sort(allValues.begin(), allValues.end(), Util::CompareUchar);
-
-	auto iterator = unique(allValues.begin(), allValues.end());
-	allValues.resize(distance(allValues.begin(), iterator));
-
-	if (allValues.size() < topCount)
-		return false;
-
-	pixelThreshHold = allValues[topCount - 1];
-	return true;
-}
 
 inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond)
 {
