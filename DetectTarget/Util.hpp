@@ -57,6 +57,8 @@ private:
 	static void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
 
 	static void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, int currentIndex);
+
+	static inline void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 };
 
 inline void Util::BinaryMat(cv::Mat& mat)
@@ -236,10 +238,39 @@ inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, 
 {
 	std::vector<cv::Rect> targetRect;
 
-	for (auto i = 0; i<afterMergeObjects.size(); ++i)
+	for (auto i = 0; i < afterMergeObjects.size(); ++i)
 	{
-		auto width = afterMergeObjects[i].right - afterMergeObjects[i].left + 1;
-		auto height = afterMergeObjects[i].bottom - afterMergeObjects[i].top + 1;
+		uchar threshHold = 0;
+
+		auto object = afterMergeObjects[i];
+
+		auto width = object.right - object.left + 1;
+		auto height = object.bottom - object.top + 1;
+
+		auto surroundBoxWidth = 2 * width;
+		auto surroundBoxHeight = 2 * height;
+
+		auto centerX = (object.right + object.left) / 2;
+		auto centerY = (object.bottom + object.top) / 2;
+
+		auto leftTopX = centerX - surroundBoxWidth / 2;
+		if (leftTopX < 0)
+			leftTopX = 0;
+
+		auto leftTopY = centerY - surroundBoxHeight / 2;
+		if (leftTopY < 0)
+			leftTopY = 0;
+
+		auto rightBottomX = leftTopX + surroundBoxWidth;
+		if (rightBottomX > curFrame.cols)
+			rightBottomX = curFrame.cols;
+
+		auto rightBottomY = leftTopY + surroundBoxHeight;
+		if (rightBottomY > curFrame.rows)
+			rightBottomY = curFrame.rows;
+
+		CalculateThreshHold(curFrame, threshHold, leftTopX, leftTopY, rightBottomX, rightBottomY);
+
 		if (width <= 0 || height <= 0)
 		{
 			std::cout << "Rect Error, and index is " << i << std::endl;
@@ -250,10 +281,10 @@ inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, 
 			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
 			continue;
 
-		if (curFrame.at<uchar>(afterMergeObjects[i].top + 1, afterMergeObjects[i].left + 1) < max_value)
+		if (curFrame.at<uchar>(object.top + 1, object.left + 1) < threshHold)
 			continue;
 
-		auto rect = cv::Rect(afterMergeObjects[i].left, afterMergeObjects[i].top, width, height);
+		auto rect = cv::Rect(object.left, object.top, width, height);
 		targetRect.push_back(rect);
 	}
 
@@ -424,4 +455,22 @@ inline void Util::DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int
 		if (c + 1 < grayFrame.cols)
 			DeepFirstSearch(grayFrame, bitMap, r, c + 1, currentIndex);
 	}
+}
+
+inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+{
+	auto sumAll = 0;
+	for (auto r = leftTopY; r < rightBottomY; ++r)
+	{
+		auto sumRow = 0;
+		for (auto c = leftTopX; c < rightBottomX; ++c)
+		{
+			sumRow += frame.at<uchar>(r, c);
+		}
+		sumAll += (sumRow / (rightBottomX - leftTopX));
+	}
+
+	threshHold = sumAll / (rightBottomY - leftTopY);
+
+	threshHold += (threshHold) / 4;
 }

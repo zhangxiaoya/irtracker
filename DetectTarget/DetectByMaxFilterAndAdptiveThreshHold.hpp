@@ -28,12 +28,14 @@ private:
 	static void RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result);
 
 	static void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
+	static void ShowAllCandidateObjects(cv::Mat curFrame, std::vector<cv::Rect> rects);
 
 	static bool GetTopValues(const cv::Mat filtedFrame, uchar& pixelThreshHold, int topCount);
 
 	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
+	static void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
-	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame, uchar& threshHold);
+	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame);
 
 	static void FillRectToFrame(cv::Rect& rect);
 
@@ -84,10 +86,30 @@ inline bool DetectByMaxFilterAndAdptiveThreshHold::CheckCross(const FourLimits& 
 	return false;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshHold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame, uchar& threshHold)
+inline void DetectByMaxFilterAndAdptiveThreshHold::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+{
+	auto sumAll = 0;
+	for (auto r = leftTopY; r < rightBottomY; ++ r)
+	{
+		auto sumRow = 0;
+		for (auto c = leftTopX; c < rightBottomX; ++c)
+		{
+			sumRow += frame.at<uchar>(r, c);
+		}
+		sumAll += (sumRow / (rightBottomX - leftTopX));
+	}
+
+	threshHold = sumAll / (rightBottomY - leftTopY);
+
+	threshHold += (threshHold) / 4;
+}
+
+inline void DetectByMaxFilterAndAdptiveThreshHold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame)
 {
 	for (auto it = allObjects.begin(); it != allObjects.end();)
 	{
+		uchar threshHold = 0;
+
 		auto width = it->right - it->left + 1;
 		auto height = it->bottom - it->top + 1;
 
@@ -113,18 +135,7 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::RemoveSmallAndBigObjects(std:
 		if (rightBottomY > frame.rows)
 			rightBottomY = frame.rows;
 
-		int sumAll = 0;
-		for (auto r = leftTopY; r < rightBottomY; ++ r)
-		{
-			int sumRow = 0;
-			for (auto c = leftTopX; c < rightBottomX; ++c)
-			{
-				sumRow += frame.at<uchar>(r, c);
-			}
-			sumAll += (sumRow / surroundBoxWidth);
-		}
-
-		threshHold = sumAll / surroundBoxHeight;
+		CalculateThreshHold(frame, threshHold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
 		if (width < 3 || height < 3 || width > 10 || height > 10 || frame.at<uchar>(it->top+1, it->left+1) < threshHold)
 			it = allObjects.erase(it);
@@ -251,6 +262,19 @@ inline void DetectByMaxFilterAndAdptiveThreshHold::FilterRectByContinuty(cv::Mat
 		RefreshMask(curFrame, rects);
 }
 
+inline void DetectByMaxFilterAndAdptiveThreshHold::ShowAllCandidateObjects(cv::Mat curFrame, std::vector<cv::Rect> rects)
+{
+	cv::Mat colorFrame;
+	cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
+
+	for (auto i = 0; i<rects.size(); ++i)
+	{
+		rectangle(colorFrame, rects[i], BLUECOLOR);
+	}
+
+	imshow("All Candidate Objects", colorFrame);
+}
+
 inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::Mat curFrame)
 {
  	cv::Mat filtedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
@@ -279,7 +303,7 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::M
 //	if (!GetTopValues(discrezatedFrame, pixelThreshHold, topCount))
 //		return falseResult;
 
-	RemoveSmallAndBigObjects(allObjects, discrezatedFrame, pixelThreshHold);
+	RemoveSmallAndBigObjects(allObjects, discrezatedFrame);
 
 	std::vector<FourLimits> afterMergeObjects;
 	MergeCrossedRectangles(allObjects,afterMergeObjects);
@@ -288,6 +312,8 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshHold::Detect(cv::M
 	Util::ShowAllObject(curFrame, afterMergeObjects);
 
 	auto rects = Util::GetCandidateTargets(curFrame, afterMergeObjects, pixelThreshHold);
+
+	ShowAllCandidateObjects(curFrame, rects);
 
 //	std::vector<cv::Rect> result;
 //	FilterRectByContinuty(curFrame, rects, result);
