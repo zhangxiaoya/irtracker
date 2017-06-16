@@ -89,7 +89,7 @@ void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<
 {
 	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
 
-	for(auto it = targetRects.begin();it != targetRects.end();++it)
+	for (auto it = targetRects.begin(); it != targetRects.end(); ++it)
 	{
 		auto rect = *it;
 		if (ConfidenceMapUtil::CheckIfInTopCount(rect, searchIndex, allConfidence))
@@ -116,7 +116,7 @@ void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<
 		else
 		{
 			it = targetRects.erase(it);
-			if(it == targetRects.end())
+			if (it == targetRects.end())
 				break;
 		}
 	}
@@ -169,7 +169,7 @@ bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex, const 
 		GlobalTrackerList[trackerIndex - 1].leftTopY = rect.y;
 		GlobalTrackerList[trackerIndex - 1].targetRect = rect;
 		GlobalTrackerList[trackerIndex - 1].ExtendLifeTime();
-//		GlobalTrackerList[trackerIndex - 1].feature = Util::ToFeatureVector(frame(rect));
+		//		GlobalTrackerList[trackerIndex - 1].feature = Util::ToFeatureVector(frame(rect));
 		return true;
 	}
 	return false;
@@ -260,8 +260,8 @@ void CreateNewTrackerForThisBlock(cv::Point blockPos, cv::Rect rect, const cv::M
 	tracker.targetRect = rect;
 	tracker.timeLeft = 1;
 
-//	tracker.feature.clear();
-//	tracker.feature = Util::ToFeatureVector(frame(rect));
+	//	tracker.feature.clear();
+	//	tracker.feature = Util::ToFeatureVector(frame(rect));
 
 	GlobalTrackerList.push_back(tracker);
 }
@@ -315,7 +315,7 @@ bool ReSearchTarget(const cv::Mat& curFrame, TargetTracker& tracker)
 			auto feature = Util::ToFeatureVector(curFrame(cv::Rect(col, row, width, height)));
 
 			auto curDiff = Util::FeatureDiff(feature, tracker.feature);
-			if(curDiff < minDiff)
+			if (curDiff < minDiff)
 			{
 				minDiff = curDiff;
 				minRow = row;
@@ -325,7 +325,7 @@ bool ReSearchTarget(const cv::Mat& curFrame, TargetTracker& tracker)
 		}
 	}
 
-	if(minCol != -1)
+	if (minCol != -1)
 	{
 		tracker.targetRect = cv::Rect(minCol, minRow, width, height);
 		tracker.leftTopX = minCol;
@@ -444,15 +444,15 @@ int main(int argc, char* argv[])
 
 								if (GlobalTrackerList.empty())
 								{
-									CreateNewTrackerForThisBlock(cv::Point(x,y), rect,curFrame);
+									CreateNewTrackerForThisBlock(cv::Point(x, y), rect, curFrame);
 								}
 								else
 								{
-									if (!TrackerDecited(rect, x, y, trackerIndex,curFrame))
+									if (!TrackerDecited(rect, x, y, trackerIndex, curFrame))
 									{
 										CheckTrackerForThisBlock(cv::Point(x, y), trackerIndex);
-										if(!TrackerDecited(rect, x, y, trackerIndex,curFrame))
-											CreateNewTrackerForThisBlock(cv::Point(x, y), rect,curFrame);
+										if (!TrackerDecited(rect, x, y, trackerIndex, curFrame))
+											CreateNewTrackerForThisBlock(cv::Point(x, y), rect, curFrame);
 									}
 
 									findTargetFlag = true;
@@ -514,7 +514,7 @@ int main(int argc, char* argv[])
 					for (auto it = GlobalTrackerList.begin(); it != GlobalTrackerList.end(); ++it)
 					{
 						std::cout << "Test Tracker" << std::endl;
-						std::cout << "X = "<< it->blockX<<" Y = "<<it->blockY<<std::endl;
+						std::cout << "X = " << it->blockX << " Y = " << it->blockY << std::endl;
 
 						auto existFlag = false;
 						for (auto target : blocksContainTargets)
@@ -524,7 +524,7 @@ int main(int argc, char* argv[])
 								existFlag = true;
 						}
 
-						if(!existFlag)
+						if (!existFlag)
 						{
 							it->timeLeft--;
 							if (it->timeLeft == 0)
@@ -549,7 +549,7 @@ int main(int argc, char* argv[])
 						}
 					}
 
-//					PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
+					//					PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
 
 					ConfidenceValueLost(confidenceValueMap);
 
@@ -560,10 +560,9 @@ int main(int argc, char* argv[])
 							rectangle(colorFrame, cv::Rect(tracker.targetRect.x - 2, tracker.targetRect.y - 2, tracker.targetRect.width + 4, tracker.targetRect.height + 4), tracker.Color());
 					}
 					ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
-
 				}
 				imshow("last result", colorFrame);
-				if(frameIndex == 0)
+				if (frameIndex == 0)
 					cv::waitKey(0);
 
 				WriteLastResultToDisk(colorFrame, frameIndex, writeFileName);

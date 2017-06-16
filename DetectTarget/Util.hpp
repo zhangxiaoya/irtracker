@@ -77,7 +77,7 @@ inline double Util::MeanMat(const cv::Mat& mat)
 		for (auto c = 0; c < mat.cols; ++c)
 			sum += static_cast<int>(mat.at<uchar>(r, c));
 
-	return  sum / (mat.rows * mat.cols);
+	return sum / (mat.rows * mat.cols);
 }
 
 inline void Util::ShowCandidateRects(const cv::Mat& grayFrame, const std::vector<cv::Rect_<int>>& candidate_rects)
@@ -85,7 +85,7 @@ inline void Util::ShowCandidateRects(const cv::Mat& grayFrame, const std::vector
 	cv::Mat colorFrame;
 	cvtColor(grayFrame, colorFrame, CV_GRAY2RGB);
 
-	for (auto i = 0; i<candidate_rects.size(); ++i)
+	for (auto i = 0; i < candidate_rects.size(); ++i)
 		rectangle(colorFrame, candidate_rects[i], REDCOLOR);
 
 	imshow("Color Frame", colorFrame);
@@ -104,7 +104,7 @@ inline void Util::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int 
 inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject)
 {
 	// top
-	for (auto r = 0; r<bitMap.rows; ++r)
+	for (auto r = 0; r < bitMap.rows; ++r)
 	{
 		for (auto c = 0; c < bitMap.cols; ++c)
 		{
@@ -120,7 +120,7 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 	// bottom
 	for (auto r = bitMap.rows - 1; r >= 0; --r)
 	{
-		for (auto c = 0; c< bitMap.cols; ++c)
+		for (auto c = 0; c < bitMap.cols; ++c)
 		{
 			auto curIndex = bitMap.at<int32_t>(r, c);
 			if (curIndex != -1 && allObject[curIndex].bottom == -1)
@@ -128,9 +128,9 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 		}
 	}
 	// left
-	for (auto c = 0; c<bitMap.cols; ++c)
+	for (auto c = 0; c < bitMap.cols; ++c)
 	{
-		for (auto r = 0; r <bitMap.rows; ++r)
+		for (auto r = 0; r < bitMap.rows; ++r)
 		{
 			auto curIndex = bitMap.at<int32_t>(r, c);
 			if (curIndex != -1 && allObject[curIndex].left == -1)
@@ -154,7 +154,7 @@ inline void Util::ShowAllObject(const cv::Mat& curFrame, const std::vector<FourL
 	cv::Mat colorFrame;
 	cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
 
-	for (auto i = 0; i<allObject.size(); ++i)
+	for (auto i = 0; i < allObject.size(); ++i)
 	{
 		auto width = allObject[i].right - allObject[i].left + 1;
 		auto height = allObject[i].bottom - allObject[i].top + 1;
@@ -175,12 +175,12 @@ inline void Util::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::ve
 	cv::Mat colorFrame;
 	cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
 
-	for (auto i = 0; i<allObject.size(); ++i)
+	for (auto i = 0; i < allObject.size(); ++i)
 	{
 		auto width = allObject[i].right - allObject[i].left + 1;
 		auto height = allObject[i].bottom - allObject[i].top + 1;
 
-		if(valueThreshHold != 0)
+		if (valueThreshHold != 0)
 		{
 			if (width <= 0 || height <= 0)
 			{
@@ -208,7 +208,7 @@ inline void Util::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::ve
 	cv::Mat colorFrame;
 	cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
 
-	for (auto i = 0; i<rects.size(); ++i)
+	for (auto i = 0; i < rects.size(); ++i)
 	{
 		rectangle(colorFrame, rects[i], BLUECOLOR);
 	}
