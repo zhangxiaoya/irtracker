@@ -78,7 +78,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::CalculateThreshold(const cv::M
 
 	threshHold = sumAll / (rightBottomY - leftTopY);
 
-	threshHold += (threshHold) / 4;
+//	threshHold += (threshHold) / 4;
 }
 
 inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame)
@@ -262,13 +262,14 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Ma
 	std::vector<FourLimits> allObjects(totalObject);
 	Util::GetRectangleSize(blockMap, allObjects);
 
+	Util::ShowAllObject(curFrame, allObjects, "Before Merge and Remove out scale Objects");
 
 	RemoveSmallAndBigObjects(allObjects, discrezatedFrame);
 
 	std::vector<FourLimits> afterMergeObjects;
 	MergeCrossedRectangles(allObjects, afterMergeObjects);
 
-	Util::ShowAllObject(curFrame, afterMergeObjects);
+	Util::ShowAllObject(curFrame, afterMergeObjects, "After Merge Cross Rectangles");
 
 	auto rects = Util::GetCandidateTargets(curFrame, afterMergeObjects);
 

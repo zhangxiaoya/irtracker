@@ -28,7 +28,7 @@ public:
 
 	static void GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject);
 
-	static void ShowAllObject(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject);
+	static void ShowAllObject(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, std::string title = "All Object");
 
 	static void ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, uchar valueThreshHold = 0);
 
@@ -149,7 +149,7 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 	}
 }
 
-inline void Util::ShowAllObject(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject)
+inline void Util::ShowAllObject(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, std::string title)
 {
 	cv::Mat colorFrame;
 	cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
@@ -167,7 +167,7 @@ inline void Util::ShowAllObject(const cv::Mat& curFrame, const std::vector<FourL
 		rectangle(colorFrame, rect, BLUECOLOR);
 	}
 
-	imshow("All Object", colorFrame);
+	imshow(title, colorFrame);
 }
 
 inline void Util::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, uchar valueThreshHold)
