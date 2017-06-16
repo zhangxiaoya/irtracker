@@ -6,7 +6,7 @@ class TargetTracker
 
 public:
 
-	TargetTracker() : blockX(-1), blockY(-1), timeLeft(0), targetRect(0, 0, 0, 0), leftTopX(-1), leftTopY(-1), warningStageTime(5), maxLifeTime(100)
+	TargetTracker() : blockX(-1), blockY(-1), timeLeft(0), targetRect(0, 0, 0, 0), leftTopX(-1), leftTopY(-1), warningStageTime(5), maxLifeTime(20)
 	{
 	}
 
@@ -30,6 +30,7 @@ public:
 	cv::Rect targetRect;
 	int leftTopX;
 	int leftTopY;
+	std::vector<uchar> feature;
 
 private:
 	int warningStageTime;

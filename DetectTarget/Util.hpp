@@ -46,6 +46,10 @@ public:
 
 	static int Sum(const std::vector<int>& valueVec);
 
+	static std::vector<uchar> ToFeatureVector(const cv::Mat& mat);
+
+	static int FeatureDiff(const std::vector<unsigned char>& featureOne, const std::vector<unsigned char>& featureTwo);
+
 private:
 
 	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex);
@@ -263,6 +267,31 @@ inline int Util::Sum(const std::vector<int>& valueVec)
 		result += val;
 
 	return result;
+}
+
+inline std::vector<uchar> Util::ToFeatureVector(const cv::Mat& mat)
+{
+	std::vector<uchar> result(mat.cols * mat.rows, 0);
+
+	auto index = 0;
+	for (auto r = 0; r < mat.rows; ++r)
+	{
+		for (auto c = 0; c < mat.cols; ++c)
+		{
+			result[index++] = mat.at<uchar>(r, c) / 50;
+		}
+	}
+	return result;
+}
+
+inline int Util::FeatureDiff(const std::vector<unsigned char>& featureOne, const std::vector<unsigned char>& featureTwo)
+{
+	auto sum = 0;
+	for (auto i = 0; i < featureOne.size(); ++i)
+	{
+		sum += (featureOne[i] - featureTwo[i]) * (featureOne[i] - featureTwo[i]);
+	}
+	return sum;
 }
 
 inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)

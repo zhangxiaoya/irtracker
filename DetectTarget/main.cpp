@@ -85,13 +85,13 @@ void GetMostLiklyTargetsRect(const std::vector<ConfidenceElem>& allConfidence, c
 	}
 }
 
-void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<ConfidenceElem>& allConfidence, const std::vector<cv::Rect>& targetRects, const int searchIndex, std::vector<std::vector<int>>& confidenceValueMap)
+void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<ConfidenceElem>& allConfidence, std::vector<cv::Rect>& targetRects, const int searchIndex, std::vector<std::vector<int>>& confidenceValueMap)
 {
 	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
 
-	for (auto i = 0; i < targetRects.size(); ++i)
+	for(auto it = targetRects.begin();it != targetRects.end();++it)
 	{
-		auto rect = targetRects[i];
+		auto rect = *it;
 		if (ConfidenceMapUtil::CheckIfInTopCount(rect, searchIndex, allConfidence))
 		{
 			rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), BLUECOLOR);
@@ -113,6 +113,12 @@ void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<
 			if (y + 1 < countY)
 				confidenceValueMap[y + 1][x] += 4;
 		}
+//		else
+//		{
+//			it = targetRects.erase(it);
+//			if(it == targetRects.end())
+//				break;
+//		}
 	}
 }
 
@@ -150,7 +156,7 @@ int MinNeighbor(const std::vector<std::vector<int>>& confidenceValueMap, int y, 
 	return minResult;
 }
 
-bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex)
+bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex, const cv::Mat frame)
 {
 	if (trackerIndex != 0)
 	{
@@ -163,6 +169,7 @@ bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex)
 		GlobalTrackerList[trackerIndex - 1].leftTopY = rect.y;
 		GlobalTrackerList[trackerIndex - 1].targetRect = rect;
 		GlobalTrackerList[trackerIndex - 1].ExtendLifeTime();
+//		GlobalTrackerList[trackerIndex - 1].feature = Util::ToFeatureVector(frame(rect));
 		return true;
 	}
 	return false;
@@ -243,7 +250,7 @@ void CheckTrackerForThisBlock(cv::Point blockPos, int& trackerIndex)
 	}
 }
 
-void CreateNewTrackerForThisBlock(cv::Point blockPos, cv::Rect rect)
+void CreateNewTrackerForThisBlock(cv::Point blockPos, cv::Rect rect, const cv::Mat& frame)
 {
 	TargetTracker tracker;
 	tracker.blockX = blockPos.x;
@@ -252,6 +259,9 @@ void CreateNewTrackerForThisBlock(cv::Point blockPos, cv::Rect rect)
 	tracker.leftTopY = rect.y;
 	tracker.targetRect = rect;
 	tracker.timeLeft = 1;
+
+//	tracker.feature.clear();
+//	tracker.feature = Util::ToFeatureVector(frame(rect));
 
 	GlobalTrackerList.push_back(tracker);
 }
@@ -272,6 +282,61 @@ void ConfidenceValueLost(std::vector<std::vector<int>> confidenceValueMap)
 	}
 }
 
+bool ReSearchTarget(const cv::Mat& curFrame, TargetTracker& tracker)
+{
+	auto leftTopBlockX = tracker.blockX - 1 >= 0 ? tracker.blockX - 1 : tracker.blockX;
+	auto leftTopBlockY = tracker.blockY - 1 >= 0 ? tracker.blockY - 1 : tracker.blockY;
+
+	auto rightBottomBlockX = tracker.blockX + 1 < countX ? tracker.blockX + 1 : tracker.blockX;
+	auto rightBottomBlockY = tracker.blockY + 1 < countY ? tracker.blockY + 1 : tracker.blockY;
+
+	auto leftTopX = leftTopBlockX * STEP;
+	auto leftTopY = leftTopBlockY * STEP;
+
+	auto rightBottomX = (rightBottomBlockX + 1) * STEP - 1;
+	if (rightBottomX >= 320)
+		rightBottomX = 319;
+	auto rightBottomY = (rightBottomBlockY + 1) * STEP - 1;
+	if (rightBottomY >= 256)
+		rightBottomY = 255;
+
+	auto width = tracker.targetRect.width;
+	auto height = tracker.targetRect.height;
+
+	auto minDiff = width * height * height * width;
+	auto minRow = -1;
+	auto minCol = -1;
+	std::vector<uchar> minFeature(width * height, 0);
+
+	for (auto row = leftTopY; row + height - 1 <= rightBottomY; ++ row)
+	{
+		for (auto col = leftTopX; col + width - 1 <= rightBottomX; ++col)
+		{
+			auto feature = Util::ToFeatureVector(curFrame(cv::Rect(col, row, width, height)));
+
+			auto curDiff = Util::FeatureDiff(feature, tracker.feature);
+			if(curDiff < minDiff)
+			{
+				minDiff = curDiff;
+				minRow = row;
+				minCol = col;
+				minFeature = feature;
+			}
+		}
+	}
+
+	if(minCol != -1)
+	{
+		tracker.targetRect = cv::Rect(minCol, minRow, width, height);
+		tracker.leftTopX = minCol;
+		tracker.leftTopY = minRow;
+		tracker.blockX = minCol / STEP;
+		tracker.blockY = minRow / STEP;
+		tracker.feature = minFeature;
+		return true;
+	}
+	return false;
+}
 
 int main(int argc, char* argv[])
 {
@@ -334,11 +399,6 @@ int main(int argc, char* argv[])
 
 					GetTopCountBlocksWhichContainsTargets(allConfidenceValues, maxTargetCount, blocksContainTargets);
 
-					std::cout << "All candidate targets" << std::endl;;
-					for (auto target : targetRects)
-						std::cout << "LeftTopX = " << target.x << " LeftTopY = " << target.y << " Width = " << target.width << " Height = " << target.height
-							<< " X = " << (target.x + target.width / 2) / STEP << " Y = " << (target.y + target.height) / STEP << std::endl;
-
 					for (auto i = 0; i < blocksContainTargets.size(); ++i)
 					{
 						auto findTargetFlag = false;
@@ -358,13 +418,13 @@ int main(int argc, char* argv[])
 							{
 								if (GlobalTrackerList.empty())
 								{
-									CreateNewTrackerForThisBlock(currentBlock, rect);
+									CreateNewTrackerForThisBlock(currentBlock, rect, curFrame);
 								}
 								else
 								{
-									if (!TrackerDecited(rect, x, y, trackerIndex))
+									if (!TrackerDecited(rect, x, y, trackerIndex, curFrame))
 									{
-										CreateNewTrackerForThisBlock(currentBlock, rect);
+										CreateNewTrackerForThisBlock(currentBlock, rect, curFrame);
 									}
 								}
 
@@ -384,15 +444,15 @@ int main(int argc, char* argv[])
 
 								if (GlobalTrackerList.empty())
 								{
-									CreateNewTrackerForThisBlock(cv::Point(x,y), rect);
+									CreateNewTrackerForThisBlock(cv::Point(x,y), rect,curFrame);
 								}
 								else
 								{
-									if (!TrackerDecited(rect, x, y, trackerIndex))
+									if (!TrackerDecited(rect, x, y, trackerIndex,curFrame))
 									{
 										CheckTrackerForThisBlock(cv::Point(x, y), trackerIndex);
-										if(!TrackerDecited(rect, x, y, trackerIndex))
-											CreateNewTrackerForThisBlock(cv::Point(x, y), rect);
+										if(!TrackerDecited(rect, x, y, trackerIndex,curFrame))
+											CreateNewTrackerForThisBlock(cv::Point(x, y), rect,curFrame);
 									}
 
 									findTargetFlag = true;
@@ -404,8 +464,10 @@ int main(int argc, char* argv[])
 						{
 							if (trackerIndex > 0)
 							{
-								GlobalTrackerList[trackerIndex - 1].timeLeft--;
-								if (GlobalTrackerList[trackerIndex - 1].timeLeft == 0)
+								auto tracker = GlobalTrackerList[trackerIndex - 1];
+
+								tracker.timeLeft--;
+								if (tracker.timeLeft == 0)
 								{
 									auto it = GlobalTrackerList.begin() + (trackerIndex - 1);
 
@@ -465,7 +527,7 @@ int main(int argc, char* argv[])
 						if(!existFlag)
 						{
 							it->timeLeft--;
-							if(it->timeLeft == 0)
+							if (it->timeLeft == 0)
 							{
 								auto col = it->blockX;
 								auto row = it->blockY;
@@ -481,7 +543,7 @@ int main(int argc, char* argv[])
 									confidenceValueMap[row + 1][col] /= 2;
 
 								it = GlobalTrackerList.erase(it);
-								if(it == GlobalTrackerList.end())
+								if (it == GlobalTrackerList.end())
 									break;
 							}
 						}
@@ -494,7 +556,7 @@ int main(int argc, char* argv[])
 					sort(GlobalTrackerList.begin(), GlobalTrackerList.end(), Util::CompareTracker);
 					for (auto tracker : GlobalTrackerList)
 					{
-						if (tracker.timeLeft > 1)
+						if (tracker.timeLeft > 2)
 							rectangle(colorFrame, cv::Rect(tracker.targetRect.x - 2, tracker.targetRect.y - 2, tracker.targetRect.width + 4, tracker.targetRect.height + 4), tracker.Color());
 					}
 					ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
