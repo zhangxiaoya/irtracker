@@ -27,7 +27,7 @@ inline void DetectByBinaryBitMap::Detect(cv::Mat curFrame)
 	Util::GetRectangleSize(bitMap, allObjects);
 
 	Util::ShowAllObject(curFrame, allObjects);
-	Util::ShowCandidateTargets(curFrame, allObjects);
+	Util::ShowAllCandidateTargets(curFrame, allObjects);
 }
 
 inline int DetectByBinaryBitMap::GetBitMap(const cv::Mat& binaryFrame, cv::Mat& bitMap)

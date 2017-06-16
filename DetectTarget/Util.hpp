@@ -30,7 +30,9 @@ public:
 
 	static void ShowAllObject(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject);
 
-	static void ShowCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, uchar valueThreshHold = 0);
+	static void ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, uchar valueThreshHold = 0);
+
+	static void ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<cv::Rect>& rects);
 
 	static uchar MaxOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end);
 
@@ -42,7 +44,7 @@ public:
 
 	static bool CompareTracker(TargetTracker left, TargetTracker right);
 
-	static std::vector<cv::Rect> GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects, unsigned char max_value);
+	static std::vector<cv::Rect> GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects);
 
 	static int Sum(const std::vector<int>& valueVec);
 
@@ -168,7 +170,7 @@ inline void Util::ShowAllObject(const cv::Mat& curFrame, const std::vector<FourL
 	imshow("All Object", colorFrame);
 }
 
-inline void Util::ShowCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, uchar valueThreshHold)
+inline void Util::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, uchar valueThreshHold)
 {
 	cv::Mat colorFrame;
 	cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
@@ -177,24 +179,41 @@ inline void Util::ShowCandidateTargets(const cv::Mat& curFrame, const std::vecto
 	{
 		auto width = allObject[i].right - allObject[i].left + 1;
 		auto height = allObject[i].bottom - allObject[i].top + 1;
-		if (width <= 0 || height <= 0)
+
+		if(valueThreshHold != 0)
 		{
-			std::cout << "Rect Error, and index is " << i << std::endl;
-			continue;
+			if (width <= 0 || height <= 0)
+			{
+				std::cout << "Rect Error, and index is " << i << std::endl;
+				continue;
+			}
+
+			if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
+				(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
+				continue;
+
+			if (curFrame.at<uchar>(allObject[i].top + 1, allObject[i].left + 1) < valueThreshHold)
+				continue;
 		}
-
-		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
-			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
-			continue;
-
-		if (curFrame.at<uchar>(allObject[i].top + 1, allObject[i].left + 1) < valueThreshHold)
-			continue;
-
 		auto rect = cv::Rect(allObject[i].left, allObject[i].top, width, height);
+
 		rectangle(colorFrame, rect, GREENCOLOR);
 	}
 
-	imshow("Candidate Targets", colorFrame);
+	imshow("All Candidate Targets", colorFrame);
+}
+
+inline void Util::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<cv::Rect>& rects)
+{
+	cv::Mat colorFrame;
+	cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
+
+	for (auto i = 0; i<rects.size(); ++i)
+	{
+		rectangle(colorFrame, rects[i], BLUECOLOR);
+	}
+
+	imshow("All Candidate Objects", colorFrame);
 }
 
 inline uchar Util::MaxOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end)
@@ -234,7 +253,7 @@ inline bool Util::CompareTracker(TargetTracker left, TargetTracker right)
 	return left.timeLeft > right.timeLeft;
 }
 
-inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects, unsigned char max_value)
+inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects)
 {
 	std::vector<cv::Rect> targetRect;
 
