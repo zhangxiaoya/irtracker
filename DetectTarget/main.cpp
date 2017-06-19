@@ -41,6 +41,18 @@ void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<
 		confidenceMap[y][x - 1 > 0 ? x - 1 : 0][queueEndIndex] += 1;
 		// right
 		confidenceMap[y][x + 1 < countX ? x + 1 : countX - 1][queueEndIndex] += 1;
+
+		if (fieldType == Eight)
+		{
+			// up left
+			confidenceMap[y - 1 >= 0 ? y - 1 : 0][x - 1 >= 0 ? x - 1 : 0][queueEndIndex] += 1;
+			// down right
+			confidenceMap[y + 1 < countY ? y + 1 : countY - 1][x + 1 < countX ? x + 1 : countX - 1][queueEndIndex] += 1;
+			// left down
+			confidenceMap[y + 1 < countY ? y + 1 : countY - 1][x - 1 > 0 ? x - 1 : 0][queueEndIndex] += 1;
+			// right up
+			confidenceMap[y - 1 >= 0 ? y - 1 : 0][x + 1 < countX ? x + 1 : countX - 1][queueEndIndex] += 1;
+		}
 	}
 }
 
@@ -379,7 +391,7 @@ int main(int argc, char* argv[])
 
 				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(curFrame);
 
-				UpdateConfidenceMap(queueEndIndex, confidenceQueueMap, targetRects);
+				UpdateConfidenceMap(queueEndIndex, confidenceQueueMap, targetRects, Four);
 
 				UpdateConfidenceVector(countX, countY, confidenceQueueMap, allConfidenceQueue);
 
