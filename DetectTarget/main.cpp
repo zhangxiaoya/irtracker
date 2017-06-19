@@ -22,6 +22,9 @@ void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<
 {
 	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
 
+	const auto fourIncrement = 2;
+	const auto eightIncrement = 1;
+
 	for (auto i = 0; i < targetRects.size(); ++i)
 	{
 		auto rect = targetRects[i];
@@ -34,24 +37,24 @@ void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<
 		confidenceMap[y][x][queueEndIndex] += 10;
 		updateFlag[y][x] = true;
 		// up
-		confidenceMap[y - 1 >= 0 ? y - 1 : 0][x][queueEndIndex] += 1;
+		confidenceMap[y - 1 >= 0 ? y - 1 : 0][x][queueEndIndex] += fourIncrement;
 		// down
-		confidenceMap[y + 1 < countY ? y + 1 : countY - 1][x][queueEndIndex] += 1;
+		confidenceMap[y + 1 < countY ? y + 1 : countY - 1][x][queueEndIndex] += fourIncrement;
 		// left
-		confidenceMap[y][x - 1 > 0 ? x - 1 : 0][queueEndIndex] += 1;
+		confidenceMap[y][x - 1 > 0 ? x - 1 : 0][queueEndIndex] += fourIncrement;
 		// right
-		confidenceMap[y][x + 1 < countX ? x + 1 : countX - 1][queueEndIndex] += 1;
+		confidenceMap[y][x + 1 < countX ? x + 1 : countX - 1][queueEndIndex] += fourIncrement;
 
 		if (fieldType == Eight)
 		{
 			// up left
-			confidenceMap[y - 1 >= 0 ? y - 1 : 0][x - 1 >= 0 ? x - 1 : 0][queueEndIndex] += 1;
+			confidenceMap[y - 1 >= 0 ? y - 1 : 0][x - 1 >= 0 ? x - 1 : 0][queueEndIndex] += eightIncrement;
 			// down right
-			confidenceMap[y + 1 < countY ? y + 1 : countY - 1][x + 1 < countX ? x + 1 : countX - 1][queueEndIndex] += 1;
+			confidenceMap[y + 1 < countY ? y + 1 : countY - 1][x + 1 < countX ? x + 1 : countX - 1][queueEndIndex] += eightIncrement;
 			// left down
-			confidenceMap[y + 1 < countY ? y + 1 : countY - 1][x - 1 > 0 ? x - 1 : 0][queueEndIndex] += 1;
+			confidenceMap[y + 1 < countY ? y + 1 : countY - 1][x - 1 > 0 ? x - 1 : 0][queueEndIndex] += eightIncrement;
 			// right up
-			confidenceMap[y - 1 >= 0 ? y - 1 : 0][x + 1 < countX ? x + 1 : countX - 1][queueEndIndex] += 1;
+			confidenceMap[y - 1 >= 0 ? y - 1 : 0][x + 1 < countX ? x + 1 : countX - 1][queueEndIndex] += eightIncrement;
 		}
 	}
 }
@@ -518,21 +521,21 @@ int main(int argc, char* argv[])
 						}
 					}
 
-					std::cout << "All Tracker" << std::endl;
-					for (auto tracker : GlobalTrackerList)
-					{
-						std::cout << "X = " << tracker.blockX << " Y = " << tracker.blockY << " Time Left = " << tracker.timeLeft << std::endl;
-					}
+//					std::cout << "All Tracker" << std::endl;
+//					for (auto tracker : GlobalTrackerList)
+//					{
+//						std::cout << "X = " << tracker.blockX << " Y = " << tracker.blockY << " Time Left = " << tracker.timeLeft << std::endl;
+//					}
 
 					for (auto it = GlobalTrackerList.begin(); it != GlobalTrackerList.end(); ++it)
 					{
-						std::cout << "Test Tracker" << std::endl;
-						std::cout << "X = " << it->blockX << " Y = " << it->blockY << std::endl;
+//						std::cout << "Test Tracker" << std::endl;
+//						std::cout << "X = " << it->blockX << " Y = " << it->blockY << std::endl;
 
 						auto existFlag = false;
 						for (auto target : blocksContainTargets)
 						{
-							std::cout << "Current X = " << target.x << " Current Y = " << target.y << std::endl;
+//							std::cout << "Current X = " << target.x << " Current Y = " << target.y << std::endl;
 							if (it->blockX == target.x && it->blockY == target.y)
 								existFlag = true;
 						}
@@ -562,7 +565,7 @@ int main(int argc, char* argv[])
 						}
 					}
 
-					//					PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
+					PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
 
 					ConfidenceValueLost(confidenceValueMap);
 
@@ -572,8 +575,10 @@ int main(int argc, char* argv[])
 						if (tracker.timeLeft > 2)
 							rectangle(colorFrame, cv::Rect(tracker.targetRect.x - 2, tracker.targetRect.y - 2, tracker.targetRect.width + 4, tracker.targetRect.height + 4), tracker.Color());
 					}
-					ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
 				}
+
+				ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
+
 				imshow("last result", colorFrame);
 				if (frameIndex == 0)
 					cv::waitKey(0);
