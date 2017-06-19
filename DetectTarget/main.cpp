@@ -31,8 +31,8 @@ void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<
 		auto x = (rect.x + rect.width / 2) / STEP;
 		auto y = (rect.y + rect.height / 2) / STEP;
 
-		if (updateFlag[y][x])
-			continue;
+//		if (updateFlag[y][x])
+//			continue;
 		// center
 		confidenceMap[y][x][queueEndIndex] += 10;
 		updateFlag[y][x] = true;
@@ -367,7 +367,7 @@ int main(int argc, char* argv[])
 
 	char writeFileName[WRITE_FILE_NAME_BUFFER_SIZE];
 
-	const auto queueSize = 4;
+	const auto queueSize = 5;
 	auto queueEndIndex = 0;
 
 	std::vector<std::vector<std::vector<int>>> confidenceQueueMap(countY, std::vector<std::vector<int>>(countX, std::vector<int>(queueSize, 0)));
@@ -408,7 +408,7 @@ int main(int argc, char* argv[])
 
 				if (frameIndex > ThinkingTime)
 				{
-					const auto maxTargetCount = 2;
+					const auto maxTargetCount = 5;
 					std::vector<cv::Point> blocksContainTargets;
 
 					UpdateConfidenceValueVector(confidenceValueMap, allConfidenceValues);

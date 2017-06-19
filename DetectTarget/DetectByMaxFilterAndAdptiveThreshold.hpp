@@ -266,8 +266,10 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Ma
 
 	RemoveSmallAndBigObjects(allObjects, discrezatedFrame);
 
-	std::vector<FourLimits> afterMergeObjects;
-	MergeCrossedRectangles(allObjects, afterMergeObjects);
+	Util::ShowAllObject(curFrame, allObjects, "Before Merge");
+
+	std::vector<FourLimits> afterMergeObjects = allObjects;
+//	MergeCrossedRectangles(allObjects, afterMergeObjects);
 
 	Util::ShowAllObject(curFrame, afterMergeObjects, "After Merge Cross Rectangles");
 
