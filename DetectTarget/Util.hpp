@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -11,8 +12,7 @@
 #include "GlobalInitialUtil.hpp"
 #include "TargetTracker.hpp"
 
-struct TargetTracker;
-const auto AFTER_MAX_FILTER = true;
+class TargetTracker;
 
 class Util
 {
@@ -43,6 +43,8 @@ public:
 	static bool CompareConfidenceValue(ConfidenceElem left, ConfidenceElem right);
 
 	static bool CompareTracker(TargetTracker left, TargetTracker right);
+
+	static uchar AverageValue(const cv::Mat& curFrame, const cv::Rect& object);
 
 	static std::vector<cv::Rect> GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects);
 
@@ -253,6 +255,20 @@ inline bool Util::CompareTracker(TargetTracker left, TargetTracker right)
 	return left.timeLeft > right.timeLeft;
 }
 
+inline uchar Util::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect)
+{
+	auto sumAll = 0;
+	for(auto r =rect.y ;r < rect.y + rect.height;++r)
+	{
+		auto sumRow = 0;
+		for (auto c = rect.x; c < rect.x + rect.width; ++c)
+			sumRow += curFrame.at<uchar>(r, c);
+		sumAll += (sumRow / rect.width);
+	}
+
+	return sumAll / rect.height;
+}
+
 inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects)
 {
 	std::vector<cv::Rect> targetRect;
@@ -300,13 +316,13 @@ inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, 
 			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
 			continue;
 
-		if (curFrame.at<uchar>(object.top + 1, object.left + 1) < threshHold)
+		auto rect = cv::Rect(object.left, object.top, width, height);
+
+		if (curFrame.at<uchar>(centerY, centerX) < threshHold)
 			continue;
 
-		auto rect = cv::Rect(object.left, object.top, width, height);
 		targetRect.push_back(rect);
 	}
-
 	return targetRect;
 }
 
@@ -490,6 +506,5 @@ inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, i
 	}
 
 	threshHold = sumAll / (rightBottomY - leftTopY);
-
-	threshHold += (threshHold) / 4;
+	threshHold += threshHold / 4;
 }

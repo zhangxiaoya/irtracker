@@ -18,9 +18,10 @@ const auto WRITE_FILE_NAME_BUFFER_SIZE = 100;
 const auto countX = ceil(static_cast<double>(320) / STEP);
 const auto countY = ceil(static_cast<double>(256) / STEP);
 
-void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects)
+void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects, FieldType fieldType = Four)
 {
 	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
+
 	for (auto i = 0; i < targetRects.size(); ++i)
 	{
 		auto rect = targetRects[i];
@@ -30,16 +31,16 @@ void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<
 		if (updateFlag[y][x])
 			continue;
 		// center
-		confidenceMap[y][x][queueEndIndex] += 20;
+		confidenceMap[y][x][queueEndIndex] += 10;
 		updateFlag[y][x] = true;
 		// up
-		confidenceMap[rect.y / STEP][x][queueEndIndex] += 1;
+		confidenceMap[y - 1 >= 0 ? y - 1 : 0][x][queueEndIndex] += 1;
 		// down
-		confidenceMap[(rect.y + rect.height - 1) / STEP][x][queueEndIndex] += 1;
+		confidenceMap[y + 1 < countY ? y + 1 : countY - 1][x][queueEndIndex] += 1;
 		// left
-		confidenceMap[y][rect.x / STEP][queueEndIndex] += 1;
+		confidenceMap[y][x - 1 > 0 ? x - 1 : 0][queueEndIndex] += 1;
 		// right
-		confidenceMap[y][(rect.x + rect.width - 1) / STEP][queueEndIndex] += 1;
+		confidenceMap[y][x + 1 < countX ? x + 1 : countX - 1][queueEndIndex] += 1;
 	}
 }
 
