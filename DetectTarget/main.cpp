@@ -419,10 +419,10 @@ int main(int argc, char* argv[])
 						for (auto j = 0; j < targetRects.size(); ++j)
 						{
 							auto rect = targetRects[j];
-							auto x = (rect.x + rect.width / 2) / BLOCK_SIZE;
-							auto y = (rect.y + rect.height / 2) / BLOCK_SIZE;
+							auto blockXOfCurrentRect = (rect.x + rect.width / 2) / BLOCK_SIZE;
+							auto blockYOfCurrentRect = (rect.y + rect.height / 2) / BLOCK_SIZE;
 
-							if (x == currentBlock.x && y == currentBlock.y)
+							if (blockXOfCurrentRect == currentBlock.x && blockYOfCurrentRect == currentBlock.y)
 							{
 								if (GlobalTrackerList.empty())
 								{
@@ -430,7 +430,7 @@ int main(int argc, char* argv[])
 								}
 								else
 								{
-									if (!UpdateTrackerStatus(rect, x, y, trackerIndex))
+									if (!UpdateTrackerStatus(rect, blockXOfCurrentRect, blockYOfCurrentRect, trackerIndex))
 									{
 										CreateNewTrackerForThisBlock(currentBlock, rect);
 									}
@@ -438,29 +438,29 @@ int main(int argc, char* argv[])
 
 								findTargetFlag = true;
 							}
-							else if ((x - 1 >= 0 && x - 1 == currentBlock.x && y == currentBlock.y) ||
-								(y - 1 >= 0 && x == currentBlock.x && y - 1 == currentBlock.y) ||
-								(x + 1 < countX && x + 1 == currentBlock.x && y == currentBlock.y) ||
-								(y + 1 < countY && x == currentBlock.x && y + 1 == currentBlock.y) ||
-								(y + 1 < countY && x + 1 < countX && x + 1 == currentBlock.x && y + 1 == currentBlock.y) ||
-								(y + 1 < countY && x - 1 >= 0 && x - 1 == currentBlock.x && y + 1 == currentBlock.y) ||
-								(y - 1 < countY && x + 1 < countX && x + 1 == currentBlock.x && y - 1 == currentBlock.y) ||
-								(y - 1 < countY && x - 1 >= 0 && x - 1 == currentBlock.x && y - 1 == currentBlock.y))
+							else if ((blockXOfCurrentRect - 1 >= 0 && blockXOfCurrentRect - 1 == currentBlock.x && blockYOfCurrentRect == currentBlock.y) ||
+								(blockYOfCurrentRect - 1 >= 0 && blockXOfCurrentRect == currentBlock.x && blockYOfCurrentRect - 1 == currentBlock.y) ||
+								(blockXOfCurrentRect + 1 < countX && blockXOfCurrentRect + 1 == currentBlock.x && blockYOfCurrentRect == currentBlock.y) ||
+								(blockYOfCurrentRect + 1 < countY && blockXOfCurrentRect == currentBlock.x && blockYOfCurrentRect + 1 == currentBlock.y) ||
+								(blockYOfCurrentRect + 1 < countY && blockXOfCurrentRect + 1 < countX && blockXOfCurrentRect + 1 == currentBlock.x && blockYOfCurrentRect + 1 == currentBlock.y) ||
+								(blockYOfCurrentRect + 1 < countY && blockXOfCurrentRect - 1 >= 0 && blockXOfCurrentRect - 1 == currentBlock.x && blockYOfCurrentRect + 1 == currentBlock.y) ||
+								(blockYOfCurrentRect - 1 < countY && blockXOfCurrentRect + 1 < countX && blockXOfCurrentRect + 1 == currentBlock.x && blockYOfCurrentRect - 1 == currentBlock.y) ||
+								(blockYOfCurrentRect - 1 < countY && blockXOfCurrentRect - 1 >= 0 && blockXOfCurrentRect - 1 == currentBlock.x && blockYOfCurrentRect - 1 == currentBlock.y))
 							{
 								confidenceValueMap[currentBlock.y][currentBlock.x] = MinNeighbor(confidenceValueMap, currentBlock.y, currentBlock.x);
-								confidenceValueMap[y][x] = MaxNeighbor(confidenceValueMap, currentBlock.y, currentBlock.x);
+								confidenceValueMap[blockYOfCurrentRect][blockXOfCurrentRect] = MaxNeighbor(confidenceValueMap, currentBlock.y, currentBlock.x);
 
 								if (GlobalTrackerList.empty())
 								{
-									CreateNewTrackerForThisBlock(cv::Point(x, y), rect);
+									CreateNewTrackerForThisBlock(cv::Point(blockXOfCurrentRect, blockYOfCurrentRect), rect);
 								}
 								else
 								{
-									if (!UpdateTrackerStatus(rect, x, y, trackerIndex))
+									if (!UpdateTrackerStatus(rect, blockXOfCurrentRect, blockYOfCurrentRect, trackerIndex))
 									{
-										SearchWhichTrackerForThisBlock(cv::Point(x, y), trackerIndex);
-										if (!UpdateTrackerStatus(rect, x, y, trackerIndex))
-											CreateNewTrackerForThisBlock(cv::Point(x, y), rect);
+										SearchWhichTrackerForThisBlock(cv::Point(blockXOfCurrentRect, blockYOfCurrentRect), trackerIndex);
+										if (!UpdateTrackerStatus(rect, blockXOfCurrentRect, blockYOfCurrentRect, trackerIndex))
+											CreateNewTrackerForThisBlock(cv::Point(blockXOfCurrentRect, blockYOfCurrentRect), rect);
 									}
 
 									findTargetFlag = true;
@@ -557,7 +557,7 @@ int main(int argc, char* argv[])
 						}
 					}
 
-					PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
+//					PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
 
 					ConfidenceValueLost(confidenceValueMap);
 
