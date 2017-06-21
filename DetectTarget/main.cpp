@@ -167,7 +167,7 @@ int MinNeighbor(const std::vector<std::vector<int>>& confidenceValueMap, int y, 
 	return minResult;
 }
 
-bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex, const cv::Mat frame)
+bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex)
 {
 	if (trackerIndex != 0)
 	{
@@ -180,7 +180,6 @@ bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex, const 
 		GlobalTrackerList[trackerIndex - 1].leftTopY = rect.y;
 		GlobalTrackerList[trackerIndex - 1].targetRect = rect;
 		GlobalTrackerList[trackerIndex - 1].ExtendLifeTime();
-		//		GlobalTrackerList[trackerIndex - 1].feature = Util::ToFeatureVector(frame(rect));
 		return true;
 	}
 	return false;
@@ -261,7 +260,7 @@ void CheckTrackerForThisBlock(cv::Point blockPos, int& trackerIndex)
 	}
 }
 
-void CreateNewTrackerForThisBlock(cv::Point blockPos, cv::Rect rect, const cv::Mat& frame)
+void CreateNewTrackerForThisBlock(cv::Point blockPos, cv::Rect rect)
 {
 	TargetTracker tracker;
 	tracker.blockX = blockPos.x;
@@ -356,6 +355,7 @@ int main(int argc, char* argv[])
 	InitVideoReader(video_capture);
 
 	cv::Mat curFrame;
+	cv::Mat grayFrame;
 	cv::Mat colorFrame;
 
 	auto frameIndex = 0;
@@ -380,14 +380,22 @@ int main(int argc, char* argv[])
 			video_capture >> curFrame;
 			if (!curFrame.empty())
 			{
-				SpecialUtil::RemoveInvalidPixel(curFrame);
-
 				imshow("Current Frame", curFrame);
 				cv::waitKey(SHOW_DELAY);
 
-				cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
+				if(SpecialUtil::CheckFrameIsGray(curFrame, grayFrame))
+				{
+					cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
+				}
+				else
+				{
+					colorFrame = curFrame;
+				}
 
-				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(curFrame);
+				SpecialUtil::RemoveInvalidPixel(grayFrame);
+
+				
+				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(grayFrame);
 
 				UpdateConfidenceMap(queueEndIndex, confidenceQueueMap, targetRects, Four);
 
@@ -429,13 +437,13 @@ int main(int argc, char* argv[])
 							{
 								if (GlobalTrackerList.empty())
 								{
-									CreateNewTrackerForThisBlock(currentBlock, rect, curFrame);
+									CreateNewTrackerForThisBlock(currentBlock, rect);
 								}
 								else
 								{
-									if (!TrackerDecited(rect, x, y, trackerIndex, curFrame))
+									if (!TrackerDecited(rect, x, y, trackerIndex))
 									{
-										CreateNewTrackerForThisBlock(currentBlock, rect, curFrame);
+										CreateNewTrackerForThisBlock(currentBlock, rect);
 									}
 								}
 
@@ -455,15 +463,15 @@ int main(int argc, char* argv[])
 
 								if (GlobalTrackerList.empty())
 								{
-									CreateNewTrackerForThisBlock(cv::Point(x, y), rect, curFrame);
+									CreateNewTrackerForThisBlock(cv::Point(x, y), rect);
 								}
 								else
 								{
-									if (!TrackerDecited(rect, x, y, trackerIndex, curFrame))
+									if (!TrackerDecited(rect, x, y, trackerIndex))
 									{
 										CheckTrackerForThisBlock(cv::Point(x, y), trackerIndex);
-										if (!TrackerDecited(rect, x, y, trackerIndex, curFrame))
-											CreateNewTrackerForThisBlock(cv::Point(x, y), rect, curFrame);
+										if (!TrackerDecited(rect, x, y, trackerIndex))
+											CreateNewTrackerForThisBlock(cv::Point(x, y), rect);
 									}
 
 									findTargetFlag = true;

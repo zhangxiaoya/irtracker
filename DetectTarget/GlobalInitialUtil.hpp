@@ -1,5 +1,4 @@
 #pragma once
-#include "ConfidenceMapUtil.hpp"
 #include "GlobalConstantConfigure.h"
 
 const char* GlobalWriteFileNameFormat;
@@ -13,9 +12,9 @@ inline void UpdateImageSize()
 	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
 	sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalImageListNameFormat, 0);
 	auto img = cv::imread(imageFullName);
-	if(!img.empty())
+	if (!img.empty())
 	{
-		std::cout << "Update Image Size" <<std::endl;
+		std::cout << "Update Image Size" << std::endl;
 
 		IMAGE_WIDTH = img.cols;
 		IMAGE_HEIGHT = img.rows;
@@ -39,8 +38,6 @@ inline void ForTwoBins()
 
 	GlobalImageListNameFormat = inFullStr.c_str();
 
-	UpdateImageSize();
-
 	std::string outPrefix = ".\\ir_file_20170531_1000m_";
 	std::string outBackend = "\\Frame_%04d.png";
 	outFullStr = outPrefix + listNum + outBackend;
@@ -52,9 +49,11 @@ inline void InitVideoReader(cv::VideoCapture& video_capture)
 {
 	ForTwoBins();
 
-//	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\00000000_00000000001582C6_%08d.bmp";
+//	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 
-//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\00000000_00000000001582C6_%08d.bmp";
+//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\Frame_%08d.bmp";
+
+	UpdateImageSize();
 
 	video_capture.open(GlobalImageListNameFormat);
 }

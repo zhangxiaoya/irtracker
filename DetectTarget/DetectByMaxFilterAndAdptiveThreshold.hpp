@@ -20,7 +20,7 @@ private:
 
 	static int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
 
-	static void Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame, uint8_t bin);
+	static void Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame);
 
 	static void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects);
 
@@ -248,9 +248,8 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Ma
 	MaxFilter(curFrame, filtedFrame, kernelSize);
 
 	cv::Mat discrezatedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
-	auto bin = 15;
 
-	Discretization(filtedFrame, discrezatedFrame, bin);
+	Discretization(filtedFrame, discrezatedFrame);
 
 	imshow("Max Filter and Discrezated", discrezatedFrame);
 
@@ -336,9 +335,9 @@ inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filted
 	return currentIndex;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame, uint8_t bin)
+inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame)
 {
 	for (auto r = 0; r < filtedFrame.rows; ++r)
 		for (auto c = 0; c < filtedFrame.cols; ++c)
-			discretizatedFrame.at<uint8_t>(r, c) = (filtedFrame.at<uint8_t>(r, c) / bin) * bin;
+			discretizatedFrame.at<uint8_t>(r, c) = (filtedFrame.at<uint8_t>(r, c) / DISCRATED_BIN) * DISCRATED_BIN;
 }
