@@ -34,6 +34,8 @@ public:
 
 	static void ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<cv::Rect>& rects);
 
+	static void ShowImage(cv::Mat curFrame);
+
 	static uchar MaxOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end);
 
 	static uchar MinOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end);
@@ -216,6 +218,12 @@ inline void Util::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::ve
 	}
 
 	imshow("All Candidate Objects", colorFrame);
+}
+
+inline void Util::ShowImage(cv::Mat curFrame)
+{
+	imshow("Current Frame", curFrame);
+	cv::waitKey(SHOW_DELAY);
 }
 
 inline uchar Util::MaxOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end)

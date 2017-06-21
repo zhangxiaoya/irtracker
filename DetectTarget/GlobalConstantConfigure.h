@@ -8,6 +8,9 @@ auto const COLOR_YELLOW = cv::Scalar(0, 255, 255);
 
 const auto BLOCK_SIZE = 10;
 const auto TOP_COUNT_OF_BLOCK_WITH_HIGH_QUEUE_VALUE = 5;
+const auto TOP_COUNT_OF_TARGET_WITH_HIGH_CONFIDENCE_VALUE = 5;
+
+const auto QUEUE_SIZE = 5;
 
 const auto SEARCH_WINDOW_WIDTH = 8;
 const auto SEARCH_WINDOW_HEIGHT = 8;

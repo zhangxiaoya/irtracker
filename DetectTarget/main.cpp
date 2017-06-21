@@ -11,7 +11,7 @@
 #include "GlobalInitialUtil.hpp"
 #include "TargetTracker.hpp"
 
-void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects, FieldType fieldType = Four)
+void UpdateConfidenceQueueMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects, FieldType fieldType = Four)
 {
 	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
 
@@ -52,7 +52,7 @@ void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<
 	}
 }
 
-void UpdateConfidenceVector(const std::vector<std::vector<std::vector<int>>>& confidenceQueueMap, std::vector<ConfidenceElem>& vectorOfConfidenceQueueMap)
+void UpdateVectorOfConfidenceQueueMap(const std::vector<std::vector<std::vector<int>>>& confidenceQueueMap, std::vector<ConfidenceElem>& vectorOfConfidenceQueueMap)
 {
 	auto confidenceIndex = 0;
 	for (auto x = 0; x < countX; ++x)
@@ -94,14 +94,18 @@ void GetMostLiklyTargetsRect(const std::vector<ConfidenceElem>& vectorOfConfiden
 	}
 }
 
-void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<ConfidenceElem>& allConfidence, std::vector<cv::Rect>& targetRects, const int searchIndex, std::vector<std::vector<int>>& confidenceValueMap)
+void DrawRectangleForAllDetectedTargetsAndUpdateBlockConfidence(cv::Mat& colorFrame,
+                                                                const int searchIndex,
+                                                                const std::vector<ConfidenceElem>& vectorOfConfidenceQueuqMap,
+                                                                std::vector<cv::Rect>& targetRects,
+                                                                std::vector<std::vector<int>>& confidenceValueMap)
 {
 	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
 
 	for (auto it = targetRects.begin(); it != targetRects.end(); ++it)
 	{
 		auto rect = *it;
-		if (ConfidenceMapUtil::CheckIfInTopCount(rect, searchIndex, allConfidence))
+		if (ConfidenceMapUtil::CheckIfInTopCount(rect, searchIndex, vectorOfConfidenceQueuqMap))
 		{
 			rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), COLOR_BLUE);
 
@@ -165,14 +169,14 @@ int MinNeighbor(const std::vector<std::vector<int>>& confidenceValueMap, int y, 
 	return minResult;
 }
 
-bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex)
+bool UpdateTrackerStatus(const cv::Rect& rect, int blockX, int blockY, int trackerIndex)
 {
 	if (trackerIndex != 0)
 	{
-		if (GlobalTrackerList[trackerIndex - 1].blockX != x)
-			GlobalTrackerList[trackerIndex - 1].blockX = x;
-		if (GlobalTrackerList[trackerIndex - 1].blockY != y)
-			GlobalTrackerList[trackerIndex - 1].blockY = y;
+		if (GlobalTrackerList[trackerIndex - 1].blockX != blockX)
+			GlobalTrackerList[trackerIndex - 1].blockX = blockX;
+		if (GlobalTrackerList[trackerIndex - 1].blockY != blockY)
+			GlobalTrackerList[trackerIndex - 1].blockY = blockY;
 
 		GlobalTrackerList[trackerIndex - 1].leftTopX = rect.x;
 		GlobalTrackerList[trackerIndex - 1].leftTopY = rect.y;
@@ -183,70 +187,64 @@ bool TrackerDecited(const cv::Rect& rect, int x, int y, int trackerIndex)
 	return false;
 }
 
-void PrintConfidenceValueMap(const std::vector<std::vector<int>>& confidenceValueMap, char* text)
+void PrintConfidenceValueMap(const std::vector<std::vector<int>>& confidenceValueMap, char* infoText)
 {
-	std::cout << text << std::endl;
+	std::cout << infoText << std::endl;
 	for (auto y = 0; y < countY; ++y)
 	{
 		for (auto x = 0; x < countX; ++x)
-			std::cout << std::setw(2) << confidenceValueMap[y][x] << " ";
+			std::cout << std::setw(3) << confidenceValueMap[y][x] << " ";
 
 		std::cout << std::endl;
 	}
 }
 
-void UpdateConfidenceValueVector(const std::vector<std::vector<int>>& confidenceValueMap, std::vector<ConfidenceElem>& allConfidenceValues)
+void UpdateConfidenceValueVector(const std::vector<std::vector<int>>& confidenceValueMap, std::vector<ConfidenceElem>& vectorOfConfidenceValueMap)
 {
 	auto index = 0;
 	for (auto x = 0; x < countX; ++x)
 	{
 		for (auto y = 0; y < countY; ++y)
 		{
-			allConfidenceValues[index].x = x;
-			allConfidenceValues[index].y = y;
-			allConfidenceValues[index++].confidenceVal = confidenceValueMap[y][x];
+			vectorOfConfidenceValueMap[index].x = x;
+			vectorOfConfidenceValueMap[index].y = y;
+			vectorOfConfidenceValueMap[index++].confidenceVal = confidenceValueMap[y][x];
 		}
 	}
 
-	sort(allConfidenceValues.begin(), allConfidenceValues.end(), Util::CompareConfidenceValue);
-
-	std::cout << "x = " << allConfidenceValues[0].x << " y = " << allConfidenceValues[0].y << " max Value = " << allConfidenceValues[0].confidenceVal << std::endl;
+	sort(vectorOfConfidenceValueMap.begin(), vectorOfConfidenceValueMap.end(), Util::CompareConfidenceValue);
 }
 
-void GetTopCountBlocksWhichContainsTargets(const std::vector<ConfidenceElem>& allConfidenceValues, const int maxTargetCount, std::vector<cv::Point>& blocksContainTargets)
+void GetTopCountBlocksWhichContainsTargets(const std::vector<ConfidenceElem>& vectorOFConfidenceValueMap, std::vector<cv::Point>& blocksContainTargets)
 {
 	auto currentTargetCountIndex = 0;
 
-	for (auto i = 0; i < allConfidenceValues.size(); ++i)
+	for (auto i = 0; i < vectorOFConfidenceValueMap.size(); ++i)
 	{
 		if (i == 0)
 		{
-			blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+			blocksContainTargets.push_back(cv::Point(vectorOFConfidenceValueMap[i].x, vectorOFConfidenceValueMap[i].y));
 			currentTargetCountIndex++;
 			continue;
 		}
-		if (allConfidenceValues[i].confidenceVal > 5 && allConfidenceValues[i].confidenceVal == allConfidenceValues[i - 1].confidenceVal)
+		if (vectorOFConfidenceValueMap[i].confidenceVal > 0 && vectorOFConfidenceValueMap[i].confidenceVal == vectorOFConfidenceValueMap[i - 1].confidenceVal)
 		{
-			blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+			blocksContainTargets.push_back(cv::Point(vectorOFConfidenceValueMap[i].x, vectorOFConfidenceValueMap[i].y));
 		}
 		else
 		{
-			if (allConfidenceValues[i].confidenceVal >= 5)
+			if (vectorOFConfidenceValueMap[i].confidenceVal >= 5)
 			{
-				blocksContainTargets.push_back(cv::Point(allConfidenceValues[i].x, allConfidenceValues[i].y));
+				blocksContainTargets.push_back(cv::Point(vectorOFConfidenceValueMap[i].x, vectorOFConfidenceValueMap[i].y));
 				currentTargetCountIndex++;
-				if (currentTargetCountIndex >= maxTargetCount)
+				if (currentTargetCountIndex >= TOP_COUNT_OF_TARGET_WITH_HIGH_CONFIDENCE_VALUE)
 					break;
 			}
 		}
 	}
-
-	std::cout << "All Blocks:" << std::endl;
-	for (auto point : blocksContainTargets)
-		std::cout << "X = " << point.x << " Y = " << point.y << std::endl;
 }
 
-void CheckTrackerForThisBlock(cv::Point blockPos, int& trackerIndex)
+void SearchWhichTrackerForThisBlock(cv::Point blockPos, int& trackerIndex)
 {
 	for (auto j = 0; j < GlobalTrackerList.size(); ++j)
 	{
@@ -267,9 +265,6 @@ void CreateNewTrackerForThisBlock(cv::Point blockPos, cv::Rect rect)
 	tracker.leftTopY = rect.y;
 	tracker.targetRect = rect;
 	tracker.timeLeft = 1;
-
-	//	tracker.feature.clear();
-	//	tracker.feature = Util::ToFeatureVector(frame(rect));
 
 	GlobalTrackerList.push_back(tracker);
 }
@@ -357,17 +352,15 @@ int main(int argc, char* argv[])
 	cv::Mat colorFrame;
 
 	auto frameIndex = 0;
+	static auto queueEndIndex = 0;
 
 	char writeFileName[WRITE_FILE_NAME_BUFFER_SIZE];
 
-	const auto queueSize = 5;
-	auto queueEndIndex = 0;
-
-	std::vector<std::vector<std::vector<int>>> confidenceQueueMap(countY, std::vector<std::vector<int>>(countX, std::vector<int>(queueSize, 0)));
+	std::vector<std::vector<std::vector<int>>> confidenceQueueMap(countY, std::vector<std::vector<int>>(countX, std::vector<int>(QUEUE_SIZE, 0)));
 	std::vector<std::vector<int>> confidenceValueMap(countY, std::vector<int>(countX, 0));
 
-	std::vector<ConfidenceElem> allConfidenceQueue(countX * countY);
-	std::vector<ConfidenceElem> allConfidenceValues(countX * countY);
+	std::vector<ConfidenceElem> vectorOfConfidenceQueueMap(countX * countY);
+	std::vector<ConfidenceElem> vectorOfConfidenceValueMap(countX * countY);
 
 	if (video_capture.isOpened())
 	{
@@ -378,8 +371,7 @@ int main(int argc, char* argv[])
 			video_capture >> curFrame;
 			if (!curFrame.empty())
 			{
-				imshow("Current Frame", curFrame);
-				cv::waitKey(SHOW_DELAY);
+				Util::ShowImage(curFrame);
 
 				if(SpecialUtil::CheckFrameIsGray(curFrame, grayFrame))
 				{
@@ -395,26 +387,25 @@ int main(int argc, char* argv[])
 				
 				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(grayFrame);
 
-				UpdateConfidenceMap(queueEndIndex, confidenceQueueMap, targetRects, Four);
+				UpdateConfidenceQueueMap(queueEndIndex, confidenceQueueMap, targetRects, Four);
 
-				UpdateConfidenceVector(confidenceQueueMap, allConfidenceQueue);
+				UpdateVectorOfConfidenceQueueMap(confidenceQueueMap, vectorOfConfidenceQueueMap);
 
 				auto searchIndex = 0;
 
-				GetMostLiklyTargetsRect(allConfidenceQueue, searchIndex);
+				GetMostLiklyTargetsRect(vectorOfConfidenceQueueMap, searchIndex);
 
-				DrawRectangleForAllCandidateTargets(colorFrame, allConfidenceQueue, targetRects, searchIndex, confidenceValueMap);
+				DrawRectangleForAllDetectedTargetsAndUpdateBlockConfidence(colorFrame, searchIndex, vectorOfConfidenceQueueMap, targetRects, confidenceValueMap);
 
-				PrintConfidenceValueMap(confidenceValueMap, "Before Draw Rect");
+//				PrintConfidenceValueMap(confidenceValueMap, "Before Draw Rect");
 
 				if (frameIndex > THINGKING_STAGE)
 				{
-					const auto maxTargetCount = 5;
 					std::vector<cv::Point> blocksContainTargets;
 
-					UpdateConfidenceValueVector(confidenceValueMap, allConfidenceValues);
+					UpdateConfidenceValueVector(confidenceValueMap, vectorOfConfidenceValueMap);
 
-					GetTopCountBlocksWhichContainsTargets(allConfidenceValues, maxTargetCount, blocksContainTargets);
+					GetTopCountBlocksWhichContainsTargets(vectorOfConfidenceValueMap, blocksContainTargets);
 
 					for (auto i = 0; i < blocksContainTargets.size(); ++i)
 					{
@@ -423,7 +414,7 @@ int main(int argc, char* argv[])
 
 						auto currentBlock = blocksContainTargets[i];
 
-						CheckTrackerForThisBlock(currentBlock, trackerIndex);
+						SearchWhichTrackerForThisBlock(currentBlock, trackerIndex);
 
 						for (auto j = 0; j < targetRects.size(); ++j)
 						{
@@ -439,7 +430,7 @@ int main(int argc, char* argv[])
 								}
 								else
 								{
-									if (!TrackerDecited(rect, x, y, trackerIndex))
+									if (!UpdateTrackerStatus(rect, x, y, trackerIndex))
 									{
 										CreateNewTrackerForThisBlock(currentBlock, rect);
 									}
@@ -465,10 +456,10 @@ int main(int argc, char* argv[])
 								}
 								else
 								{
-									if (!TrackerDecited(rect, x, y, trackerIndex))
+									if (!UpdateTrackerStatus(rect, x, y, trackerIndex))
 									{
-										CheckTrackerForThisBlock(cv::Point(x, y), trackerIndex);
-										if (!TrackerDecited(rect, x, y, trackerIndex))
+										SearchWhichTrackerForThisBlock(cv::Point(x, y), trackerIndex);
+										if (!UpdateTrackerStatus(rect, x, y, trackerIndex))
 											CreateNewTrackerForThisBlock(cv::Point(x, y), rect);
 									}
 
@@ -578,7 +569,7 @@ int main(int argc, char* argv[])
 					}
 				}
 
-				ConfidenceMapUtil::LostMemory(queueSize, queueEndIndex, confidenceQueueMap);
+				ConfidenceMapUtil::LostMemory(QUEUE_SIZE, queueEndIndex, confidenceQueueMap);
 
 				imshow("last result", colorFrame);
 				if (frameIndex == 0)
