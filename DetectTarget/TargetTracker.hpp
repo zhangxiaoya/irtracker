@@ -14,8 +14,8 @@ public:
 	{
 		
 		if (timeLeft >= warningStageTime)
-			return REDCOLOR;
-		return YELLOWCOLOR;
+			return COLOR_RED;
+		return COLOR_YELLOW;
 	}
 
 	void ExtendLifeTime()

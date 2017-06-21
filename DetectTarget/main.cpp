@@ -23,8 +23,8 @@ void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<
 	for (auto i = 0; i < targetRects.size(); ++i)
 	{
 		auto rect = targetRects[i];
-		auto x = (rect.x + rect.width / 2) / STEP;
-		auto y = (rect.y + rect.height / 2) / STEP;
+		auto x = (rect.x + rect.width / 2) / BLOCK_SIZE;
+		auto y = (rect.y + rect.height / 2) / BLOCK_SIZE;
 
 //		if (updateFlag[y][x])
 //			continue;
@@ -105,10 +105,10 @@ void DrawRectangleForAllCandidateTargets(cv::Mat& colorFrame, const std::vector<
 		auto rect = *it;
 		if (ConfidenceMapUtil::CheckIfInTopCount(rect, searchIndex, allConfidence))
 		{
-			rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), BLUECOLOR);
+			rectangle(colorFrame, cv::Rect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2), COLOR_BLUE);
 
-			auto x = (rect.x + rect.width / 2) / STEP;
-			auto y = (rect.y + rect.height / 2) / STEP;
+			auto x = (rect.x + rect.width / 2) / BLOCK_SIZE;
+			auto y = (rect.y + rect.height / 2) / BLOCK_SIZE;
 
 			if (updateFlag[y][x])
 				continue;
@@ -301,15 +301,15 @@ bool ReSearchTarget(const cv::Mat& curFrame, TargetTracker& tracker)
 	auto rightBottomBlockX = tracker.blockX + 1 < countX ? tracker.blockX + 1 : tracker.blockX;
 	auto rightBottomBlockY = tracker.blockY + 1 < countY ? tracker.blockY + 1 : tracker.blockY;
 
-	auto leftTopX = leftTopBlockX * STEP;
-	auto leftTopY = leftTopBlockY * STEP;
+	auto leftTopX = leftTopBlockX * BLOCK_SIZE;
+	auto leftTopY = leftTopBlockY * BLOCK_SIZE;
 
-	auto rightBottomX = (rightBottomBlockX + 1) * STEP - 1;
-	if (rightBottomX >= IMAGEWIDTH)
-		rightBottomX = IMAGEWIDTH - 1;
-	auto rightBottomY = (rightBottomBlockY + 1) * STEP - 1;
-	if (rightBottomY >= IMAGEHEIGHT)
-		rightBottomY = IMAGEHEIGHT - 1;
+	auto rightBottomX = (rightBottomBlockX + 1) * BLOCK_SIZE - 1;
+	if (rightBottomX >= IMAGE_WIDTH)
+		rightBottomX = IMAGE_WIDTH - 1;
+	auto rightBottomY = (rightBottomBlockY + 1) * BLOCK_SIZE - 1;
+	if (rightBottomY >= IMAGE_HEIGHT)
+		rightBottomY = IMAGE_HEIGHT - 1;
 
 	auto width = tracker.targetRect.width;
 	auto height = tracker.targetRect.height;
@@ -341,8 +341,8 @@ bool ReSearchTarget(const cv::Mat& curFrame, TargetTracker& tracker)
 		tracker.targetRect = cv::Rect(minCol, minRow, width, height);
 		tracker.leftTopX = minCol;
 		tracker.leftTopY = minRow;
-		tracker.blockX = minCol / STEP;
-		tracker.blockY = minRow / STEP;
+		tracker.blockX = minCol / BLOCK_SIZE;
+		tracker.blockY = minRow / BLOCK_SIZE;
 		tracker.feature = minFeature;
 		return true;
 	}
@@ -401,7 +401,7 @@ int main(int argc, char* argv[])
 
 				PrintConfidenceValueMap(confidenceValueMap, "Before Draw Rect");
 
-				if (frameIndex > ThinkingTime)
+				if (frameIndex > THINGKING_STAGE)
 				{
 					const auto maxTargetCount = 5;
 					std::vector<cv::Point> blocksContainTargets;
@@ -422,8 +422,8 @@ int main(int argc, char* argv[])
 						for (auto j = 0; j < targetRects.size(); ++j)
 						{
 							auto rect = targetRects[j];
-							auto x = (rect.x + rect.width / 2) / STEP;
-							auto y = (rect.y + rect.height / 2) / STEP;
+							auto x = (rect.x + rect.width / 2) / BLOCK_SIZE;
+							auto y = (rect.y + rect.height / 2) / BLOCK_SIZE;
 
 							if (x == currentBlock.x && y == currentBlock.y)
 							{

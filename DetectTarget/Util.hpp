@@ -69,7 +69,7 @@ inline void Util::BinaryMat(cv::Mat& mat)
 {
 	for (auto r = 0; r < mat.rows; ++r)
 		for (auto c = 0; c < mat.cols; ++c)
-			mat.at<uchar>(r, c) = mat.at<uchar>(r, c) > THRESHHOLD ? 1 : 0;
+			mat.at<uchar>(r, c) = mat.at<uchar>(r, c) > THRESHOLD ? 1 : 0;
 }
 
 inline double Util::MeanMat(const cv::Mat& mat)
@@ -88,7 +88,7 @@ inline void Util::ShowCandidateRects(const cv::Mat& grayFrame, const std::vector
 	cvtColor(grayFrame, colorFrame, CV_GRAY2RGB);
 
 	for (auto i = 0; i < candidate_rects.size(); ++i)
-		rectangle(colorFrame, candidate_rects[i], REDCOLOR);
+		rectangle(colorFrame, candidate_rects[i], COLOR_RED);
 
 	imshow("Color Frame", colorFrame);
 }
@@ -166,7 +166,7 @@ inline void Util::ShowAllObject(const cv::Mat& curFrame, const std::vector<FourL
 			continue;
 		}
 		auto rect = cv::Rect(allObject[i].left, allObject[i].top, width, height);
-		rectangle(colorFrame, rect, BLUECOLOR);
+		rectangle(colorFrame, rect, COLOR_BLUE);
 	}
 
 	imshow(title, colorFrame);
@@ -199,7 +199,7 @@ inline void Util::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::ve
 		}
 		auto rect = cv::Rect(allObject[i].left, allObject[i].top, width, height);
 
-		rectangle(colorFrame, rect, GREENCOLOR);
+		rectangle(colorFrame, rect, COLOR_GREEN);
 	}
 
 	imshow("All Candidate Targets", colorFrame);
@@ -212,7 +212,7 @@ inline void Util::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::ve
 
 	for (auto i = 0; i < rects.size(); ++i)
 	{
-		rectangle(colorFrame, rects[i], BLUECOLOR);
+		rectangle(colorFrame, rects[i], COLOR_BLUE);
 	}
 
 	imshow("All Candidate Objects", colorFrame);

@@ -4,7 +4,7 @@
 #include <highgui/highgui.hpp>
 #include <filesystem>
 
-cv::Mat previousFrame = cv::Mat(cv::Size(IMAGEWIDTH, IMAGEHEIGHT), CV_32SC1, cv::Scalar(1));
+cv::Mat previousFrame = cv::Mat(cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT), CV_32SC1, cv::Scalar(1));
 
 class DetectByMaxFilterAndAdptiveThreshold
 {

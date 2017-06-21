@@ -15,8 +15,8 @@ public:
 
 inline bool ConfidenceMapUtil::CheckIfInTopCount(const cv::Rect& rect, int searchIndex, const std::vector<ConfidenceElem>& confidenceElems)
 {
-	auto x = (rect.x + rect.width / 2) / STEP;
-	auto y = (rect.y + rect.height / 2) / STEP;
+	auto x = (rect.x + rect.width / 2) / BLOCK_SIZE;
+	auto y = (rect.y + rect.height / 2) / BLOCK_SIZE;
 
 	for (auto i = 0; i < searchIndex; ++i)
 	{

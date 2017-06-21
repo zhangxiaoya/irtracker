@@ -16,10 +16,10 @@ inline void UpdateImageSize()
 	{
 		std::cout << "Update Image Size" <<std::endl;
 
-		IMAGEWIDTH = img.cols;
-		IMAGEHEIGHT = img.rows;
-		countX = ceil(static_cast<double>(IMAGEWIDTH) / STEP);
-		countY = ceil(static_cast<double>(IMAGEWIDTH) / STEP);
+		IMAGE_WIDTH = img.cols;
+		IMAGE_HEIGHT = img.rows;
+		countX = ceil(static_cast<double>(IMAGE_WIDTH) / BLOCK_SIZE);
+		countY = ceil(static_cast<double>(IMAGE_WIDTH) / BLOCK_SIZE);
 	}
 	else
 	{
