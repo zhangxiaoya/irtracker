@@ -98,7 +98,8 @@ void DrawRectangleForAllDetectedTargetsAndUpdateBlockConfidence(cv::Mat& colorFr
                                                                 const int searchIndex,
                                                                 const std::vector<ConfidenceElem>& vectorOfConfidenceQueuqMap,
                                                                 std::vector<cv::Rect>& targetRects,
-                                                                std::vector<std::vector<int>>& confidenceValueMap)
+                                                                std::vector<std::vector<int>>& confidenceValueMap,
+																FieldType fieldType = FieldType::Four)
 {
 	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
 
@@ -125,6 +126,18 @@ void DrawRectangleForAllDetectedTargetsAndUpdateBlockConfidence(cv::Mat& colorFr
 				confidenceValueMap[y - 1][x] += 4;
 			if (y + 1 < countY)
 				confidenceValueMap[y + 1][x] += 4;
+
+			if(fieldType == FieldType::Eight)
+			{
+				if (x - 1 >= 0 && y -1 >= 0)
+					confidenceValueMap[y - 1][x - 1] += 4;
+				if (x + 1 < countX && y + 1 < countY)
+					confidenceValueMap[y + 1][x + 1] += 4;
+				if (y - 1 >= 0 && x + 1 < countX)
+					confidenceValueMap[y - 1][x + 1] += 4;
+				if (y + 1 < countY && x - 1 <= 0)
+					confidenceValueMap[y + 1][x - 1] += 4;
+			}
 		}
 		else
 		{
@@ -372,6 +385,19 @@ void PrintTrackersAndBlocksAndRectsLogs(std::vector<cv::Rect> targetRects, std::
 	}
 }
 
+void PrintConfidenceQueueMap(std::vector<std::vector<std::vector<int>>> confidenceQueueMap)
+{
+	for (auto r = 0; r < countY; ++r)
+	{
+		for (auto c = 0; c < countX; ++c)
+		{
+			std::cout << std::setw(3) << Util::Sum(confidenceQueueMap[r][c]) << " ";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
@@ -420,13 +446,15 @@ int main(int argc, char* argv[])
 
 				UpdateConfidenceQueueMap(queueEndIndex, confidenceQueueMap, targetRects, Four);
 
+				PrintConfidenceQueueMap(confidenceQueueMap);
+
 				UpdateVectorOfConfidenceQueueMap(confidenceQueueMap, vectorOfConfidenceQueueMap);
 
 				auto searchIndex = 0;
 
 				GetMostLiklyTargetsRect(vectorOfConfidenceQueueMap, searchIndex);
 
-				DrawRectangleForAllDetectedTargetsAndUpdateBlockConfidence(colorFrame, searchIndex, vectorOfConfidenceQueueMap, targetRects, confidenceValueMap);
+				DrawRectangleForAllDetectedTargetsAndUpdateBlockConfidence(colorFrame, searchIndex, vectorOfConfidenceQueueMap, targetRects, confidenceValueMap, Four);
 
 //				PrintConfidenceValueMap(confidenceValueMap, "Before Draw Rect");
 
@@ -541,7 +569,7 @@ int main(int argc, char* argv[])
 						}
 					}
 
-					PrintTrackersAndBlocksAndRectsLogs(targetRects, blocksContainTargets);
+//					PrintTrackersAndBlocksAndRectsLogs(targetRects, blocksContainTargets);
 
 					for (auto it = GlobalTrackerList.begin(); it != GlobalTrackerList.end(); ++it)
 					{
