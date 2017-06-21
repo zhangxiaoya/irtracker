@@ -11,8 +11,6 @@
 #include "GlobalInitialUtil.hpp"
 #include "TargetTracker.hpp"
 
-const auto TopCount = 5;
-
 void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects, FieldType fieldType = Four)
 {
 	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
@@ -54,43 +52,43 @@ void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<
 	}
 }
 
-void UpdateConfidenceVector(double countX, double countY, const std::vector<std::vector<std::vector<int>>>& confidenceMap, std::vector<ConfidenceElem>& allConfidence)
+void UpdateConfidenceVector(const std::vector<std::vector<std::vector<int>>>& confidenceQueueMap, std::vector<ConfidenceElem>& vectorOfConfidenceQueueMap)
 {
 	auto confidenceIndex = 0;
 	for (auto x = 0; x < countX; ++x)
 	{
 		for (auto y = 0; y < countY; ++y)
 		{
-			allConfidence[confidenceIndex].x = x;
-			allConfidence[confidenceIndex].y = y;
-			allConfidence[confidenceIndex++].confidenceVal = Util::Sum(confidenceMap[y][x]);
+			vectorOfConfidenceQueueMap[confidenceIndex].x = x;
+			vectorOfConfidenceQueueMap[confidenceIndex].y = y;
+			vectorOfConfidenceQueueMap[confidenceIndex++].confidenceVal = Util::Sum(confidenceQueueMap[y][x]);
 		}
 	}
 
-	sort(allConfidence.begin(), allConfidence.end(), Util::CompareConfidenceValue);
+	sort(vectorOfConfidenceQueueMap.begin(), vectorOfConfidenceQueueMap.end(), Util::CompareConfidenceValue);
 }
 
-void GetMostLiklyTargetsRect(const std::vector<ConfidenceElem>& allConfidence, const int topCount, int& searchIndex)
+void GetMostLiklyTargetsRect(const std::vector<ConfidenceElem>& vectorOfConfidenceQueueMap, int& searchIndex)
 {
-	auto currentTop = 0;
+	auto currentTopCount = 0;
 
-	while (searchIndex < allConfidence.size())
+	while (searchIndex < vectorOfConfidenceQueueMap.size())
 	{
 		if (searchIndex == 0)
 		{
-			++currentTop;
+			++currentTopCount;
 			++searchIndex;
 			continue;
 		}
-		if (allConfidence[currentTop].confidenceVal == allConfidence[searchIndex].confidenceVal)
+		if (vectorOfConfidenceQueueMap[currentTopCount].confidenceVal == vectorOfConfidenceQueueMap[searchIndex].confidenceVal)
 		{
 			++searchIndex;
 		}
 		else
 		{
-			++currentTop;
+			++currentTopCount;
 			++searchIndex;
-			if (currentTop >= topCount)
+			if (currentTopCount >= TOP_COUNT_OF_BLOCK_WITH_HIGH_QUEUE_VALUE)
 				break;
 		}
 	}
@@ -399,11 +397,11 @@ int main(int argc, char* argv[])
 
 				UpdateConfidenceMap(queueEndIndex, confidenceQueueMap, targetRects, Four);
 
-				UpdateConfidenceVector(countX, countY, confidenceQueueMap, allConfidenceQueue);
+				UpdateConfidenceVector(confidenceQueueMap, allConfidenceQueue);
 
 				auto searchIndex = 0;
 
-				GetMostLiklyTargetsRect(allConfidenceQueue, TopCount, searchIndex);
+				GetMostLiklyTargetsRect(allConfidenceQueue, searchIndex);
 
 				DrawRectangleForAllCandidateTargets(colorFrame, allConfidenceQueue, targetRects, searchIndex, confidenceValueMap);
 
