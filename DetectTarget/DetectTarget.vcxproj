@@ -119,7 +119,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ConfidenceMapUtil.hpp" />
+    <ClCompile Include="GlobalConstantConfigure.h" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ConfidenceElem.hpp" />
+    <ClInclude Include="DetectByBinaryBitMap.hpp" />
+    <ClInclude Include="DetectByDiscontinuity.hpp" />
+    <ClInclude Include="DetectByMaxFilterAndAdptiveThreshold.hpp" />
+    <ClInclude Include="DetectByMultiscaleLocalDifference.hpp" />
+    <ClInclude Include="FieldType.hpp" />
+    <ClInclude Include="FourLimits.hpp" />
+    <ClInclude Include="GlobalInitialUtil.hpp" />
+    <ClInclude Include="SpecialUtil.hpp" />
+    <ClInclude Include="Util.hpp" />
+    <ClInclude Include="TargetTracker.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
