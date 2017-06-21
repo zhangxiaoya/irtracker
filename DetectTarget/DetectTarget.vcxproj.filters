@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClCompile Include="ConfidenceMapUtil.hpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="GlobalConstantConfigure.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConfidenceElem.hpp" />

@@ -2,8 +2,7 @@
 #include "ConfidenceElem.hpp"
 #include <vector>
 #include <core/core.hpp>
-
-const auto STEP = 10;
+#include "GlobalConstantConfigure.h"
 
 class ConfidenceMapUtil
 {
@@ -11,8 +10,7 @@ public:
 
 	static bool CheckIfInTopCount(const cv::Rect& rect, int searchIndex, const std::vector<ConfidenceElem>& confidenceElems);
 
-	static void LostMemory(double countX, double countY, int queueSize, int& currentIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap);
-
+	static void LostMemory(int queueSize, int& currentIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap);
 };
 
 inline bool ConfidenceMapUtil::CheckIfInTopCount(const cv::Rect& rect, int searchIndex, const std::vector<ConfidenceElem>& confidenceElems)
@@ -28,7 +26,7 @@ inline bool ConfidenceMapUtil::CheckIfInTopCount(const cv::Rect& rect, int searc
 	return false;
 }
 
-inline void ConfidenceMapUtil::LostMemory(double countX, double countY, int queueSize, int& currentIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap)
+inline void ConfidenceMapUtil::LostMemory(int queueSize, int& currentIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap)
 {
 	currentIndex++;
 	currentIndex %= queueSize;

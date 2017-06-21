@@ -120,6 +120,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConfidenceMapUtil.hpp" />
+    <ClCompile Include="GlobalConstantConfigure.h" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>

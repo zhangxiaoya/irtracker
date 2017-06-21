@@ -11,12 +11,7 @@
 #include "GlobalInitialUtil.hpp"
 #include "TargetTracker.hpp"
 
-const auto SHOW_DELAY = 1;
 const auto TopCount = 5;
-const auto WRITE_FILE_NAME_BUFFER_SIZE = 100;
-
-const auto countX = ceil(static_cast<double>(320) / STEP);
-const auto countY = ceil(static_cast<double>(256) / STEP);
 
 void UpdateConfidenceMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects, FieldType fieldType = Four)
 {
@@ -310,11 +305,11 @@ bool ReSearchTarget(const cv::Mat& curFrame, TargetTracker& tracker)
 	auto leftTopY = leftTopBlockY * STEP;
 
 	auto rightBottomX = (rightBottomBlockX + 1) * STEP - 1;
-	if (rightBottomX >= 320)
-		rightBottomX = 319;
+	if (rightBottomX >= IMAGEWIDTH)
+		rightBottomX = IMAGEWIDTH - 1;
 	auto rightBottomY = (rightBottomBlockY + 1) * STEP - 1;
-	if (rightBottomY >= 256)
-		rightBottomY = 255;
+	if (rightBottomY >= IMAGEHEIGHT)
+		rightBottomY = IMAGEHEIGHT - 1;
 
 	auto width = tracker.targetRect.width;
 	auto height = tracker.targetRect.height;
@@ -577,7 +572,7 @@ int main(int argc, char* argv[])
 					}
 				}
 
-				ConfidenceMapUtil::LostMemory(countX, countY, queueSize, queueEndIndex, confidenceQueueMap);
+				ConfidenceMapUtil::LostMemory(queueSize, queueEndIndex, confidenceQueueMap);
 
 				imshow("last result", colorFrame);
 				if (frameIndex == 0)

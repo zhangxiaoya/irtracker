@@ -2,10 +2,9 @@
 #include <core/core.hpp>
 #include "Util.hpp"
 #include <highgui/highgui.hpp>
-#include <iostream>
 #include <filesystem>
 
-cv::Mat previousFrame = cv::Mat(cv::Size(320, 256), CV_32SC1, cv::Scalar(1));
+cv::Mat previousFrame = cv::Mat(cv::Size(IMAGEWIDTH, IMAGEHEIGHT), CV_32SC1, cv::Scalar(1));
 
 class DetectByMaxFilterAndAdptiveThreshold
 {
@@ -268,8 +267,8 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Ma
 
 	Util::ShowAllObject(curFrame, allObjects, "Before Merge");
 
-	std::vector<FourLimits> afterMergeObjects = allObjects;
-//	MergeCrossedRectangles(allObjects, afterMergeObjects);
+	std::vector<FourLimits> afterMergeObjects;
+	MergeCrossedRectangles(allObjects, afterMergeObjects);
 
 	Util::ShowAllObject(curFrame, afterMergeObjects, "After Merge Cross Rectangles");
 

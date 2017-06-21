@@ -1,27 +1,33 @@
 #pragma once
-
-auto const REDCOLOR = cv::Scalar(0, 0, 255);
-auto const BLUECOLOR = cv::Scalar(255, 0, 0);
-auto const GREENCOLOR = cv::Scalar(0, 255, 0);
-auto const YELLOWCOLOR = cv::Scalar(0, 255, 255);
-
-const auto WINDOW_WIDTH = 8;
-const auto WINDOW_HEIGHT = 8;
-const auto THRESHHOLD = 25;
-
-const auto ThinkingTime = 6;
-
-const auto TARGET_WIDTH_MIN_LIMIT = 2;
-const auto TARGET_HEIGHT_MIN_LIMIT = 2;
-const auto TARGET_WIDTH_MAX_LIMIT = 16;
-const auto TARGET_HEIGHT_MAX_LIMIT = 16;
+#include "ConfidenceMapUtil.hpp"
+#include "GlobalConstantConfigure.h"
 
 const char* GlobalWriteFileNameFormat;
 const char* GlobalImageListFolder;
 std::string inFullStr;
 std::string outFullStr;
 
-inline void InitVideoReader(cv::VideoCapture& video_capture)
+inline void UpdateImageSize()
+{
+	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
+	sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalImageListFolder, 0);
+	auto img = cv::imread(imageFullName);
+	if(!img.empty())
+	{
+		std::cout << "Update Image Size" <<std::endl;
+
+		IMAGEWIDTH = img.cols;
+		IMAGEHEIGHT = img.rows;
+		countX = ceil(static_cast<double>(IMAGEWIDTH) / STEP);
+		countY = ceil(static_cast<double>(IMAGEWIDTH) / STEP);
+	}
+	else
+	{
+		std::cout << "Read Image Failed, please check whether the path exist!" << std::endl;
+	}
+}
+
+inline void ForTwoBins()
 {
 	std::string listNum = "2";
 	// GlobalImageListFolder = "D:\\Bag\\Code_VS15\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_2_8bit_maxFilter_discrezated\\Frame_%04d.png";
@@ -32,11 +38,22 @@ inline void InitVideoReader(cv::VideoCapture& video_capture)
 
 	GlobalImageListFolder = inFullStr.c_str();
 
+	UpdateImageSize();
+
 	std::string outPrefix = ".\\ir_file_20170531_1000m_";
 	std::string outBackend = "\\Frame_%04d.png";
 	outFullStr = outPrefix + listNum + outBackend;
 
 	GlobalWriteFileNameFormat = outFullStr.c_str();
+}
+
+inline void InitVideoReader(cv::VideoCapture& video_capture)
+{
+	ForTwoBins();
+
+//	GlobalImageListFolder = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\00000000_00000000001582C6_%08d.bmp";
+
+//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\00000000_00000000001582C6_%08d.bmp";
 
 	video_capture.open(GlobalImageListFolder);
 }
