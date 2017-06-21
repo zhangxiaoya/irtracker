@@ -3,14 +3,15 @@
 #include "GlobalConstantConfigure.h"
 
 const char* GlobalWriteFileNameFormat;
-const char* GlobalImageListFolder;
-std::string inFullStr;
-std::string outFullStr;
+const char* GlobalImageListNameFormat;
+
+static std::string inFullStr;
+static std::string outFullStr;
 
 inline void UpdateImageSize()
 {
 	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
-	sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalImageListFolder, 0);
+	sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalImageListNameFormat, 0);
 	auto img = cv::imread(imageFullName);
 	if(!img.empty())
 	{
@@ -30,13 +31,13 @@ inline void UpdateImageSize()
 inline void ForTwoBins()
 {
 	std::string listNum = "2";
-	// GlobalImageListFolder = "D:\\Bag\\Code_VS15\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_2_8bit_maxFilter_discrezated\\Frame_%04d.png";
+	// GlobalImageListNameFormat = "D:\\Bag\\Code_VS15\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_2_8bit_maxFilter_discrezated\\Frame_%04d.png";
 
 	std::string inPrefix = "E:\\WorkLogs\\Gitlab\\ExtractVideo\\ExtractVideo\\ir_file_20170531_1000m_";
 	std::string inBackend = "_8bit\\Frame_%04d.png";
 	inFullStr = inPrefix + listNum + inBackend;
 
-	GlobalImageListFolder = inFullStr.c_str();
+	GlobalImageListNameFormat = inFullStr.c_str();
 
 	UpdateImageSize();
 
@@ -51,9 +52,9 @@ inline void InitVideoReader(cv::VideoCapture& video_capture)
 {
 	ForTwoBins();
 
-//	GlobalImageListFolder = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\00000000_00000000001582C6_%08d.bmp";
+//	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\00000000_00000000001582C6_%08d.bmp";
 
 //	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\00000000_00000000001582C6_%08d.bmp";
 
-	video_capture.open(GlobalImageListFolder);
+	video_capture.open(GlobalImageListNameFormat);
 }
