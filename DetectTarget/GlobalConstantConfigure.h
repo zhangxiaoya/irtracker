@@ -28,7 +28,7 @@ static int IMAGE_WIDTH = 320;
 static int IMAGE_HEIGHT = 256;
 
 static auto countX = ceil(static_cast<double>(IMAGE_WIDTH) / BLOCK_SIZE);
-static auto countY = ceil(static_cast<double>(IMAGE_WIDTH) / BLOCK_SIZE);
+static auto countY = ceil(static_cast<double>(IMAGE_HEIGHT) / BLOCK_SIZE);
 
 const auto WRITE_FILE_NAME_BUFFER_SIZE = 200;
 
