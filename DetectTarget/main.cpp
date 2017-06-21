@@ -341,6 +341,37 @@ bool ReSearchTarget(const cv::Mat& curFrame, TargetTracker& tracker)
 	return false;
 }
 
+void DrawResults(cv::Mat colorFrame)
+{
+	sort(GlobalTrackerList.begin(), GlobalTrackerList.end(), Util::CompareTracker);
+	for (auto tracker : GlobalTrackerList)
+	{
+		if (tracker.timeLeft > 2)
+			rectangle(colorFrame, cv::Rect(tracker.targetRect.x - 2, tracker.targetRect.y - 2, tracker.targetRect.width + 4, tracker.targetRect.height + 4), tracker.Color());
+	}
+}
+
+void PrintTrackersAndBlocksAndRectsLogs(std::vector<cv::Rect> targetRects, std::vector<cv::Point> blocksContainTargets)
+{
+	std::cout << "All Tracker" << std::endl;
+	for (auto tracker : GlobalTrackerList)
+	{
+		std::cout << "X = " << tracker.blockX << " Y = " << tracker.blockY << " Time Left = " << tracker.timeLeft << std::endl;
+	}
+
+	std::cout << "All Blocks" << std::endl;
+	for (auto target : blocksContainTargets)
+	{
+		std::cout << "X = " << target.x << " Y = "<< target.y <<std::endl;
+	}
+
+	std::cout << "All Rects" << std::endl;
+	for (auto rect : targetRects)
+	{
+		std::cout << "X = " << (rect.x + rect.width / 2) / BLOCK_SIZE <<" Y = " << (rect.y + rect.height /2 ) / BLOCK_SIZE<<std::endl;
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
@@ -462,9 +493,8 @@ int main(int argc, char* argv[])
 										if (!UpdateTrackerStatus(rect, blockXOfCurrentRect, blockYOfCurrentRect, trackerIndex))
 											CreateNewTrackerForThisBlock(cv::Point(blockXOfCurrentRect, blockYOfCurrentRect), rect);
 									}
-
-									findTargetFlag = true;
 								}
+								findTargetFlag = true;
 							}
 						}
 
@@ -472,13 +502,11 @@ int main(int argc, char* argv[])
 						{
 							if (trackerIndex > 0)
 							{
-								auto tracker = GlobalTrackerList[trackerIndex - 1];
+								auto it = GlobalTrackerList.begin() + (trackerIndex - 1);
 
-								tracker.timeLeft--;
-								if (tracker.timeLeft == 0)
+								it->timeLeft--;
+								if (it->timeLeft == 0)
 								{
-									auto it = GlobalTrackerList.begin() + (trackerIndex - 1);
-
 									auto col = it->blockX;
 									auto row = it->blockY;
 
@@ -513,23 +541,18 @@ int main(int argc, char* argv[])
 						}
 					}
 
-//					std::cout << "All Tracker" << std::endl;
-//					for (auto tracker : GlobalTrackerList)
-//					{
-//						std::cout << "X = " << tracker.blockX << " Y = " << tracker.blockY << " Time Left = " << tracker.timeLeft << std::endl;
-//					}
+					PrintTrackersAndBlocksAndRectsLogs(targetRects, blocksContainTargets);
 
 					for (auto it = GlobalTrackerList.begin(); it != GlobalTrackerList.end(); ++it)
 					{
-//						std::cout << "Test Tracker" << std::endl;
-//						std::cout << "X = " << it->blockX << " Y = " << it->blockY << std::endl;
-
 						auto existFlag = false;
 						for (auto target : blocksContainTargets)
 						{
-//							std::cout << "Current X = " << target.x << " Current Y = " << target.y << std::endl;
 							if (it->blockX == target.x && it->blockY == target.y)
+							{
 								existFlag = true;
+								break;
+							}
 						}
 
 						if (!existFlag)
@@ -559,14 +582,9 @@ int main(int argc, char* argv[])
 
 //					PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
 
-					ConfidenceValueLost(confidenceValueMap);
+//					ConfidenceValueLost(confidenceValueMap);
 
-					sort(GlobalTrackerList.begin(), GlobalTrackerList.end(), Util::CompareTracker);
-					for (auto tracker : GlobalTrackerList)
-					{
-						if (tracker.timeLeft > 2)
-							rectangle(colorFrame, cv::Rect(tracker.targetRect.x - 2, tracker.targetRect.y - 2, tracker.targetRect.width + 4, tracker.targetRect.height + 4), tracker.Color());
-					}
+					DrawResults(colorFrame);
 				}
 
 				ConfidenceMapUtil::LostMemory(QUEUE_SIZE, queueEndIndex, confidenceQueueMap);
