@@ -266,7 +266,7 @@ inline bool Util::CompareTracker(TargetTracker left, TargetTracker right)
 inline uchar Util::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect)
 {
 	auto sumAll = 0;
-	for(auto r =rect.y ;r < rect.y + rect.height;++r)
+	for (auto r = rect.y; r < rect.y + rect.height; ++r)
 	{
 		auto sumRow = 0;
 		for (auto c = rect.x; c < rect.x + rect.width; ++c)

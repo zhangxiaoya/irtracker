@@ -49,9 +49,9 @@ inline void InitVideoReader(cv::VideoCapture& video_capture)
 {
 	ForTwoBins();
 
-//	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
+	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 
-//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\Frame_%08d.bmp";
+	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\Frame_%08d.bmp";
 
 	UpdateImageSize();
 

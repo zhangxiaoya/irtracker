@@ -15,7 +15,6 @@ public:
 private:
 
 	static bool CheckDiscontinuity(const cv::Mat& cur_frame, const cv::Point& leftTop);
-
 };
 
 inline bool DetectByDiscontinuity::CheckDiscontinuity(const cv::Mat& frame, const cv::Point& leftTop)

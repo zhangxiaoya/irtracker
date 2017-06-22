@@ -78,7 +78,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::CalculateThreshold(const cv::M
 
 	threshHold = sumAll / (rightBottomY - leftTopY);
 
-//	threshHold += (threshHold) / 4;
+	//	threshHold += (threshHold) / 4;
 }
 
 inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame)
