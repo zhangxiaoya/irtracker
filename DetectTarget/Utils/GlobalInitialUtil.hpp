@@ -1,5 +1,5 @@
 #pragma once
-#include "GlobalConstantConfigure.h"
+#include "../Headers/GlobalConstantConfigure.h"
 
 const char* GlobalWriteFileNameFormat;
 const char* GlobalImageListNameFormat;

@@ -119,22 +119,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ConfidenceMapUtil.hpp" />
-    <ClCompile Include="GlobalConstantConfigure.h" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ConfidenceElem.hpp" />
-    <ClInclude Include="DetectByBinaryBitMap.hpp" />
-    <ClInclude Include="DetectByDiscontinuity.hpp" />
-    <ClInclude Include="DetectByMaxFilterAndAdptiveThreshold.hpp" />
-    <ClInclude Include="DetectByMultiscaleLocalDifference.hpp" />
-    <ClInclude Include="FieldType.hpp" />
-    <ClInclude Include="FourLimits.hpp" />
-    <ClInclude Include="GlobalInitialUtil.hpp" />
-    <ClInclude Include="SpecialUtil.hpp" />
-    <ClInclude Include="Util.hpp" />
-    <ClInclude Include="TargetTracker.hpp" />
+    <ClInclude Include="Detector\DetectByBinaryBitMap.hpp" />
+    <ClInclude Include="Detector\DetectByDiscontinuity.hpp" />
+    <ClInclude Include="Detector\DetectByMaxFilterAndAdptiveThreshold.hpp" />
+    <ClInclude Include="Detector\DetectByMultiscaleLocalDifference.hpp" />
+    <ClInclude Include="Headers\GlobalConstantConfigure.h" />
+    <ClInclude Include="Models\ConfidenceElem.hpp" />
+    <ClInclude Include="Models\FieldType.hpp" />
+    <ClInclude Include="Models\FourLimits.hpp" />
+    <ClInclude Include="Tracker\TargetTracker.hpp" />
+    <ClInclude Include="Utils\ConfidenceMapUtil.hpp" />
+    <ClInclude Include="Utils\GlobalInitialUtil.hpp" />
+    <ClInclude Include="Utils\SpecialUtil.hpp" />
+    <ClInclude Include="Utils\Util.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

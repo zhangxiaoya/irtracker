@@ -1,7 +1,8 @@
 #pragma once
 
 #include <opencv2/core/core.hpp>
-#include "Util.hpp"
+#include "../Headers/GlobalConstantConfigure.h"
+#include "../Utils/Util.hpp"
 
 const auto CONTIUNITY_THRESHHOLD = 0.4;
 

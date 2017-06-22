@@ -1,8 +1,7 @@
 #pragma once
-#include "ConfidenceElem.hpp"
 #include <vector>
 #include <core/core.hpp>
-#include "GlobalConstantConfigure.h"
+#include "../Models/ConfidenceElem.hpp"
 
 class ConfidenceMapUtil
 {

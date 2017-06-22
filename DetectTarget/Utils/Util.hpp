@@ -6,11 +6,11 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "FourLimits.hpp"
-#include "FieldType.hpp"
-#include "ConfidenceElem.hpp"
+#include "../Models/FourLimits.hpp"
+#include "../Models/FieldType.hpp"
+#include "../Models/ConfidenceElem.hpp"
 #include "GlobalInitialUtil.hpp"
-#include "TargetTracker.hpp"
+#include "../Tracker/TargetTracker.hpp"
 
 class TargetTracker;
 

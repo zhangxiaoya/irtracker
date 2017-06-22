@@ -4,12 +4,16 @@
 #include <iomanip>
 #include <iterator>
 
-#include "DetectByMaxFilterAndAdptiveThreshold.hpp"
-#include "ConfidenceElem.hpp"
-#include "SpecialUtil.hpp"
-#include "ConfidenceMapUtil.hpp"
-#include "GlobalInitialUtil.hpp"
-#include "TargetTracker.hpp"
+#include "Models/FieldType.hpp"
+#include "Headers/GlobalConstantConfigure.h"
+#include "Utils/ConfidenceMapUtil.hpp"
+#include "Tracker/TargetTracker.hpp"
+#include "Detector/DetectByMaxFilterAndAdptiveThreshold.hpp"
+#include "Utils/SpecialUtil.hpp"
+#include <imgproc/types_c.h>
+#include <imgproc/imgproc.hpp>
+#include "Utils/Util.hpp"
+#include "Models/ConfidenceElem.hpp"
 
 void UpdateConfidenceQueueMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects, FieldType fieldType = Four)
 {
