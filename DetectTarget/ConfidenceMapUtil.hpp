@@ -11,6 +11,10 @@ public:
 	static bool CheckIfInTopCount(const cv::Rect& rect, int searchIndex, const std::vector<ConfidenceElem>& confidenceElems);
 
 	static void LostMemory(int queueSize, int& currentIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap);
+
+private:
+
+	const static int CONFIDENCE_MIN_THRESHOLD = 20;
 };
 
 inline bool ConfidenceMapUtil::CheckIfInTopCount(const cv::Rect& rect, int searchIndex, const std::vector<ConfidenceElem>& confidenceElems)
@@ -20,7 +24,7 @@ inline bool ConfidenceMapUtil::CheckIfInTopCount(const cv::Rect& rect, int searc
 
 	for (auto i = 0; i < searchIndex; ++i)
 	{
-		if (confidenceElems[i].x == x && confidenceElems[i].y == y && confidenceElems[i].confidenceVal >= 40)
+		if (confidenceElems[i].x == x && confidenceElems[i].y == y && confidenceElems[i].confidenceVal >= CONFIDENCE_MIN_THRESHOLD)
 			return true;
 	}
 	return false;
