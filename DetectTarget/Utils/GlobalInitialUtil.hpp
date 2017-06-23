@@ -19,7 +19,7 @@ inline void UpdateImageSize()
 		IMAGE_WIDTH = img.cols;
 		IMAGE_HEIGHT = img.rows;
 		countX = ceil(static_cast<double>(IMAGE_WIDTH) / BLOCK_SIZE);
-		countY = ceil(static_cast<double>(IMAGE_WIDTH) / BLOCK_SIZE);
+		countY = ceil(static_cast<double>(IMAGE_HEIGHT) / BLOCK_SIZE);
 	}
 	else
 	{
