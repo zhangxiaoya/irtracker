@@ -11,7 +11,7 @@ class DetectByMaxFilterAndAdptiveThreshold
 {
 public:
 
-	static std::vector<cv::Rect> Detect(cv::Mat curFrame);
+	static std::vector<cv::Rect> Detect(cv::Mat& curFrame);
 
 private:
 
@@ -241,10 +241,60 @@ inline void DetectByMaxFilterAndAdptiveThreshold::FilterRectByContinuty(cv::Mat 
 		RefreshMask(curFrame, rects);
 }
 
-inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat curFrame)
+inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curFrame)
 {
 	cv::Mat filtedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
 	auto kernelSize = 3;
+
+	std::vector<std::vector<uchar>> maxmindiff(countY,std::vector<uchar>(countX,0));
+
+	for (auto br = 0; br < countY; ++br)
+	{
+		auto height = br == (countY - 1) ? IMAGE_HEIGHT - (countY - 1) * BLOCK_SIZE : BLOCK_SIZE;
+		for (auto bc = 0; bc < countX; ++bc)
+		{
+			auto width = bc == (countX - 1) ? IMAGE_WIDTH - (countX - 1) * BLOCK_SIZE : BLOCK_SIZE;
+			maxmindiff[br][bc] = Util::GetMaxValueOfBlock(curFrame(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height))) - Util::GetMinValueOfBlock(curFrame(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height)));
+		}
+	}
+
+	auto maxdiff = 0;
+	auto maxdiffBlockX = -1;
+	auto maxdiffBlockY = -1;
+	for (auto br = 0; br < countY; ++br)
+	{
+		for (auto bc = 0; bc < countX; ++bc)
+		{
+			if(maxdiff < static_cast<int>(maxmindiff[br][bc]))
+			{
+				maxdiff = static_cast<int>(maxmindiff[br][bc]);
+				maxdiffBlockX = bc;
+				maxdiffBlockY = br;
+			}
+		}
+	}
+	std::cout << "Max Diff = " << maxdiff << std::endl;
+
+	auto centerX = maxdiffBlockX * BLOCK_SIZE + BLOCK_SIZE / 2;
+	auto centerY = maxdiffBlockY * BLOCK_SIZE + BLOCK_SIZE / 2;
+	auto boundingBoxLeftTopX = centerX - BLOCK_SIZE >= 0 ? centerX - BLOCK_SIZE : 0;
+	auto boundingBoxLeftTopY = centerY - BLOCK_SIZE >= 0 ? centerY - BLOCK_SIZE : 0;
+	auto boundingBoxRightBottomX = centerX + BLOCK_SIZE < IMAGE_WIDTH ? centerX + BLOCK_SIZE : IMAGE_WIDTH - 1;
+	auto boundingBoxRightBottomY = centerY + BLOCK_SIZE < IMAGE_HEIGHT ? centerY + BLOCK_SIZE : IMAGE_HEIGHT - 1;
+	auto averageValue = Util::CalculateAverageValue(curFrame, boundingBoxLeftTopX, boundingBoxLeftTopY, boundingBoxRightBottomX, boundingBoxRightBottomY);
+
+	auto maxdiffBlockRightBottomX = (maxdiffBlockX + 1) * BLOCK_SIZE > IMAGE_WIDTH ? IMAGE_WIDTH - 1 : (maxdiffBlockX + 1) * BLOCK_SIZE;
+	auto maxdiffBlockRightBottomY = (maxdiffBlockY + 1) * BLOCK_SIZE > IMAGE_HEIGHT ? IMAGE_HEIGHT - 1 : (maxdiffBlockY + 1) * BLOCK_SIZE;
+	for(auto r = maxdiffBlockY * BLOCK_SIZE; r < maxdiffBlockRightBottomY;++r)
+	{
+		for(auto c = maxdiffBlockX * BLOCK_SIZE; c < maxdiffBlockRightBottomX; ++c)
+		{
+			if(curFrame.at<uchar>(r,c) > averageValue)
+			{
+				curFrame.at<uchar>(r, c) = curFrame.at<uchar>(r, c) + 10 > 255 ? 255 : curFrame.at<uchar>(r, c) + 10;
+			}
+		}
+	}
 
 	MaxFilter(curFrame, filtedFrame, kernelSize);
 
@@ -272,9 +322,10 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Ma
 
 	Util::ShowAllObject(curFrame, afterMergeObjects, "After Merge Cross Rectangles");
 
-	auto rects = Util::GetCandidateTargets(curFrame, afterMergeObjects);
+	auto rects = Util::GetCandidateTargets(discrezatedFrame, afterMergeObjects);
 
 	Util::ShowAllCandidateTargets(curFrame, rects);
+	std::cout << "Count = " << rects.size() << std::endl;
 
 	return rects;
 }

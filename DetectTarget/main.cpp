@@ -443,14 +443,14 @@ int main(int argc, char* argv[])
 					colorFrame = curFrame;
 				}
 
-				SpecialUtil::RemoveInvalidPixel(grayFrame);
+//				SpecialUtil::RemoveInvalidPixel(grayFrame);
 
 				
 				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(grayFrame);
 
 				UpdateConfidenceQueueMap(queueEndIndex, confidenceQueueMap, targetRects, Four);
 
-				PrintConfidenceQueueMap(confidenceQueueMap);
+//				PrintConfidenceQueueMap(confidenceQueueMap);
 
 				UpdateVectorOfConfidenceQueueMap(confidenceQueueMap, vectorOfConfidenceQueueMap);
 

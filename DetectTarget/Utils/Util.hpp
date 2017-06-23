@@ -56,6 +56,12 @@ public:
 
 	static int FeatureDiff(const std::vector<unsigned char>& featureOne, const std::vector<unsigned char>& featureTwo);
 
+	static uchar GetMinValueOfBlock(const cv::Mat& cuFrame);
+
+	static uchar GetMaxValueOfBlock(const cv::Mat& mat);
+
+	static uchar CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
+
 private:
 
 	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex);
@@ -368,6 +374,50 @@ inline int Util::FeatureDiff(const std::vector<unsigned char>& featureOne, const
 	return sum;
 }
 
+inline uchar Util::GetMinValueOfBlock(const cv::Mat& mat)
+{
+	uchar minVal = 255;
+	for (auto r = 0; r < mat.rows; ++r)
+	{
+		for (auto c = 0; c < mat.cols; ++c)
+		{
+			if (minVal > mat.at<uchar>(r, c))
+				minVal = mat.at<uchar>(r, c);
+		}
+	}
+	return minVal;
+}
+
+inline uchar Util::GetMaxValueOfBlock(const cv::Mat& mat)
+{
+	uchar maxVal = 0;
+	for (auto r = 0; r < mat.rows; ++r)
+	{
+		for (auto c = 0; c < mat.cols; ++c)
+		{
+			if (maxVal < mat.at<uchar>(r, c))
+				maxVal = mat.at<uchar>(r, c);
+		}
+	}
+	return maxVal;
+}
+
+inline uchar Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+{
+	uchar sumAll = 0;
+	for (auto r = leftTopY; r < rightBottomY; ++r)
+	{
+		auto sumRow = 0;
+		for (auto c = leftTopX; c < rightBottomX; ++c)
+		{
+			sumRow += frame.at<uchar>(r, c);
+		}
+		sumAll += (sumRow / (rightBottomX - leftTopX));
+	}
+
+	return sumAll / (rightBottomY - leftTopY);
+}
+
 inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
 {
 	std::stack<cv::Point> deepTrace;
@@ -502,17 +552,6 @@ inline void Util::DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int
 
 inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
-	auto sumAll = 0;
-	for (auto r = leftTopY; r < rightBottomY; ++r)
-	{
-		auto sumRow = 0;
-		for (auto c = leftTopX; c < rightBottomX; ++c)
-		{
-			sumRow += frame.at<uchar>(r, c);
-		}
-		sumAll += (sumRow / (rightBottomX - leftTopX));
-	}
-
-	threshHold = sumAll / (rightBottomY - leftTopY);
-	threshHold += threshHold / 4;
+	threshHold = CalculateAverageValue(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
+//	threshHold += threshHold / 4;
 }
