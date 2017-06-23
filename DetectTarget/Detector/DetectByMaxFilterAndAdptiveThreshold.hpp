@@ -12,7 +12,7 @@ class DetectByMaxFilterAndAdptiveThreshold
 {
 public:
 
-	static std::vector<cv::Rect> Detect(cv::Mat& curFrame);
+	static std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& fdImg);
 
 private:
 
@@ -318,7 +318,7 @@ inline std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold::GetMost
 	return mostPossibleBlocks;
 }
 
-inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curFrame)
+inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curFrame, cv::Mat& fdImg)
 {
 	cv::Mat filtedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
 	auto kernelSize = 3;
@@ -331,8 +331,9 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Ma
 
 	Discretization(filtedFrame, discrezatedFrame);
 
-	imshow("Max Filter and Discrezated", discrezatedFrame);
+	fdImg = discrezatedFrame;
 
+	imshow("Max Filter and Discrezated", discrezatedFrame);
 
 	cv::Mat blockMap(cv::Size(discrezatedFrame.cols, discrezatedFrame.rows), CV_32SC1, cv::Scalar(-1));
 	auto totalObject = GetBlocks(discrezatedFrame, blockMap);
