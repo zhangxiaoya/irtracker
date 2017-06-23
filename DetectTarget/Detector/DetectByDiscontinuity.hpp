@@ -1,7 +1,8 @@
 #pragma once
 
 #include <opencv2/core/core.hpp>
-#include "Util.hpp"
+#include "../Headers/GlobalConstantConfigure.h"
+#include "../Utils/Util.hpp"
 
 const auto CONTIUNITY_THRESHHOLD = 0.4;
 
@@ -14,7 +15,6 @@ public:
 private:
 
 	static bool CheckDiscontinuity(const cv::Mat& cur_frame, const cv::Point& leftTop);
-
 };
 
 inline bool DetectByDiscontinuity::CheckDiscontinuity(const cv::Mat& frame, const cv::Point& leftTop)

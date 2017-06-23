@@ -22,7 +22,7 @@ inline void SpecialUtil::RemoveInvalidPixel(cv::Mat curFrame)
 
 inline bool SpecialUtil::CheckFrameIsGray(const cv::Mat& curFrame, cv::Mat& grayImage)
 {
-	if(curFrame.channels() == 3)
+	if (curFrame.channels() == 3)
 	{
 		cvtColor(curFrame, grayImage, CV_RGB2GRAY);
 		return false;

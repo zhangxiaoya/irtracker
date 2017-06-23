@@ -1,21 +1,64 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="ConfidenceMapUtil.hpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="GlobalConstantConfigure.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ConfidenceElem.hpp" />
-    <ClInclude Include="DetectByBinaryBitMap.hpp" />
-    <ClInclude Include="DetectByDiscontinuity.hpp" />
-    <ClInclude Include="DetectByMultiscaleLocalDifference.hpp" />
-    <ClInclude Include="FieldType.hpp" />
-    <ClInclude Include="FourLimits.hpp" />
-    <ClInclude Include="GlobalInitialUtil.hpp" />
-    <ClInclude Include="SpecialUtil.hpp" />
-    <ClInclude Include="Util.hpp" />
-    <ClInclude Include="TargetTracker.hpp" />
-    <ClInclude Include="DetectByMaxFilterAndAdptiveThreshold.hpp" />
+    <ClInclude Include="Models\ConfidenceElem.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\FieldType.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\FourLimits.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\ConfidenceMapUtil.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\GlobalInitialUtil.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\SpecialUtil.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Util.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Detector\DetectByBinaryBitMap.hpp">
+      <Filter>Detector</Filter>
+    </ClInclude>
+    <ClInclude Include="Detector\DetectByDiscontinuity.hpp">
+      <Filter>Detector</Filter>
+    </ClInclude>
+    <ClInclude Include="Detector\DetectByMaxFilterAndAdptiveThreshold.hpp">
+      <Filter>Detector</Filter>
+    </ClInclude>
+    <ClInclude Include="Detector\DetectByMultiscaleLocalDifference.hpp">
+      <Filter>Detector</Filter>
+    </ClInclude>
+    <ClInclude Include="Tracker\TargetTracker.hpp">
+      <Filter>Tracker</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\GlobalConstantConfigure.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Models">
+      <UniqueIdentifier>{37dec2b2-2ec3-416c-88d8-95a7f9754a37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{56d480ae-9d40-4351-8f49-176934233426}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Detector">
+      <UniqueIdentifier>{a61b7386-7c44-4f4c-9e8f-df1a15942d5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tracker">
+      <UniqueIdentifier>{4d593a0c-3d0f-4998-83af-31b1e081e2d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{284cd885-f466-4290-ba0b-28c508c41a49}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

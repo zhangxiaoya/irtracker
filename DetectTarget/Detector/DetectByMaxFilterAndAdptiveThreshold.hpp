@@ -1,8 +1,9 @@
 #pragma once
 #include <core/core.hpp>
-#include "Util.hpp"
 #include <highgui/highgui.hpp>
 #include <filesystem>
+#include "../Models/FourLimits.hpp"
+#include "../Utils/Util.hpp"
 
 cv::Mat previousFrame = cv::Mat(cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT), CV_32SC1, cv::Scalar(1));
 
@@ -77,7 +78,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::CalculateThreshold(const cv::M
 
 	threshHold = sumAll / (rightBottomY - leftTopY);
 
-//	threshHold += (threshHold) / 4;
+	//	threshHold += (threshHold) / 4;
 }
 
 inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame)

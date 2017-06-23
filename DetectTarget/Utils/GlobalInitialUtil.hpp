@@ -1,5 +1,5 @@
 #pragma once
-#include "GlobalConstantConfigure.h"
+#include "../Headers/GlobalConstantConfigure.h"
 
 const char* GlobalWriteFileNameFormat;
 const char* GlobalImageListNameFormat;
@@ -19,7 +19,7 @@ inline void UpdateImageSize()
 		IMAGE_WIDTH = img.cols;
 		IMAGE_HEIGHT = img.rows;
 		countX = ceil(static_cast<double>(IMAGE_WIDTH) / BLOCK_SIZE);
-		countY = ceil(static_cast<double>(IMAGE_WIDTH) / BLOCK_SIZE);
+		countY = ceil(static_cast<double>(IMAGE_HEIGHT) / BLOCK_SIZE);
 	}
 	else
 	{
@@ -49,9 +49,9 @@ inline void InitVideoReader(cv::VideoCapture& video_capture)
 {
 	ForTwoBins();
 
-//	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
+	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 
-//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\Frame_%08d.bmp";
+	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\Frame_%08d.bmp";
 
 	UpdateImageSize();
 

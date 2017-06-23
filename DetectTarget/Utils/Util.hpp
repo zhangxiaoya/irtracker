@@ -6,11 +6,11 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "FourLimits.hpp"
-#include "FieldType.hpp"
-#include "ConfidenceElem.hpp"
+#include "../Models/FourLimits.hpp"
+#include "../Models/FieldType.hpp"
+#include "../Models/ConfidenceElem.hpp"
 #include "GlobalInitialUtil.hpp"
-#include "TargetTracker.hpp"
+#include "../Tracker/TargetTracker.hpp"
 
 class TargetTracker;
 
@@ -266,7 +266,7 @@ inline bool Util::CompareTracker(TargetTracker left, TargetTracker right)
 inline uchar Util::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect)
 {
 	auto sumAll = 0;
-	for(auto r =rect.y ;r < rect.y + rect.height;++r)
+	for (auto r = rect.y; r < rect.y + rect.height; ++r)
 	{
 		auto sumRow = 0;
 		for (auto c = rect.x; c < rect.x + rect.width; ++c)

@@ -1,17 +1,18 @@
 #pragma once
 #include <core/core.hpp>
-#include "Util.hpp"
+#include "../Utils/Util.hpp"
+#include "../Models/FourLimits.hpp"
+#include "../Models/FieldType.hpp"
 
 class DetectByBinaryBitMap
 {
 public:
-	
+
 	static void Detect(cv::Mat curFrame);
 
 private:
 
 	static int GetBitMap(const cv::Mat& binaryFrame, cv::Mat& bitMap);
-
 };
 
 inline void DetectByBinaryBitMap::Detect(cv::Mat curFrame)
