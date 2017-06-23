@@ -43,6 +43,9 @@
     <ClInclude Include="Headers\GlobalConstantConfigure.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="DifferenceElem.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Models">

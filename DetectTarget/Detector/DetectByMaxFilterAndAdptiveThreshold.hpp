@@ -4,6 +4,7 @@
 #include <filesystem>
 #include "../Models/FourLimits.hpp"
 #include "../Utils/Util.hpp"
+#include "../DifferenceElem.hpp"
 
 cv::Mat previousFrame = cv::Mat(cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT), CV_32SC1, cv::Scalar(1));
 
@@ -28,6 +29,10 @@ private:
 	static void RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result);
 
 	static void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
+	static std::vector<std::vector<uchar>> GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame);
+	static void StrengthenIntensityOfBlock(cv::Mat& curFrame);
+	static void GetMaxValueOfMatrix(std::vector<std::vector<uchar>> maxmindiff, DifferenceElem& diffElem);
+	static std::vector<DifferenceElem> GetMostMaxDiffBlock(std::vector<std::vector<uchar>> maxmindiff);
 
 	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
 
@@ -241,13 +246,9 @@ inline void DetectByMaxFilterAndAdptiveThreshold::FilterRectByContinuty(cv::Mat 
 		RefreshMask(curFrame, rects);
 }
 
-inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curFrame)
+inline std::vector<std::vector<uchar>> DetectByMaxFilterAndAdptiveThreshold::GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame)
 {
-	cv::Mat filtedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
-	auto kernelSize = 3;
-
-	std::vector<std::vector<uchar>> maxmindiff(countY,std::vector<uchar>(countX,0));
-
+	std::vector<std::vector<uchar>> maxmindiff(countY, std::vector<uchar>(countX, 0));
 	for (auto br = 0; br < countY; ++br)
 	{
 		auto height = br == (countY - 1) ? IMAGE_HEIGHT - (countY - 1) * BLOCK_SIZE : BLOCK_SIZE;
@@ -257,44 +258,72 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Ma
 			maxmindiff[br][bc] = Util::GetMaxValueOfBlock(curFrame(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height))) - Util::GetMinValueOfBlock(curFrame(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height)));
 		}
 	}
+	return maxmindiff;
+}
 
-	auto maxdiff = 0;
-	auto maxdiffBlockX = -1;
-	auto maxdiffBlockY = -1;
+inline void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv::Mat& curFrame)
+{
+	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap(curFrame);
+	auto differenceElems = GetMostMaxDiffBlock(maxmindiffMatrix);
+
+	for (auto elem : differenceElems)
+	{
+		auto centerX = elem.blockX * BLOCK_SIZE + BLOCK_SIZE / 2;
+		auto centerY = elem.blockY * BLOCK_SIZE + BLOCK_SIZE / 2;
+		auto boundingBoxLeftTopX = centerX - BLOCK_SIZE >= 0 ? centerX - BLOCK_SIZE : 0;
+		auto boundingBoxLeftTopY = centerY - BLOCK_SIZE >= 0 ? centerY - BLOCK_SIZE : 0;
+		auto boundingBoxRightBottomX = centerX + BLOCK_SIZE < IMAGE_WIDTH ? centerX + BLOCK_SIZE : IMAGE_WIDTH - 1;
+		auto boundingBoxRightBottomY = centerY + BLOCK_SIZE < IMAGE_HEIGHT ? centerY + BLOCK_SIZE : IMAGE_HEIGHT - 1;
+		auto averageValue = Util::CalculateAverageValue(curFrame, boundingBoxLeftTopX, boundingBoxLeftTopY, boundingBoxRightBottomX, boundingBoxRightBottomY);
+
+		auto maxdiffBlockRightBottomX = (elem.blockX + 1) * BLOCK_SIZE > IMAGE_WIDTH ? IMAGE_WIDTH - 1 : (elem.blockX + 1) * BLOCK_SIZE;
+		auto maxdiffBlockRightBottomY = (elem.blockY + 1) * BLOCK_SIZE > IMAGE_HEIGHT ? IMAGE_HEIGHT - 1 : (elem.blockY + 1) * BLOCK_SIZE;
+		for (auto r = elem.blockY * BLOCK_SIZE; r < maxdiffBlockRightBottomY; ++r)
+		{
+			for (auto c = elem.blockX * BLOCK_SIZE; c < maxdiffBlockRightBottomX; ++c)
+			{
+				if (curFrame.at<uchar>(r, c) > averageValue)
+				{
+					curFrame.at<uchar>(r, c) = curFrame.at<uchar>(r, c) + 10 > 255 ? 255 : curFrame.at<uchar>(r, c) + 10;
+				}
+			}
+		}
+	}
+}
+
+inline void DetectByMaxFilterAndAdptiveThreshold::GetMaxValueOfMatrix(std::vector<std::vector<uchar>> maxmindiff, DifferenceElem& diffElem)
+{
 	for (auto br = 0; br < countY; ++br)
 	{
 		for (auto bc = 0; bc < countX; ++bc)
 		{
-			if(maxdiff < static_cast<int>(maxmindiff[br][bc]))
+			if(diffElem.diffVal < static_cast<int>(maxmindiff[br][bc]))
 			{
-				maxdiff = static_cast<int>(maxmindiff[br][bc]);
-				maxdiffBlockX = bc;
-				maxdiffBlockY = br;
+				diffElem.diffVal = static_cast<int>(maxmindiff[br][bc]);
+				diffElem.blockX = bc;
+				diffElem.blockY = br;
 			}
 		}
 	}
-	std::cout << "Max Diff = " << maxdiff << std::endl;
+}
 
-	auto centerX = maxdiffBlockX * BLOCK_SIZE + BLOCK_SIZE / 2;
-	auto centerY = maxdiffBlockY * BLOCK_SIZE + BLOCK_SIZE / 2;
-	auto boundingBoxLeftTopX = centerX - BLOCK_SIZE >= 0 ? centerX - BLOCK_SIZE : 0;
-	auto boundingBoxLeftTopY = centerY - BLOCK_SIZE >= 0 ? centerY - BLOCK_SIZE : 0;
-	auto boundingBoxRightBottomX = centerX + BLOCK_SIZE < IMAGE_WIDTH ? centerX + BLOCK_SIZE : IMAGE_WIDTH - 1;
-	auto boundingBoxRightBottomY = centerY + BLOCK_SIZE < IMAGE_HEIGHT ? centerY + BLOCK_SIZE : IMAGE_HEIGHT - 1;
-	auto averageValue = Util::CalculateAverageValue(curFrame, boundingBoxLeftTopX, boundingBoxLeftTopY, boundingBoxRightBottomX, boundingBoxRightBottomY);
+inline std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold::GetMostMaxDiffBlock(std::vector<std::vector<uchar>> maxmindiff)
+{
+	std::vector<DifferenceElem> mostPossibleBlocks;
 
-	auto maxdiffBlockRightBottomX = (maxdiffBlockX + 1) * BLOCK_SIZE > IMAGE_WIDTH ? IMAGE_WIDTH - 1 : (maxdiffBlockX + 1) * BLOCK_SIZE;
-	auto maxdiffBlockRightBottomY = (maxdiffBlockY + 1) * BLOCK_SIZE > IMAGE_HEIGHT ? IMAGE_HEIGHT - 1 : (maxdiffBlockY + 1) * BLOCK_SIZE;
-	for(auto r = maxdiffBlockY * BLOCK_SIZE; r < maxdiffBlockRightBottomY;++r)
-	{
-		for(auto c = maxdiffBlockX * BLOCK_SIZE; c < maxdiffBlockRightBottomX; ++c)
-		{
-			if(curFrame.at<uchar>(r,c) > averageValue)
-			{
-				curFrame.at<uchar>(r, c) = curFrame.at<uchar>(r, c) + 10 > 255 ? 255 : curFrame.at<uchar>(r, c) + 10;
-			}
-		}
-	}
+	DifferenceElem diffElem;
+	GetMaxValueOfMatrix(maxmindiff, diffElem);
+	mostPossibleBlocks.push_back(diffElem);
+
+	return mostPossibleBlocks;
+}
+
+inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curFrame)
+{
+	cv::Mat filtedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
+	auto kernelSize = 3;
+
+	StrengthenIntensityOfBlock(curFrame);
 
 	MaxFilter(curFrame, filtedFrame, kernelSize);
 
