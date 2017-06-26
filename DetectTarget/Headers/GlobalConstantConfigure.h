@@ -35,5 +35,3 @@ const auto WRITE_FILE_NAME_BUFFER_SIZE = 200;
 static auto DISCRATED_BIN = 25;
 
 static auto CV_DATA_TYPE = CV_8UC1;
-
-typedef uchar DATA_TYPE;
