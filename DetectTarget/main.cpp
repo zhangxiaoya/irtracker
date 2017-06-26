@@ -457,6 +457,7 @@ int main(int argc, char* argv[])
 	static auto queueEndIndex = 0;
 
 	char writeFileName[WRITE_FILE_NAME_BUFFER_SIZE];
+	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
 
 	std::vector<std::vector<std::vector<int>>> confidenceQueueMap(countY, std::vector<std::vector<int>>(countX, std::vector<int>(QUEUE_SIZE, 0)));
 	std::vector<std::vector<int>> confidenceValueMap(countY, std::vector<int>(countX, 0));
@@ -472,7 +473,11 @@ int main(int argc, char* argv[])
 
 		while (!curFrame.empty() || frameIndex == 0)
 		{
-			video_capture >> curFrame;
+//			video_capture >> curFrame;
+
+			sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalImageListNameFormat, frameIndex);
+			curFrame = cv::imread(imageFullName);
+
 			if (!curFrame.empty())
 			{
 				Util::ShowImage(curFrame);
