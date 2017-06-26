@@ -492,8 +492,27 @@ int main(int argc, char* argv[])
 				
 				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(grayFrame, fdImg);
 
-				UpdateRectLayoutMatrix(rectLayoutMatrix, targetRects);
+//				UpdateRectLayoutMatrix(rectLayoutMatrix, targetRects);
 
+				for (auto rect : targetRects)
+				{
+					auto centerX = rect.x + rect.width / 2;
+					auto centerY = rect.y + rect.height / 2;
+
+					auto boxLeftTopX = centerX - 2 * rect.width / 2 >= 0 ? centerX - 2 * rect.width / 2 : 0;
+					auto boxLeftTopY = centerY - 2 * rect.height / 2 >= 0 ? centerY - 2 * rect.height / 2 : 0;
+					auto boxRightBottomX = centerX + 2 * rect.width / 2 < IMAGE_WIDTH ? centerX + 2 * rect.width / 2 : IMAGE_WIDTH - 1;
+					auto boxRightBottomY = centerY + 2 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 2 * rect.height / 2 : IMAGE_HEIGHT - 1;
+
+					auto avgVal = Util::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
+
+					auto centerVal = grayFrame.at<uchar>(centerY, centerX);
+
+					if(centerVal > avgVal)
+					{
+						rectangle(colorFrame, cv::Rect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4), COLOR_RED);
+					}
+				}
 
 
 //				UpdateConfidenceQueueMap(queueEndIndex, confidenceQueueMap, targetRects, Four);
@@ -662,8 +681,8 @@ int main(int argc, char* argv[])
 //				ConfidenceMapUtil::LostMemory(QUEUE_SIZE, queueEndIndex, confidenceQueueMap);
 
 				imshow("last result", colorFrame);
-				if (frameIndex == 0)
-					cv::waitKey(0);
+//				if (frameIndex == 0)
+//					cv::waitKey(0);
 
 				WriteLastResultToDisk(colorFrame, frameIndex, writeFileName);
 
