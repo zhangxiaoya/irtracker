@@ -72,8 +72,8 @@ inline void InitVideoReader(cv::VideoCapture& video_capture)
 
 //		GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 //		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\Frame_%08d.bmp";
-	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1km\\images\\Frame_%08d.png";
-	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\2\\Frame_%08d.png";
+	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\2_500-1500_150ms\\Frame_%08d.bmp";
+	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\3\\Frame_%08d.png";
 
 	UpdateConstants();
 
