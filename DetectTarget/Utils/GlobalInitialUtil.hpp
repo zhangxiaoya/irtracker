@@ -47,7 +47,7 @@ inline void UpdateDataType(const cv::Mat& img)
 {
 	std::cout << "Update Image Size" << std::endl;
 
-	DATA_TYPE = img.type();
+	CV_DATA_TYPE = img.type();
 }
 
 inline void UpdateConstants()
