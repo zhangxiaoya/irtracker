@@ -48,6 +48,12 @@ inline void UpdateDataType(const cv::Mat& img)
 	std::cout << "Update Image Size" << std::endl;
 
 	CV_DATA_TYPE = img.type();
+
+	if (CV_DATA_TYPE == CV_8UC1)
+		typedef uchar DATA_TYPE;
+
+	if (CV_DATA_TYPE == CV_16UC1)
+		typedef ushort DATA_TYPE;
 }
 
 inline void UpdateConstants()
