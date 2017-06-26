@@ -27,17 +27,10 @@ inline void ForTwoBins()
 
 inline cv::Mat GetTheFirstImage(int firImageIndex = 0)
 {
-	cv::Mat firstFrame;
-	cv::VideoCapture video;
+	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
+	sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalImageListNameFormat, firImageIndex);
 
-	video.open(GlobalImageListNameFormat);
-	if (video.isOpened())
-	{
-		video >> firstFrame;
-	}
-	video.release();
-
-	return firstFrame;
+	return cv::imread(imageFullName);
 }
 
 inline void UpdateImageSize(cv::Mat& img)
@@ -79,8 +72,8 @@ inline void InitVideoReader(cv::VideoCapture& video_capture)
 
 //		GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 //		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\Frame_%08d.bmp";
-	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\3_1500m_100ms\\images\\Frame_%08d.png";
-	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\3\\Frame_%08d.png";
+	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1km\\images\\Frame_%08d.png";
+	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\2\\Frame_%08d.png";
 
 	UpdateConstants();
 
