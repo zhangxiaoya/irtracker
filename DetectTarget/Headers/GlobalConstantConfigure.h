@@ -33,3 +33,5 @@ static auto countY = ceil(static_cast<double>(IMAGE_HEIGHT) / BLOCK_SIZE);
 const auto WRITE_FILE_NAME_BUFFER_SIZE = 200;
 
 static auto DISCRATED_BIN = 25;
+
+static auto DATA_TYPE = CV_8UC1;

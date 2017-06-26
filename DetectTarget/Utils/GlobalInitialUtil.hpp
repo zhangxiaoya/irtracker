@@ -7,26 +7,6 @@ const char* GlobalImageListNameFormat;
 static std::string inFullStr;
 static std::string outFullStr;
 
-inline void UpdateImageSize()
-{
-	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
-	sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalImageListNameFormat, 0);
-	auto img = cv::imread(imageFullName);
-	if (!img.empty())
-	{
-		std::cout << "Update Image Size" << std::endl;
-
-		IMAGE_WIDTH = img.cols;
-		IMAGE_HEIGHT = img.rows;
-		countX = ceil(static_cast<double>(IMAGE_WIDTH) / BLOCK_SIZE);
-		countY = ceil(static_cast<double>(IMAGE_HEIGHT) / BLOCK_SIZE);
-	}
-	else
-	{
-		std::cout << "Read Image Failed, please check whether the path exist!" << std::endl;
-	}
-}
-
 inline void ForTwoBins()
 {
 	std::string listNum = "2";
@@ -45,15 +25,57 @@ inline void ForTwoBins()
 	GlobalWriteFileNameFormat = outFullStr.c_str();
 }
 
+inline cv::Mat GetTheFirstImage(int firImageIndex = 0)
+{
+	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
+	sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalImageListNameFormat, firImageIndex);
+
+	return cv::imread(imageFullName);
+}
+
+inline void UpdateImageSize(cv::Mat& img)
+{
+	std::cout << "Update Image Size" << std::endl;
+
+	IMAGE_WIDTH = img.cols;
+	IMAGE_HEIGHT = img.rows;
+	countX = ceil(static_cast<double>(IMAGE_WIDTH) / BLOCK_SIZE);
+	countY = ceil(static_cast<double>(IMAGE_HEIGHT) / BLOCK_SIZE);
+}
+
+inline void UpdateDataType(const cv::Mat& img)
+{
+	std::cout << "Update Image Size" << std::endl;
+
+	DATA_TYPE = img.type();
+}
+
+inline void UpdateConstants()
+{
+	auto img = GetTheFirstImage();
+
+	if (!img.empty())
+	{
+		UpdateImageSize(img);
+
+		UpdateDataType(img);
+	}
+	else
+	{
+		std::cout << "Read Image Failed, please check whether the path exist!" << std::endl;
+	}
+}
+
 inline void InitVideoReader(cv::VideoCapture& video_capture)
 {
 //	ForTwoBins();
 
-		GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
+//		GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
+//		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\Frame_%08d.bmp";
+	GlobalImageListNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\1km\\images\\Frame_%08d.png";
+	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\2\\Frame_%08d.png";
 
-		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Data\\Ir\\207\\Raw\\result\\1\\Frame_%08d.bmp";
-
-	UpdateImageSize();
+	UpdateConstants();
 
 	video_capture.open(GlobalImageListNameFormat);
 }
