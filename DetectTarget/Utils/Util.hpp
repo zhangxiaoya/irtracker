@@ -24,7 +24,8 @@ public:
 
 	static void ShowCandidateRects(const cv::Mat& grayFrame, const std::vector<cv::Rect_<int>>& candidate_rects);
 
-	static void FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, uchar value = 0);
+	template <typename DATA_TYPE>
+	static void FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, DATA_TYPE value = 0);
 
 	static void GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject);
 
@@ -40,14 +41,14 @@ public:
 
 	static uchar MinOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end);
 
-	static bool CompareUchar(uchar left, uchar right);
-
 	static bool CompareConfidenceValue(ConfidenceElem left, ConfidenceElem right);
 
 	static bool CompareTracker(TargetTracker left, TargetTracker right);
 
-	static uchar AverageValue(const cv::Mat& curFrame, const cv::Rect& object);
+	template <typename DATA_TYPE>
+	static DATA_TYPE AverageValue(const cv::Mat& curFrame, const cv::Rect& object);
 
+	template <typename DATA_TYPE>
 	static std::vector<cv::Rect> GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects);
 
 	static int Sum(const std::vector<int>& valueVec);
@@ -56,21 +57,27 @@ public:
 
 	static int FeatureDiff(const std::vector<unsigned char>& featureOne, const std::vector<unsigned char>& featureTwo);
 
-	static uchar GetMinValueOfBlock(const cv::Mat& cuFrame);
+	template<typename DATA_TYPE>
+	static DATA_TYPE GetMinValueOfBlock(const cv::Mat& cuFrame);
 
-	static uchar GetMaxValueOfBlock(const cv::Mat& mat);
+	template<typename DATA_TYPE>
+	static DATA_TYPE GetMaxValueOfBlock(const cv::Mat& mat);
 
-	static uchar CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
+	template <typename DATA_TYPE>
+	static DATA_TYPE CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
 private:
 
+	template <typename DATA_TYPE>
 	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex);
 
-	static void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
+	template <typename DATA_TYPE>
+	static void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DATA_TYPE value = 0);
 
 	static void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, int currentIndex);
 
-	static inline void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
+	template <typename DATA_TYPE>
+	static inline void CalculateThreshHold(const cv::Mat& frame, DATA_TYPE& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 };
 
 inline void Util::BinaryMat(cv::Mat& mat)
@@ -101,12 +108,13 @@ inline void Util::ShowCandidateRects(const cv::Mat& grayFrame, const std::vector
 	imshow("Color Frame", colorFrame);
 }
 
-inline void Util::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, uchar value)
+template <typename DATA_TYPE>
+void Util::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, DATA_TYPE value)
 {
 	if (fieldType == FieldType::Eight)
-		DFSWithoutRecursionEightField(binaryFrame, bitMap, r, c, currentIndex);
+		DFSWithoutRecursionEightField<DATA_TYPE>(binaryFrame, bitMap, r, c, currentIndex);
 	else if (fieldType == FieldType::Four)
-		DFSWithoutRecursionFourField(binaryFrame, bitMap, r, c, currentIndex, value);
+		DFSWithoutRecursionFourField<DATA_TYPE>(binaryFrame, bitMap, r, c, currentIndex, value);
 	else
 		std::cout << "FieldType Error!" << std::endl;
 }
@@ -254,11 +262,6 @@ inline uchar Util::MinOfVector(const std::vector<uchar>::iterator& begin, const 
 	return minResult;
 }
 
-inline bool Util::CompareUchar(uchar left, uchar right)
-{
-	return left > right;
-}
-
 inline bool Util::CompareConfidenceValue(ConfidenceElem left, ConfidenceElem right)
 {
 	return left.confidenceVal > right.confidenceVal;
@@ -269,27 +272,29 @@ inline bool Util::CompareTracker(TargetTracker left, TargetTracker right)
 	return left.timeLeft > right.timeLeft;
 }
 
-inline uchar Util::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect)
+template <typename DATA_TYPE>
+DATA_TYPE Util::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect)
 {
 	auto sumAll = 0;
 	for (auto r = rect.y; r < rect.y + rect.height; ++r)
 	{
 		auto sumRow = 0;
 		for (auto c = rect.x; c < rect.x + rect.width; ++c)
-			sumRow += curFrame.at<uchar>(r, c);
+			sumRow += curFrame.at<DATA_TYPE>(r, c);
 		sumAll += (sumRow / rect.width);
 	}
 
 	return sumAll / rect.height;
 }
 
-inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects)
+template <typename DATA_TYPE>
+std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects)
 {
 	std::vector<cv::Rect> targetRect;
 
 	for (auto i = 0; i < afterMergeObjects.size(); ++i)
 	{
-		uchar threshHold = 0;
+		DATA_TYPE threshHold = 0;
 
 		auto object = afterMergeObjects[i];
 
@@ -318,7 +323,7 @@ inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, 
 		if (rightBottomY > curFrame.rows)
 			rightBottomY = curFrame.rows;
 
-		CalculateThreshHold(curFrame, threshHold, leftTopX, leftTopY, rightBottomX, rightBottomY);
+		CalculateThreshHold<DATA_TYPE>(curFrame, threshHold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
 		if (width <= 0 || height <= 0)
 		{
@@ -332,7 +337,7 @@ inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, 
 
 		auto rect = cv::Rect(object.left, object.top, width, height);
 
-		if (curFrame.at<uchar>(centerY, centerX) < threshHold)
+		if (curFrame.at<DATA_TYPE>(centerY, centerX) < threshHold)
 			continue;
 
 		targetRect.push_back(rect);
@@ -374,43 +379,46 @@ inline int Util::FeatureDiff(const std::vector<unsigned char>& featureOne, const
 	return sum;
 }
 
-inline uchar Util::GetMinValueOfBlock(const cv::Mat& mat)
+template<typename DATA_TYPE>
+DATA_TYPE Util::GetMinValueOfBlock(const cv::Mat& mat)
 {
-	uchar minVal = 255;
+	DATA_TYPE minVal = (1 << sizeof(DATA_TYPE)) - 1;
 	for (auto r = 0; r < mat.rows; ++r)
 	{
 		for (auto c = 0; c < mat.cols; ++c)
 		{
-			if (minVal > mat.at<uchar>(r, c))
-				minVal = mat.at<uchar>(r, c);
+			if (minVal > mat.at<DATA_TYPE>(r, c))
+				minVal = mat.at<DATA_TYPE>(r, c);
 		}
 	}
 	return minVal;
 }
 
-inline uchar Util::GetMaxValueOfBlock(const cv::Mat& mat)
+template<typename DATA_TYPE>
+DATA_TYPE Util::GetMaxValueOfBlock(const cv::Mat& mat)
 {
-	uchar maxVal = 0;
+	DATA_TYPE maxVal = 0;
 	for (auto r = 0; r < mat.rows; ++r)
 	{
 		for (auto c = 0; c < mat.cols; ++c)
 		{
-			if (maxVal < mat.at<uchar>(r, c))
-				maxVal = mat.at<uchar>(r, c);
+			if (maxVal < mat.at<DATA_TYPE>(r, c))
+				maxVal = mat.at<DATA_TYPE>(r, c);
 		}
 	}
 	return maxVal;
 }
 
-inline uchar Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+template<typename DATA_TYPE>
+DATA_TYPE Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
-	uchar sumAll = 0;
+	DATA_TYPE sumAll = 0;
 	for (auto r = leftTopY; r < rightBottomY; ++r)
 	{
 		auto sumRow = 0;
 		for (auto c = leftTopX; c < rightBottomX; ++c)
 		{
-			sumRow += frame.at<uchar>(r, c);
+			sumRow += frame.at<DATA_TYPE>(r, c);
 		}
 		sumAll += (sumRow / (rightBottomX - leftTopX));
 	}
@@ -418,7 +426,8 @@ inline uchar Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int
 	return sumAll / (rightBottomY - leftTopY);
 }
 
-inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
+template <typename DATA_TYPE>
+void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
 {
 	std::stack<cv::Point> deepTrace;
 	bitMap.at<int32_t>(r, c) = currentIndex;
@@ -433,50 +442,50 @@ inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::
 		auto curC = curPos.x;
 
 		// up
-		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == 0 && bitMap.at<int32_t>(curR - 1, curC) == -1)
+		if (curR - 1 >= 0 && binaryFrame.at<DATA_TYPE>(curR - 1, curC) == 0 && bitMap.at<int32_t>(curR - 1, curC) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC) = currentIndex;
 			deepTrace.push(cv::Point(curC, curR - 1));
 		}
 		// down
-		if (curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC) == 0 && bitMap.at<int32_t>(curR + 1, curC) == -1)
+		if (curR + 1 < binaryFrame.rows && binaryFrame.at<DATA_TYPE>(curR + 1, curC) == 0 && bitMap.at<int32_t>(curR + 1, curC) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC) = currentIndex;
 			deepTrace.push(cv::Point(curC, curR + 1));
 		}
 		// left
-		if (curC - 1 >= 0 && binaryFrame.at<uchar>(curR, curC - 1) == 0 && bitMap.at<int32_t>(curR, curC - 1) == -1)
+		if (curC - 1 >= 0 && binaryFrame.at<DATA_TYPE>(curR, curC - 1) == 0 && bitMap.at<int32_t>(curR, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR));
 		}
 		// right
-		if (curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR, curC + 1) == 0 && bitMap.at<int32_t>(curR, curC + 1) == -1)
+		if (curC + 1 < binaryFrame.cols && binaryFrame.at<DATA_TYPE>(curR, curC + 1) == 0 && bitMap.at<int32_t>(curR, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR));
 		}
 
 		// up and left
-		if (curR - 1 >= 0 && curC - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC - 1) == 0 && bitMap.at<int32_t>(curR - 1, curC - 1) == -1)
+		if (curR - 1 >= 0 && curC - 1 >= 0 && binaryFrame.at<DATA_TYPE>(curR - 1, curC - 1) == 0 && bitMap.at<int32_t>(curR - 1, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR - 1));
 		}
 		// down and right
-		if (curR + 1 < binaryFrame.rows && curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR + 1, curC + 1) == 0 && bitMap.at<int32_t>(curR + 1, curC + 1) == -1)
+		if (curR + 1 < binaryFrame.rows && curC + 1 < binaryFrame.cols && binaryFrame.at<DATA_TYPE>(curR + 1, curC + 1) == 0 && bitMap.at<int32_t>(curR + 1, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR + 1));
 		}
 		// left and down
-		if (curC - 1 >= 0 && curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC - 1) == 0 && bitMap.at<int32_t>(curR + 1, curC - 1) == -1)
+		if (curC - 1 >= 0 && curR + 1 < binaryFrame.rows && binaryFrame.at<DATA_TYPE>(curR + 1, curC - 1) == 0 && bitMap.at<int32_t>(curR + 1, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR + 1));
 		}
 		// right and up
-		if (curC + 1 < binaryFrame.cols && curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC + 1) == 0 && bitMap.at<int32_t>(curR - 1, curC + 1) == -1)
+		if (curC + 1 < binaryFrame.cols && curR - 1 >= 0 && binaryFrame.at<DATA_TYPE>(curR - 1, curC + 1) == 0 && bitMap.at<int32_t>(curR - 1, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR - 1));
@@ -484,7 +493,8 @@ inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::
 	}
 }
 
-inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value)
+template <typename DATA_TYPE>
+void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DATA_TYPE value)
 {
 	std::stack<cv::Point> deepTrace;
 	bitMap.at<int32_t>(r, c) = currentIndex;
@@ -499,25 +509,25 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 		auto curC = curPos.x;
 
 		// up
-		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == value && bitMap.at<int32_t>(curR - 1, curC) == -1)
+		if (curR - 1 >= 0 && binaryFrame.at<DATA_TYPE>(curR - 1, curC) == value && bitMap.at<int32_t>(curR - 1, curC) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC) = currentIndex;
 			deepTrace.push(cv::Point(curC, curR - 1));
 		}
 		// down
-		if (curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC) == value && bitMap.at<int32_t>(curR + 1, curC) == -1)
+		if (curR + 1 < binaryFrame.rows && binaryFrame.at<DATA_TYPE>(curR + 1, curC) == value && bitMap.at<int32_t>(curR + 1, curC) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC) = currentIndex;
 			deepTrace.push(cv::Point(curC, curR + 1));
 		}
 		// left
-		if (curC - 1 >= 0 && binaryFrame.at<uchar>(curR, curC - 1) == value && bitMap.at<int32_t>(curR, curC - 1) == -1)
+		if (curC - 1 >= 0 && binaryFrame.at<DATA_TYPE>(curR, curC - 1) == value && bitMap.at<int32_t>(curR, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR));
 		}
 		// right
-		if (curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR, curC + 1) == value && bitMap.at<int32_t>(curR, curC + 1) == -1)
+		if (curC + 1 < binaryFrame.cols && binaryFrame.at<DATA_TYPE>(curR, curC + 1) == value && bitMap.at<int32_t>(curR, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR));
@@ -550,8 +560,9 @@ inline void Util::DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int
 	}
 }
 
-inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+template <typename DATA_TYPE>
+void Util::CalculateThreshHold(const cv::Mat& frame, DATA_TYPE& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
-	threshHold = CalculateAverageValue(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
+	threshHold = CalculateAverageValue<DATA_TYPE>(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
 //	threshHold += threshHold / 4;
 }

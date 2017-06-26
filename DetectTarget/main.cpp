@@ -490,7 +490,7 @@ int main(int argc, char* argv[])
 
 				cv::Mat fdImg;
 				
-				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(grayFrame, fdImg);
+				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect<ushort>(grayFrame, fdImg);
 
 //				UpdateRectLayoutMatrix(rectLayoutMatrix, targetRects);
 
@@ -504,9 +504,9 @@ int main(int argc, char* argv[])
 					auto boxRightBottomX = centerX + 2 * rect.width / 2 < IMAGE_WIDTH ? centerX + 2 * rect.width / 2 : IMAGE_WIDTH - 1;
 					auto boxRightBottomY = centerY + 2 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 2 * rect.height / 2 : IMAGE_HEIGHT - 1;
 
-					auto avgVal = Util::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
+					auto avgVal = Util::AverageValue<ushort>(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
 
-					auto centerVal = grayFrame.at<uchar>(centerY, centerX);
+					auto centerVal = grayFrame.at<ushort>(centerY, centerX);
 
 					if(centerVal > avgVal)
 					{
