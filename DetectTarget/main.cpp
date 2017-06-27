@@ -510,10 +510,11 @@ int main(int argc, char* argv[])
 					auto boxRightBottomY = centerY + 2 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 2 * rect.height / 2 : IMAGE_HEIGHT - 1;
 
 					auto avgVal = Util::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
+					avgVal += avgVal / 20;
 
 					auto centerVal = grayFrame.at<uchar>(centerY, centerX);
 
-					if(centerVal > avgVal)
+					if (centerVal > avgVal)
 					{
 						rectangle(colorFrame, cv::Rect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4), COLOR_RED);
 					}
@@ -685,9 +686,7 @@ int main(int argc, char* argv[])
 
 //				ConfidenceMapUtil::LostMemory(QUEUE_SIZE, queueEndIndex, confidenceQueueMap);
 
-				imshow("last result", colorFrame);
-//				if (frameIndex == 0)
-//					cv::waitKey(0);
+				imshow("Last Detect and Tracking Result", colorFrame);
 
 				WriteLastResultToDisk(colorFrame, frameIndex, writeFileName);
 
