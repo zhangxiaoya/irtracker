@@ -509,12 +509,15 @@ int main(int argc, char* argv[])
 					auto boxRightBottomX = centerX + 2 * rect.width / 2 < IMAGE_WIDTH ? centerX + 2 * rect.width / 2 : IMAGE_WIDTH - 1;
 					auto boxRightBottomY = centerY + 2 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 2 * rect.height / 2 : IMAGE_HEIGHT - 1;
 
-					auto avgVal = Util::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
-					avgVal += avgVal / 20;
+					auto avgValOfSurroundingBox = Util::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
+					auto avgValOfCurrentRect = Util::AverageValue(grayFrame, rect);
+
+					auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 17;
+					auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 10;
 
 					auto centerVal = grayFrame.at<uchar>(centerY, centerX);
 
-					if (centerVal > avgVal)
+					if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold)
 					{
 						rectangle(colorFrame, cv::Rect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4), COLOR_RED);
 					}

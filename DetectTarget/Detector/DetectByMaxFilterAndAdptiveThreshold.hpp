@@ -261,9 +261,10 @@ inline std::vector<std::vector<uchar>> DetectByMaxFilterAndAdptiveThreshold::Get
 	return maxmindiff;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv::Mat& curFrame)
+inline void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv::Mat& currentGrayFrame)
 {
-	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap(curFrame);
+	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap(currentGrayFrame);
+
 	auto differenceElems = GetMostMaxDiffBlock(maxmindiffMatrix);
 
 	for (auto elem : differenceElems)
@@ -274,7 +275,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv:
 		auto boundingBoxLeftTopY = centerY - BLOCK_SIZE >= 0 ? centerY - BLOCK_SIZE : 0;
 		auto boundingBoxRightBottomX = centerX + BLOCK_SIZE < IMAGE_WIDTH ? centerX + BLOCK_SIZE : IMAGE_WIDTH - 1;
 		auto boundingBoxRightBottomY = centerY + BLOCK_SIZE < IMAGE_HEIGHT ? centerY + BLOCK_SIZE : IMAGE_HEIGHT - 1;
-		auto averageValue = Util::CalculateAverageValue(curFrame, boundingBoxLeftTopX, boundingBoxLeftTopY, boundingBoxRightBottomX, boundingBoxRightBottomY);
+		auto averageValue = Util::CalculateAverageValue(currentGrayFrame, boundingBoxLeftTopX, boundingBoxLeftTopY, boundingBoxRightBottomX, boundingBoxRightBottomY);
 
 		auto maxdiffBlockRightBottomX = (elem.blockX + 1) * BLOCK_SIZE > IMAGE_WIDTH ? IMAGE_WIDTH - 1 : (elem.blockX + 1) * BLOCK_SIZE;
 		auto maxdiffBlockRightBottomY = (elem.blockY + 1) * BLOCK_SIZE > IMAGE_HEIGHT ? IMAGE_HEIGHT - 1 : (elem.blockY + 1) * BLOCK_SIZE;
@@ -282,9 +283,9 @@ inline void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv:
 		{
 			for (auto c = elem.blockX * BLOCK_SIZE; c < maxdiffBlockRightBottomX; ++c)
 			{
-				if (curFrame.at<uchar>(r, c) > averageValue)
+				if (currentGrayFrame.at<uchar>(r, c) > averageValue)
 				{
-					curFrame.at<uchar>(r, c) = curFrame.at<uchar>(r, c) + 10 > 255 ? 255 : curFrame.at<uchar>(r, c) + 10;
+					currentGrayFrame.at<uchar>(r, c) = currentGrayFrame.at<uchar>(r, c) + 10 > 255 ? 255 : currentGrayFrame.at<uchar>(r, c) + 10;
 				}
 			}
 		}
@@ -318,43 +319,43 @@ inline std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold::GetMost
 	return mostPossibleBlocks;
 }
 
-inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curFrame, cv::Mat& fdImg)
+inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& fdImg)
 {
-	cv::Mat filtedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
+	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 	auto kernelSize = 3;
 
-	StrengthenIntensityOfBlock(curFrame);
+	StrengthenIntensityOfBlock(currentGrayFrame);
 
-	MaxFilter(curFrame, filtedFrame, kernelSize);
+	MaxFilter(currentGrayFrame, frameAfterMaxFilter, kernelSize);
 
-	cv::Mat discrezatedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
+	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 
-	Discretization(filtedFrame, discrezatedFrame);
+	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
 
-	fdImg = discrezatedFrame;
+	fdImg = frameAfterDiscrezated;
 
-	imshow("Max Filter and Discrezated", discrezatedFrame);
+	imshow("Max Filter and Discrezated", frameAfterDiscrezated);
 
-	cv::Mat blockMap(cv::Size(discrezatedFrame.cols, discrezatedFrame.rows), CV_32SC1, cv::Scalar(-1));
-	auto totalObject = GetBlocks(discrezatedFrame, blockMap);
+	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
+	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
 
 	std::vector<FourLimits> allObjects(totalObject);
 	Util::GetRectangleSize(blockMap, allObjects);
 
-	Util::ShowAllObject(curFrame, allObjects, "Before Merge and Remove out scale Objects");
+	Util::ShowAllObject(currentGrayFrame, allObjects, "Before Merge and Remove out scale Objects");
 
-	RemoveSmallAndBigObjects(allObjects, discrezatedFrame);
+	RemoveSmallAndBigObjects(allObjects, frameAfterDiscrezated);
 
-	Util::ShowAllObject(curFrame, allObjects, "Before Merge");
+	Util::ShowAllObject(currentGrayFrame, allObjects, "Before Merge");
 
 	std::vector<FourLimits> afterMergeObjects;
 	MergeCrossedRectangles(allObjects, afterMergeObjects);
 
-	Util::ShowAllObject(curFrame, afterMergeObjects, "After Merge Cross Rectangles");
+	Util::ShowAllObject(currentGrayFrame, afterMergeObjects, "After Merge Cross Rectangles");
 
-	auto rects = Util::GetCandidateTargets(discrezatedFrame, afterMergeObjects);
+	auto rects = Util::GetCandidateTargets(frameAfterDiscrezated, afterMergeObjects);
 
-	Util::ShowAllCandidateTargets(curFrame, rects);
+	Util::ShowAllCandidateTargets(currentGrayFrame, rects);
 	std::cout << "Count = " << rects.size() << std::endl;
 
 	return rects;
