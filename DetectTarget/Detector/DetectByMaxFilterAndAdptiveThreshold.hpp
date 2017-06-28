@@ -1,6 +1,7 @@
 #pragma once
 #include <core/core.hpp>
 #include <highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <filesystem>
 #include "../Models/FourLimits.hpp"
 #include "../Utils/Util.hpp"
@@ -18,8 +19,6 @@ private:
 
 	static void MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize);
 
-	static unsigned char GetMaxPixelValue(const cv::Mat& curFrame, std::vector<uchar>& pixelValues, int r, int c, int kernelSize);
-
 	static int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
 
 	static void Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame);
@@ -29,9 +28,13 @@ private:
 	static void RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result);
 
 	static void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
+
 	static std::vector<std::vector<uchar>> GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame);
+
 	static void StrengthenIntensityOfBlock(cv::Mat& curFrame);
+
 	static void GetMaxValueOfMatrix(std::vector<std::vector<uchar>> maxmindiff, DifferenceElem& diffElem);
+
 	static std::vector<DifferenceElem> GetMostMaxDiffBlock(std::vector<std::vector<uchar>> maxmindiff);
 
 	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
@@ -328,8 +331,8 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Ma
 
 	MaxFilter(currentGrayFrame, frameAfterMaxFilter, kernelSize);
 
-	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 
+	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
 
 	fdImg = frameAfterDiscrezated;
@@ -363,42 +366,8 @@ inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Ma
 
 inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize)
 {
-	std::vector<uchar> pixelVector;
-
-	for (auto r = 0; r < curFrame.rows; ++r)
-	{
-		for (auto c = 0; c < curFrame.cols; ++c)
-		{
-			pixelVector.clear();
-			filtedFrame.at<uchar>(r, c) = GetMaxPixelValue(curFrame, pixelVector, r, c, kernelSize);
-		}
-	}
-}
-
-inline unsigned char DetectByMaxFilterAndAdptiveThreshold::GetMaxPixelValue(const cv::Mat& curFrame, std::vector<uchar>& pixelValues, int r, int c, int kernelSize)
-{
-	auto radius = kernelSize / 2;
-	auto leftTopX = c - radius;
-	auto leftTopY = r - radius;
-
-	auto rightBottomX = leftTopX + 2 * radius;
-	auto rightBottomY = leftTopY + 2 * radius;
-
-	uchar maxVal = 0;
-
-	for (auto row = leftTopY; row <= rightBottomY; ++row)
-	{
-		if (row >= 0 && row < curFrame.rows)
-		{
-			for (auto col = leftTopX; col <= rightBottomX; ++col)
-			{
-				if (col >= 0 && col < curFrame.cols && maxVal < curFrame.at<uchar>(row, col))
-					maxVal = curFrame.at<uchar>(row, col);
-			}
-		}
-	}
-
-	return maxVal;
+	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
+	dilate(curFrame, filtedFrame, kernel);
 }
 
 inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
