@@ -495,7 +495,7 @@ int main(int argc, char* argv[])
 
 				cv::Mat fdImg;
 				
-				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(grayFrame, fdImg);
+				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect<uchar>(grayFrame, fdImg);
 
 //				UpdateRectLayoutMatrix(rectLayoutMatrix, targetRects);
 
