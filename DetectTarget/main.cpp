@@ -56,6 +56,47 @@ void UpdateConfidenceQueueMap(int queueEndIndex, std::vector<std::vector<std::ve
 	}
 }
 
+void UpdateRectLayoutMatrix(std::vector<std::vector<int>>& rectLayoutMatrix, const std::vector<cv::Rect>& targetRects, FieldType fieldType = Four)
+{
+	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
+
+	const auto fourIncrement = 2;
+	const auto eightIncrement = 1;
+
+	for (auto i = 0; i < targetRects.size(); ++i)
+	{
+		auto rect = targetRects[i];
+		auto x = (rect.x + rect.width / 2) / BLOCK_SIZE;
+		auto y = (rect.y + rect.height / 2) / BLOCK_SIZE;
+
+		if (updateFlag[y][x])
+			continue;
+		// center
+		rectLayoutMatrix[y][x] = 10;
+		updateFlag[y][x] = true;
+		// up
+		rectLayoutMatrix[y - 1 >= 0 ? y - 1 : 0][x] += fourIncrement;
+		// down
+		rectLayoutMatrix[y + 1 < countY ? y + 1 : countY - 1][x] += fourIncrement;
+		// left
+		rectLayoutMatrix[y][x - 1 > 0 ? x - 1 : 0] += fourIncrement;
+		// right
+		rectLayoutMatrix[y][x + 1 < countX ? x + 1 : countX - 1] += fourIncrement;
+
+		if (fieldType == Eight)
+		{
+			// up left
+			rectLayoutMatrix[y - 1 >= 0 ? y - 1 : 0][x - 1 >= 0 ? x - 1 : 0] += eightIncrement;
+			// down right
+			rectLayoutMatrix[y + 1 < countY ? y + 1 : countY - 1][x + 1 < countX ? x + 1 : countX - 1] += eightIncrement;
+			// left down
+			rectLayoutMatrix[y + 1 < countY ? y + 1 : countY - 1][x - 1 > 0 ? x - 1 : 0] += eightIncrement;
+			// right up
+			rectLayoutMatrix[y - 1 >= 0 ? y - 1 : 0][x + 1 < countX ? x + 1 : countX - 1] += eightIncrement;
+		}
+	}
+}
+
 void UpdateVectorOfConfidenceQueueMap(const std::vector<std::vector<std::vector<int>>>& confidenceQueueMap, std::vector<ConfidenceElem>& vectorOfConfidenceQueueMap)
 {
 	auto confidenceIndex = 0;
@@ -416,9 +457,12 @@ int main(int argc, char* argv[])
 	static auto queueEndIndex = 0;
 
 	char writeFileName[WRITE_FILE_NAME_BUFFER_SIZE];
+	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
 
 	std::vector<std::vector<std::vector<int>>> confidenceQueueMap(countY, std::vector<std::vector<int>>(countX, std::vector<int>(QUEUE_SIZE, 0)));
 	std::vector<std::vector<int>> confidenceValueMap(countY, std::vector<int>(countX, 0));
+
+	std::vector<std::vector<int>> rectLayoutMatrix(countY, std::vector<int>(countX, 0));
 
 	std::vector<ConfidenceElem> vectorOfConfidenceQueueMap(countX * countY);
 	std::vector<ConfidenceElem> vectorOfConfidenceValueMap(countX * countY);
@@ -429,7 +473,11 @@ int main(int argc, char* argv[])
 
 		while (!curFrame.empty() || frameIndex == 0)
 		{
-			video_capture >> curFrame;
+//			video_capture >> curFrame;
+
+			sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalImageListNameFormat, frameIndex);
+			curFrame = cv::imread(imageFullName);
+
 			if (!curFrame.empty())
 			{
 				Util::ShowImage(curFrame);
@@ -443,187 +491,209 @@ int main(int argc, char* argv[])
 					colorFrame = curFrame;
 				}
 
-				SpecialUtil::RemoveInvalidPixel(grayFrame);
+//				SpecialUtil::RemoveInvalidPixel(grayFrame);
 
+				cv::Mat fdImg;
 				
-				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(grayFrame);
+				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect(grayFrame, fdImg);
 
-				UpdateConfidenceQueueMap(queueEndIndex, confidenceQueueMap, targetRects, Four);
+//				UpdateRectLayoutMatrix(rectLayoutMatrix, targetRects);
 
-				PrintConfidenceQueueMap(confidenceQueueMap);
-
-				UpdateVectorOfConfidenceQueueMap(confidenceQueueMap, vectorOfConfidenceQueueMap);
-
-				auto searchIndex = 0;
-
-				GetMostLiklyTargetsRect(vectorOfConfidenceQueueMap, searchIndex);
-
-				DrawRectangleForAllDetectedTargetsAndUpdateBlockConfidence(colorFrame, searchIndex, vectorOfConfidenceQueueMap, targetRects, confidenceValueMap, Four);
-
-//				PrintConfidenceValueMap(confidenceValueMap, "Before Draw Rect");
-
-				if (frameIndex > THINGKING_STAGE)
+				for (auto rect : targetRects)
 				{
-					std::vector<cv::Point> blocksContainTargets;
+					auto centerX = rect.x + rect.width / 2;
+					auto centerY = rect.y + rect.height / 2;
 
-					UpdateConfidenceValueVector(confidenceValueMap, vectorOfConfidenceValueMap);
+					auto boxLeftTopX = centerX - 2 * rect.width / 2 >= 0 ? centerX - 2 * rect.width / 2 : 0;
+					auto boxLeftTopY = centerY - 2 * rect.height / 2 >= 0 ? centerY - 2 * rect.height / 2 : 0;
+					auto boxRightBottomX = centerX + 2 * rect.width / 2 < IMAGE_WIDTH ? centerX + 2 * rect.width / 2 : IMAGE_WIDTH - 1;
+					auto boxRightBottomY = centerY + 2 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 2 * rect.height / 2 : IMAGE_HEIGHT - 1;
 
-					GetTopCountBlocksWhichContainsTargets(vectorOfConfidenceValueMap, blocksContainTargets);
+					auto avgValOfSurroundingBox = Util::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
+					auto avgValOfCurrentRect = Util::AverageValue(grayFrame, rect);
 
-					for (auto i = 0; i < blocksContainTargets.size(); ++i)
+					auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 17;
+					auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 20;
+
+					if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
+						continue;
+
+					auto centerVal = grayFrame.at<uchar>(centerY, centerX);
+
+					if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold ||
+						centerVal > convexThreshold || centerVal < concaveThreshold)
 					{
-						auto findTargetFlag = false;
-						auto trackerIndex = 0;
-
-						auto currentBlock = blocksContainTargets[i];
-
-						SearchWhichTrackerForThisBlock(currentBlock, trackerIndex);
-
-						for (auto j = 0; j < targetRects.size(); ++j)
-						{
-							auto rect = targetRects[j];
-							auto blockXOfCurrentRect = (rect.x + rect.width / 2) / BLOCK_SIZE;
-							auto blockYOfCurrentRect = (rect.y + rect.height / 2) / BLOCK_SIZE;
-
-							if (blockXOfCurrentRect == currentBlock.x && blockYOfCurrentRect == currentBlock.y)
-							{
-								if (GlobalTrackerList.empty())
-								{
-									CreateNewTrackerForThisBlock(currentBlock, rect);
-								}
-								else
-								{
-									if (!UpdateTrackerStatus(rect, blockXOfCurrentRect, blockYOfCurrentRect, trackerIndex))
-									{
-										CreateNewTrackerForThisBlock(currentBlock, rect);
-									}
-								}
-
-								findTargetFlag = true;
-							}
-							else if ((blockXOfCurrentRect - 1 >= 0 && blockXOfCurrentRect - 1 == currentBlock.x && blockYOfCurrentRect == currentBlock.y) ||
-								(blockYOfCurrentRect - 1 >= 0 && blockXOfCurrentRect == currentBlock.x && blockYOfCurrentRect - 1 == currentBlock.y) ||
-								(blockXOfCurrentRect + 1 < countX && blockXOfCurrentRect + 1 == currentBlock.x && blockYOfCurrentRect == currentBlock.y) ||
-								(blockYOfCurrentRect + 1 < countY && blockXOfCurrentRect == currentBlock.x && blockYOfCurrentRect + 1 == currentBlock.y) ||
-								(blockYOfCurrentRect + 1 < countY && blockXOfCurrentRect + 1 < countX && blockXOfCurrentRect + 1 == currentBlock.x && blockYOfCurrentRect + 1 == currentBlock.y) ||
-								(blockYOfCurrentRect + 1 < countY && blockXOfCurrentRect - 1 >= 0 && blockXOfCurrentRect - 1 == currentBlock.x && blockYOfCurrentRect + 1 == currentBlock.y) ||
-								(blockYOfCurrentRect - 1 < countY && blockXOfCurrentRect + 1 < countX && blockXOfCurrentRect + 1 == currentBlock.x && blockYOfCurrentRect - 1 == currentBlock.y) ||
-								(blockYOfCurrentRect - 1 < countY && blockXOfCurrentRect - 1 >= 0 && blockXOfCurrentRect - 1 == currentBlock.x && blockYOfCurrentRect - 1 == currentBlock.y))
-							{
-								confidenceValueMap[currentBlock.y][currentBlock.x] = MinNeighbor(confidenceValueMap, currentBlock.y, currentBlock.x);
-								confidenceValueMap[blockYOfCurrentRect][blockXOfCurrentRect] = MaxNeighbor(confidenceValueMap, currentBlock.y, currentBlock.x);
-
-								if (GlobalTrackerList.empty())
-								{
-									CreateNewTrackerForThisBlock(cv::Point(blockXOfCurrentRect, blockYOfCurrentRect), rect);
-								}
-								else
-								{
-									if (!UpdateTrackerStatus(rect, blockXOfCurrentRect, blockYOfCurrentRect, trackerIndex))
-									{
-										SearchWhichTrackerForThisBlock(cv::Point(blockXOfCurrentRect, blockYOfCurrentRect), trackerIndex);
-										if (!UpdateTrackerStatus(rect, blockXOfCurrentRect, blockYOfCurrentRect, trackerIndex))
-											CreateNewTrackerForThisBlock(cv::Point(blockXOfCurrentRect, blockYOfCurrentRect), rect);
-									}
-								}
-								findTargetFlag = true;
-							}
-						}
-
-						if (!findTargetFlag)
-						{
-							if (trackerIndex > 0)
-							{
-								auto it = GlobalTrackerList.begin() + (trackerIndex - 1);
-
-								it->timeLeft--;
-								if (it->timeLeft == 0)
-								{
-									auto col = it->blockX;
-									auto row = it->blockY;
-
-									confidenceValueMap[row][col] /= 2;
-									if (col - 1 >= 0)
-										confidenceValueMap[row][col - 1] /= 2;
-									if (col + 1 < countX)
-										confidenceValueMap[row][col + 1] /= 2;
-									if (row - 1 >= 0)
-										confidenceValueMap[row - 1][col] /= 2;
-									if (row + 1 < countY)
-										confidenceValueMap[row + 1][col] /= 2;
-
-									GlobalTrackerList.erase(it);
-								}
-							}
-							else
-							{
-								auto col = currentBlock.x;
-								auto row = currentBlock.y;
-
-								confidenceValueMap[row][col] /= 2;
-								if (col - 1 >= 0)
-									confidenceValueMap[row][col - 1] /= 2;
-								if (col + 1 < countX)
-									confidenceValueMap[row][col + 1] /= 2;
-								if (row - 1 >= 0)
-									confidenceValueMap[row - 1][col] /= 2;
-								if (row + 1 < countY)
-									confidenceValueMap[row + 1][col] /= 2;
-							}
-						}
+						rectangle(colorFrame, cv::Rect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4), COLOR_RED);
 					}
-
-//					PrintTrackersAndBlocksAndRectsLogs(targetRects, blocksContainTargets);
-
-					for (auto it = GlobalTrackerList.begin(); it != GlobalTrackerList.end(); ++it)
-					{
-						auto existFlag = false;
-						for (auto target : blocksContainTargets)
-						{
-							if (it->blockX == target.x && it->blockY == target.y)
-							{
-								existFlag = true;
-								break;
-							}
-						}
-
-						if (!existFlag)
-						{
-							it->timeLeft--;
-							if (it->timeLeft == 0)
-							{
-								auto col = it->blockX;
-								auto row = it->blockY;
-
-								confidenceValueMap[row][col] /= 2;
-								if (col - 1 >= 0)
-									confidenceValueMap[row][col - 1] /= 2;
-								if (col + 1 < countX)
-									confidenceValueMap[row][col + 1] /= 2;
-								if (row - 1 >= 0)
-									confidenceValueMap[row - 1][col] /= 2;
-								if (row + 1 < countY)
-									confidenceValueMap[row + 1][col] /= 2;
-
-								it = GlobalTrackerList.erase(it);
-								if (it == GlobalTrackerList.end())
-									break;
-							}
-						}
-					}
-
-//					PrintConfidenceValueMap(confidenceValueMap, "After Draw Rect");
-
-//					ConfidenceValueLost(confidenceValueMap);
-
-					DrawResults(colorFrame);
 				}
 
-				ConfidenceMapUtil::LostMemory(QUEUE_SIZE, queueEndIndex, confidenceQueueMap);
 
-				imshow("last result", colorFrame);
-				if (frameIndex == 0)
-					cv::waitKey(0);
+//				UpdateConfidenceQueueMap(queueEndIndex, confidenceQueueMap, targetRects, Four);
+
+//				UpdateVectorOfConfidenceQueueMap(confidenceQueueMap, vectorOfConfidenceQueueMap);
+
+//				auto searchIndex = 0;
+
+//				GetMostLiklyTargetsRect(vectorOfConfidenceQueueMap, searchIndex);
+
+//				DrawRectangleForAllDetectedTargetsAndUpdateBlockConfidence(colorFrame, searchIndex, vectorOfConfidenceQueueMap, targetRects, confidenceValueMap, Four);
+
+
+//				if (frameIndex > THINGKING_STAGE)
+//				{
+//					std::vector<cv::Point> blocksContainTargets;
+
+//					UpdateConfidenceValueVector(confidenceValueMap, vectorOfConfidenceValueMap);
+
+//					GetTopCountBlocksWhichContainsTargets(vectorOfConfidenceValueMap, blocksContainTargets);
+
+//					for (auto i = 0; i < blocksContainTargets.size(); ++i)
+//					{
+//						auto findTargetFlag = false;
+//						auto trackerIndex = 0;
+
+//						auto currentBlock = blocksContainTargets[i];
+
+//						SearchWhichTrackerForThisBlock(currentBlock, trackerIndex);
+
+//						for (auto j = 0; j < targetRects.size(); ++j)
+//						{
+//							auto rect = targetRects[j];
+//							auto blockXOfCurrentRect = (rect.x + rect.width / 2) / BLOCK_SIZE;
+//							auto blockYOfCurrentRect = (rect.y + rect.height / 2) / BLOCK_SIZE;
+
+//							if (blockXOfCurrentRect == currentBlock.x && blockYOfCurrentRect == currentBlock.y)
+//							{
+//								if (GlobalTrackerList.empty())
+//								{
+//									CreateNewTrackerForThisBlock(currentBlock, rect);
+//								}
+//								else
+//								{
+//									if (!UpdateTrackerStatus(rect, blockXOfCurrentRect, blockYOfCurrentRect, trackerIndex))
+//									{
+//										CreateNewTrackerForThisBlock(currentBlock, rect);
+//									}
+//								}
+
+//								findTargetFlag = true;
+//							}
+//							else if ((blockXOfCurrentRect - 1 >= 0 && blockXOfCurrentRect - 1 == currentBlock.x && blockYOfCurrentRect == currentBlock.y) ||
+//								(blockYOfCurrentRect - 1 >= 0 && blockXOfCurrentRect == currentBlock.x && blockYOfCurrentRect - 1 == currentBlock.y) ||
+//								(blockXOfCurrentRect + 1 < countX && blockXOfCurrentRect + 1 == currentBlock.x && blockYOfCurrentRect == currentBlock.y) ||
+//								(blockYOfCurrentRect + 1 < countY && blockXOfCurrentRect == currentBlock.x && blockYOfCurrentRect + 1 == currentBlock.y) ||
+//								(blockYOfCurrentRect + 1 < countY && blockXOfCurrentRect + 1 < countX && blockXOfCurrentRect + 1 == currentBlock.x && blockYOfCurrentRect + 1 == currentBlock.y) ||
+//								(blockYOfCurrentRect + 1 < countY && blockXOfCurrentRect - 1 >= 0 && blockXOfCurrentRect - 1 == currentBlock.x && blockYOfCurrentRect + 1 == currentBlock.y) ||
+//								(blockYOfCurrentRect - 1 < countY && blockXOfCurrentRect + 1 < countX && blockXOfCurrentRect + 1 == currentBlock.x && blockYOfCurrentRect - 1 == currentBlock.y) ||
+//								(blockYOfCurrentRect - 1 < countY && blockXOfCurrentRect - 1 >= 0 && blockXOfCurrentRect - 1 == currentBlock.x && blockYOfCurrentRect - 1 == currentBlock.y))
+//							{
+//								confidenceValueMap[currentBlock.y][currentBlock.x] = MinNeighbor(confidenceValueMap, currentBlock.y, currentBlock.x);
+//								confidenceValueMap[blockYOfCurrentRect][blockXOfCurrentRect] = MaxNeighbor(confidenceValueMap, currentBlock.y, currentBlock.x);
+
+//								if (GlobalTrackerList.empty())
+//								{
+//									CreateNewTrackerForThisBlock(cv::Point(blockXOfCurrentRect, blockYOfCurrentRect), rect);
+//								}
+//								else
+//								{
+//									if (!UpdateTrackerStatus(rect, blockXOfCurrentRect, blockYOfCurrentRect, trackerIndex))
+//									{
+//										SearchWhichTrackerForThisBlock(cv::Point(blockXOfCurrentRect, blockYOfCurrentRect), trackerIndex);
+//										if (!UpdateTrackerStatus(rect, blockXOfCurrentRect, blockYOfCurrentRect, trackerIndex))
+//											CreateNewTrackerForThisBlock(cv::Point(blockXOfCurrentRect, blockYOfCurrentRect), rect);
+//									}
+//								}
+//								findTargetFlag = true;
+//							}
+//						}
+
+//						if (!findTargetFlag)
+//						{
+//							if (trackerIndex > 0)
+//							{
+//								auto it = GlobalTrackerList.begin() + (trackerIndex - 1);
+
+//								it->timeLeft--;
+//								if (it->timeLeft == 0)
+//								{
+//									auto col = it->blockX;
+//									auto row = it->blockY;
+
+//									confidenceValueMap[row][col] /= 2;
+//									if (col - 1 >= 0)
+//										confidenceValueMap[row][col - 1] /= 2;
+//									if (col + 1 < countX)
+//										confidenceValueMap[row][col + 1] /= 2;
+//									if (row - 1 >= 0)
+//										confidenceValueMap[row - 1][col] /= 2;
+//									if (row + 1 < countY)
+//										confidenceValueMap[row + 1][col] /= 2;
+
+//									GlobalTrackerList.erase(it);
+//								}
+//							}
+//							else
+//							{
+//								auto col = currentBlock.x;
+//								auto row = currentBlock.y;
+
+//								confidenceValueMap[row][col] /= 2;
+//								if (col - 1 >= 0)
+//									confidenceValueMap[row][col - 1] /= 2;
+//								if (col + 1 < countX)
+//									confidenceValueMap[row][col + 1] /= 2;
+//								if (row - 1 >= 0)
+//									confidenceValueMap[row - 1][col] /= 2;
+//								if (row + 1 < countY)
+//									confidenceValueMap[row + 1][col] /= 2;
+//							}
+//						}
+//					}
+
+
+//					for (auto it = GlobalTrackerList.begin(); it != GlobalTrackerList.end(); ++it)
+//					{
+//						auto existFlag = false;
+//						for (auto target : blocksContainTargets)
+//						{
+//							if (it->blockX == target.x && it->blockY == target.y)
+//							{
+//								existFlag = true;
+//								break;
+//							}
+//						}
+
+//						if (!existFlag)
+//						{
+//							it->timeLeft--;
+//							if (it->timeLeft == 0)
+//							{
+//								auto col = it->blockX;
+//								auto row = it->blockY;
+
+//								confidenceValueMap[row][col] /= 2;
+//								if (col - 1 >= 0)
+//									confidenceValueMap[row][col - 1] /= 2;
+//								if (col + 1 < countX)
+//									confidenceValueMap[row][col + 1] /= 2;
+//								if (row - 1 >= 0)
+//									confidenceValueMap[row - 1][col] /= 2;
+//								if (row + 1 < countY)
+//									confidenceValueMap[row + 1][col] /= 2;
+
+//								it = GlobalTrackerList.erase(it);
+//								if (it == GlobalTrackerList.end())
+//									break;
+//							}
+//						}
+//					}
+
+//					DrawResults(colorFrame);
+//				}
+
+//				ConfidenceMapUtil::LostMemory(QUEUE_SIZE, queueEndIndex, confidenceQueueMap);
+
+				imshow("Last Detect and Tracking Result", colorFrame);
 
 				WriteLastResultToDisk(colorFrame, frameIndex, writeFileName);
 
