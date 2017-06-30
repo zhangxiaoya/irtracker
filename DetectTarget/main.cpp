@@ -513,11 +513,15 @@ int main(int argc, char* argv[])
 					auto avgValOfCurrentRect = Util::AverageValue(grayFrame, rect);
 
 					auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 17;
-					auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 10;
+					auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 20;
+
+					if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
+						continue;
 
 					auto centerVal = grayFrame.at<uchar>(centerY, centerX);
 
-					if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold)
+					if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold ||
+						centerVal > convexThreshold || centerVal < concaveThreshold)
 					{
 						rectangle(colorFrame, cv::Rect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4), COLOR_RED);
 					}
