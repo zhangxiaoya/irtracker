@@ -68,7 +68,7 @@ private:
 
 	static void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
 
-	static void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, int currentIndex);
+	static void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, int currentIndex) = delete;
 
 	static inline void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 };
@@ -522,31 +522,6 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 			bitMap.at<int32_t>(curR, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR));
 		}
-	}
-}
-
-inline void Util::DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
-{
-	if (grayFrame.at<uchar>(r, c) == 0 && bitMap.at<int32_t>(r, c) == -1)
-	{
-		// center
-		bitMap.at<int32_t>(r, c) = currentIndex;
-
-		// up
-		if (r - 1 >= 0)
-			DeepFirstSearch(grayFrame, bitMap, r - 1, c, currentIndex);
-
-		// down
-		if (r + 1 < grayFrame.rows)
-			DeepFirstSearch(grayFrame, bitMap, r + 1, c, currentIndex);
-
-		// left
-		if (c - 1 >= 0)
-			DeepFirstSearch(grayFrame, bitMap, r, c - 1, currentIndex);
-
-		// right
-		if (c + 1 < grayFrame.cols)
-			DeepFirstSearch(grayFrame, bitMap, r, c + 1, currentIndex);
 	}
 }
 

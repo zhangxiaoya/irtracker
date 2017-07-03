@@ -13,6 +13,7 @@ class DetectByMaxFilterAndAdptiveThreshold
 {
 public:
 
+	template<typename DataType>
 	static std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& fdImg);
 
 private:
@@ -322,7 +323,8 @@ inline std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold::GetMost
 	return mostPossibleBlocks;
 }
 
-inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& fdImg)
+template<typename DataType>
+std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& fdImg)
 {
 	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 	auto kernelSize = 3;
