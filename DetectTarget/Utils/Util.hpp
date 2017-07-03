@@ -404,7 +404,7 @@ inline uchar Util::GetMaxValueOfBlock(const cv::Mat& mat)
 
 inline uchar Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
-	uchar sumAll = 0;
+	auto sumAll = 0;
 	for (auto r = leftTopY; r < rightBottomY; ++r)
 	{
 		auto sumRow = 0;
@@ -415,7 +415,7 @@ inline uchar Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int
 		sumAll += (sumRow / (rightBottomX - leftTopX));
 	}
 
-	return sumAll / (rightBottomY - leftTopY);
+	return static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
 }
 
 inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
