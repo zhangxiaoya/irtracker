@@ -3,5 +3,6 @@ enum DrawResultType
 {
 	Rectangle,
 	Target,
-	HalfRectangle
+	HalfRectangle,
+	HalfRectangleWithLine
 };

@@ -444,6 +444,21 @@ void PrintConfidenceQueueMap(std::vector<std::vector<std::vector<int>>> confiden
 	std::cout << std::endl;
 }
 
+void DrawHalfRectangle(cv::Mat& colorFrame, const int left, const int top, const int right, const int bottom, const cv::Scalar& lineColor)
+{
+	line(colorFrame, cv::Point(left, top), cv::Point(left, top + 3), lineColor, 1, CV_AA);
+	line(colorFrame, cv::Point(left, top), cv::Point(left + 3, top), lineColor, 1, CV_AA);
+
+	line(colorFrame, cv::Point(right, top), cv::Point(right, top + 3), lineColor, 1, CV_AA);
+	line(colorFrame, cv::Point(right, top), cv::Point(right - 3, top), lineColor, 1, CV_AA);
+
+	line(colorFrame, cv::Point(left, bottom), cv::Point(left, bottom - 3), lineColor, 1, CV_AA);
+	line(colorFrame, cv::Point(left, bottom), cv::Point(left + 3, bottom), lineColor, 1, CV_AA);
+
+	line(colorFrame, cv::Point(right, bottom), cv::Point(right, bottom - 3), lineColor, 1, CV_AA);
+	line(colorFrame, cv::Point(right, bottom), cv::Point(right - 3, bottom), lineColor, 1, CV_AA);
+}
+
 void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangle)
 {
 	auto left = rect.x - 2 < 0 ? 0 : rect.x - 2;
@@ -462,17 +477,8 @@ void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawRe
 
 	case DrawResultType::HalfRectangle:
 		{
-			line(colorFrame, cv::Point(left, top), cv::Point(left, top + 3), lineColor, 1, CV_AA);
-			line(colorFrame, cv::Point(left, top), cv::Point(left + 3, top), lineColor, 1, CV_AA);
+			DrawHalfRectangle(colorFrame, left, top, right, bottom, lineColor);
 
-			line(colorFrame, cv::Point(right, top), cv::Point(right, top + 3), lineColor, 1, CV_AA);
-			line(colorFrame, cv::Point(right, top), cv::Point(right - 3, top), lineColor, 1, CV_AA);
-
-			line(colorFrame, cv::Point(left, bottom), cv::Point(left, bottom - 3), lineColor, 1, CV_AA);
-			line(colorFrame, cv::Point(left, bottom), cv::Point(left + 3, bottom), lineColor, 1, CV_AA);
-
-			line(colorFrame, cv::Point(right, bottom), cv::Point(right, bottom - 3), lineColor, 1, CV_AA);
-			line(colorFrame, cv::Point(right, bottom), cv::Point(right - 3, bottom), lineColor, 1, CV_AA);
 			break;
 		}
 	case DrawResultType::Target:
@@ -483,6 +489,17 @@ void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawRe
 			line(colorFrame, cv::Point((left + right) / 2, top - 6), cv::Point((left + right) / 2, top - 2), lineColor, 1, CV_AA);
 			line(colorFrame, cv::Point((left + right) / 2, bottom + 2), cv::Point((left + right) / 2, bottom + 6), lineColor, 1, CV_AA);
 			break;
+		}
+	case DrawResultType::HalfRectangleWithLine:
+		{
+		DrawHalfRectangle(colorFrame, left, top, right, bottom, lineColor);
+
+		line(colorFrame, cv::Point(0, (top + bottom) / 2), cv::Point(left - 2, (top + bottom) / 2), lineColor, 1, CV_AA);
+		line(colorFrame, cv::Point(right + 2, (top + bottom) / 2), cv::Point(IMAGE_WIDTH - 1, (top + bottom) / 2), lineColor, 1, CV_AA);
+
+		line(colorFrame, cv::Point((left + right) / 2, 0), cv::Point((left + right) / 2, top - 2), lineColor, 1, CV_AA);
+		line(colorFrame, cv::Point((left + right) / 2, bottom + 2), cv::Point((left + right) / 2, IMAGE_HEIGHT - 1), lineColor, 1, CV_AA);
+		break;
 		}
 	default:
 		rectangle(colorFrame, cv::Rect(left, top, rect.width + 4, rect.height + 4), COLOR_RED);
@@ -567,10 +584,10 @@ int main(int argc, char* argv[])
 
 					auto centerVal = grayFrame.at<uchar>(centerY, centerX);
 
-					if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold) // ||
-//						centerVal > convexThreshold || centerVal < concaveThreshold)
+					if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold ||
+						centerVal > convexThreshold || centerVal < concaveThreshold)
 					{
-						DrawResult(colorFrame, rect, DrawResultType::HalfRectangle);
+						DrawResult(colorFrame, rect, DrawResultType::HalfRectangleWithLine);
 					}
 				}
 
