@@ -446,9 +446,29 @@ void PrintConfidenceQueueMap(std::vector<std::vector<std::vector<int>>> confiden
 
 void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangle)
 {
-	if(drawResultType == DrawResultType::Rectangle)
+	if (drawResultType == DrawResultType::Rectangle)
 	{
 		rectangle(colorFrame, cv::Rect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4), COLOR_RED);
+	}
+	else if (drawResultType == DrawResultType::Target)
+	{
+		auto left = rect.x;
+		auto top = rect.y;
+		auto right = rect.x + rect.width - 1;
+		auto bottom = rect.y + rect.height - 1;
+
+		auto lineColor = cv::Scalar(10, 50, 200);
+		line(colorFrame, cv::Point(left - 6, (top + bottom) / 2), cv::Point(left - 2, (top + bottom) / 2), lineColor, 1,CV_AA);
+		line(colorFrame, cv::Point(right + 2, (top + bottom) / 2), cv::Point(right + 6, (top + bottom) / 2), lineColor, 1, CV_AA);
+
+		//		line(colorFrame, cv::Point(left, top + 2), cv::Point(left, bottom - 2), lineColor, 1, CV_AA);
+		//		line(colorFrame, cv::Point(right, top + 2), cv::Point(right, bottom - 2), lineColor, 1, CV_AA);
+
+		line(colorFrame, cv::Point((left + right) / 2, top - 6), cv::Point((left + right) / 2, top - 2), lineColor, 1, CV_AA);
+		line(colorFrame, cv::Point((left + right) / 2, bottom + 2), cv::Point((left + right) / 2, bottom + 6), lineColor, 1, CV_AA);
+
+		//		line(colorFrame, cv::Point(left + 2, top), cv::Point(right - 2, top), lineColor, 1, CV_AA);
+		//		line(colorFrame, cv::Point(left + 2, bottom), cv::Point(right - 2, bottom), lineColor, 1, CV_AA);
 	}
 }
 
@@ -532,7 +552,7 @@ int main(int argc, char* argv[])
 					if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold) // ||
 //						centerVal > convexThreshold || centerVal < concaveThreshold)
 					{
-						DrawResult(colorFrame, rect);
+						DrawResult(colorFrame, rect, DrawResultType::Target);
 					}
 				}
 
