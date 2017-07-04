@@ -14,6 +14,7 @@
 #include <imgproc/imgproc.hpp>
 #include "Utils/Util.hpp"
 #include "Models/ConfidenceElem.hpp"
+#include "Models/DrawResultType.hpp"
 
 void UpdateConfidenceQueueMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects, FieldType fieldType = Four)
 {
@@ -443,6 +444,14 @@ void PrintConfidenceQueueMap(std::vector<std::vector<std::vector<int>>> confiden
 	std::cout << std::endl;
 }
 
+void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangle)
+{
+	if(drawResultType == DrawResultType::Rectangle)
+	{
+		rectangle(colorFrame, cv::Rect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4), COLOR_RED);
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
@@ -523,7 +532,7 @@ int main(int argc, char* argv[])
 					if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold) // ||
 //						centerVal > convexThreshold || centerVal < concaveThreshold)
 					{
-						rectangle(colorFrame, cv::Rect(rect.x - 2, rect.y - 2, rect.width + 4, rect.height + 4), COLOR_RED);
+						DrawResult(colorFrame, rect);
 					}
 				}
 
