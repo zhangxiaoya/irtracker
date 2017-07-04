@@ -126,8 +126,10 @@
     <ClInclude Include="Detector\DetectByDiscontinuity.hpp" />
     <ClInclude Include="Detector\DetectByMaxFilterAndAdptiveThreshold.hpp" />
     <ClInclude Include="Detector\DetectByMultiscaleLocalDifference.hpp" />
+    <ClInclude Include="DifferenceElem.hpp" />
     <ClInclude Include="Headers\GlobalConstantConfigure.h" />
     <ClInclude Include="Models\ConfidenceElem.hpp" />
+    <ClInclude Include="Models\DrawResultType.hpp" />
     <ClInclude Include="Models\FieldType.hpp" />
     <ClInclude Include="Models\FourLimits.hpp" />
     <ClInclude Include="Tracker\TargetTracker.hpp" />
