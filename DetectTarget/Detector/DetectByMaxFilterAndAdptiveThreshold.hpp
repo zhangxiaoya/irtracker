@@ -38,6 +38,8 @@ private:
 
 	static std::vector<DifferenceElem> GetMostMaxDiffBlock(std::vector<std::vector<uchar>> maxmindiff);
 
+	static void GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<uchar>> maxmindiff, std::vector<DifferenceElem>& diffElemVec);
+
 	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
 
 	static void CalculateThreshold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
@@ -320,7 +322,28 @@ inline std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold::GetMost
 	GetMaxValueOfMatrix(maxmindiff, diffElem);
 	mostPossibleBlocks.push_back(diffElem);
 
+//	GetDiffValueOfMatrixBigThanThreshold(maxmindiff, mostPossibleBlocks);
+
 	return mostPossibleBlocks;
+}
+
+inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<uchar>> maxmindiff, std::vector<DifferenceElem>& diffElemVec)
+{
+	diffElemVec.clear();
+	for (auto br = 0; br < countY; ++br)
+	{
+		for (auto bc = 0; bc < countX; ++bc)
+		{
+			if (3 <= static_cast<int>(maxmindiff[br][bc]))
+			{
+				DifferenceElem diffElem;
+				diffElem.blockX = bc;
+				diffElem.blockY = br;
+				diffElem.diffVal = static_cast<int>(maxmindiff[br][bc]);
+				diffElemVec.push_back(diffElem);
+			}
+		}
+	}
 }
 
 template<typename DataType>
