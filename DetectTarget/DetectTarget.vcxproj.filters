@@ -46,6 +46,9 @@
     <ClInclude Include="DifferenceElem.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Models\DrawResultType.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Models">
