@@ -83,14 +83,15 @@ inline void DetectByMaxFilterAndAdptiveThreshold::CalculateThreshold(const cv::M
 	for (auto r = leftTopY; r < rightBottomY; ++ r)
 	{
 		auto sumRow = 0;
+		auto ptr = frame.ptr<uchar>(r);
 		for (auto c = leftTopX; c < rightBottomX; ++c)
 		{
-			sumRow += frame.at<uchar>(r, c);
+			sumRow += static_cast<int>(ptr[c]);
 		}
-		sumAll += (sumRow / (rightBottomX - leftTopX));
+		sumAll += static_cast<int>(sumRow / (rightBottomX - leftTopX));
 	}
 
-	threshHold = sumAll / (rightBottomY - leftTopY);
+	threshHold = static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
 
 	//	threshHold += (threshHold) / 4;
 }
@@ -474,11 +475,11 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
 
 	std::vector<FourLimits> allObjects(totalObject);
-	CheckPerf(Util::GetRectangleSize(blockMap, allObjects));
+	Util::GetRectangleSize(blockMap, allObjects);
 
-		Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
+	Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
 
-	//	RemoveSmallAndBigObjects(allObjects, frameAfterDiscrezated);
+	CheckPerf(RemoveSmallAndBigObjects(allObjects, frameAfterDiscrezated));
 
 	//	Util::ShowAllObject(currentGrayFrame, allObjects, "Before Merge");
 
