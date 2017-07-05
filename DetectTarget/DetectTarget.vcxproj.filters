@@ -49,6 +49,9 @@
     <ClInclude Include="Models\DrawResultType.hpp">
       <Filter>Models</Filter>
     </ClInclude>
+    <ClInclude Include="Utils\PerformanceUtil.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Models">

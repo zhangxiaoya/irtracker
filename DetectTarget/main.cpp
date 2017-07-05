@@ -459,7 +459,7 @@ void DrawHalfRectangle(cv::Mat& colorFrame, const int left, const int top, const
 	line(colorFrame, cv::Point(right, bottom), cv::Point(right - 3, bottom), lineColor, 1, CV_AA);
 }
 
-void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangle)
+void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangles)
 {
 	auto left = rect.x - 2 < 0 ? 0 : rect.x - 2;
 	auto top = rect.y - 2 < 0 ? 0 : rect.y - 2;
@@ -469,7 +469,7 @@ void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawRe
 
 	switch (drawResultType)
 	{
-	case DrawResultType::Rectangle:
+	case DrawResultType::Rectangles:
 		{
 			rectangle(colorFrame, cv::Rect(left, top, rect.width + 4, rect.height + 4), COLOR_RED);
 			break;
@@ -649,7 +649,7 @@ int main(int argc, char* argv[])
 					if ((CheckOriginalImageSuroundedBox(grayFrame, rect) || CheckDecreatizatedImageSuroundedBox(fdImg, rect))  && CheckFourBlock(fdImg,rect))
 					{
 
-						DrawResult(colorFrame, rect, DrawResultType::Rectangle);
+						DrawResult(colorFrame, rect, DrawResultType::Rectangles);
 					}
 					else
 					{
