@@ -457,13 +457,13 @@ template<typename DataType>
 std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& fdImg)
 {
 
-	StrengthenIntensityOfBlock(currentGrayFrame);
+	CheckPerf(StrengthenIntensityOfBlock(currentGrayFrame));
 
 	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 	MaxFilter(currentGrayFrame, frameAfterMaxFilter, DilateKernelSize);
 
 	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
-	CheckPerf(Discretization(frameAfterMaxFilter, frameAfterDiscrezated));
+	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
 
 	fdImg = frameAfterDiscrezated;
 

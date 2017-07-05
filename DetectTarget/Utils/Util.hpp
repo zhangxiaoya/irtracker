@@ -381,10 +381,11 @@ inline uchar Util::GetMinValueOfBlock(const cv::Mat& mat)
 	uchar minVal = 255;
 	for (auto r = 0; r < mat.rows; ++r)
 	{
+		auto ptr = mat.ptr<uchar>(r);
 		for (auto c = 0; c < mat.cols; ++c)
 		{
-			if (minVal > mat.at<uchar>(r, c))
-				minVal = mat.at<uchar>(r, c);
+			if (minVal > ptr[c])
+				minVal = ptr[c];
 		}
 	}
 	return minVal;
@@ -395,10 +396,11 @@ inline uchar Util::GetMaxValueOfBlock(const cv::Mat& mat)
 	uchar maxVal = 0;
 	for (auto r = 0; r < mat.rows; ++r)
 	{
+		auto ptr = mat.ptr<uchar>(r);
 		for (auto c = 0; c < mat.cols; ++c)
 		{
-			if (maxVal < mat.at<uchar>(r, c))
-				maxVal = mat.at<uchar>(r, c);
+			if (maxVal < ptr[c])
+				maxVal = ptr[c];
 		}
 	}
 	return maxVal;
