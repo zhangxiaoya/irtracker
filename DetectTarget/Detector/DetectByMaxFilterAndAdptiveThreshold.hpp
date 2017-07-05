@@ -415,46 +415,6 @@ inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThr
 	}
 }
 
-template<typename DataType>
-std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& fdImg)
-{
-	StrengthenIntensityOfBlock(currentGrayFrame);
-
-	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
-	MaxFilter(currentGrayFrame, frameAfterMaxFilter, DilateKernelSize);
-
-	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
-	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
-
-	fdImg = frameAfterDiscrezated;
-
-	imshow("Max Filter and Discrezated", frameAfterDiscrezated);
-
-	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
-	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
-
-	std::vector<FourLimits> allObjects(totalObject);
-	Util::GetRectangleSize(blockMap, allObjects);
-
-	Util::ShowAllObject(currentGrayFrame, allObjects, "Before Merge and Remove out scale Objects");
-
-	RemoveSmallAndBigObjects(allObjects, frameAfterDiscrezated);
-
-	Util::ShowAllObject(currentGrayFrame, allObjects, "Before Merge");
-
-	std::vector<FourLimits> afterMergeObjects;
-	MergeCrossedRectangles(allObjects, afterMergeObjects);
-
-	Util::ShowAllObject(currentGrayFrame, afterMergeObjects, "After Merge Cross Rectangles");
-
-	auto rects = Util::GetCandidateTargets(frameAfterDiscrezated, afterMergeObjects);
-
-	Util::ShowAllCandidateTargets(currentGrayFrame, rects);
-	std::cout << "Count = " << rects.size() << std::endl;
-
-	return rects;
-}
-
 inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize)
 {
 	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
@@ -482,6 +442,55 @@ inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filted
 inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame)
 {
 	for (auto r = 0; r < filtedFrame.rows; ++r)
+	{
+		auto srcImgPtr = filtedFrame.ptr<uchar>(r);
+		auto destImgPtr = discretizatedFrame.ptr<uchar>(r);
+
 		for (auto c = 0; c < filtedFrame.cols; ++c)
-			discretizatedFrame.at<uint8_t>(r, c) = (filtedFrame.at<uint8_t>(r, c) / DISCRATED_BIN) * DISCRATED_BIN;
+		{
+			destImgPtr[c] = (srcImgPtr[c] / DISCRATED_BIN) * DISCRATED_BIN;
+		}
+	}
+}
+
+template<typename DataType>
+std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& fdImg)
+{
+
+	StrengthenIntensityOfBlock(currentGrayFrame);
+
+	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
+	MaxFilter(currentGrayFrame, frameAfterMaxFilter, DilateKernelSize);
+
+	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
+	CheckPerf(Discretization(frameAfterMaxFilter, frameAfterDiscrezated));
+
+	fdImg = frameAfterDiscrezated;
+
+	imshow("Max Filter and Discrezated", frameAfterDiscrezated);
+
+	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
+	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
+
+	//	std::vector<FourLimits> allObjects(totalObject);
+	//	Util::GetRectangleSize(blockMap, allObjects);
+
+	//	Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
+
+	//	RemoveSmallAndBigObjects(allObjects, frameAfterDiscrezated);
+
+	//	Util::ShowAllObject(currentGrayFrame, allObjects, "Before Merge");
+
+	//	std::vector<FourLimits> afterMergeObjects;
+	//	MergeCrossedRectangles(allObjects, afterMergeObjects);
+
+	//	Util::ShowAllObject(currentGrayFrame, afterMergeObjects, "After Merge Cross Rectangles");
+
+	//	auto rects = Util::GetCandidateTargets(frameAfterDiscrezated, afterMergeObjects);
+
+	//	Util::ShowAllCandidateTargets(currentGrayFrame, rects);
+	//	std::cout << "Count = " << rects.size() << std::endl;
+
+	std::vector<cv::Rect> rects;
+	return rects;
 }
