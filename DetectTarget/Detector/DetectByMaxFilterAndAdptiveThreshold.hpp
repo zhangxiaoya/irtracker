@@ -476,7 +476,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	std::vector<FourLimits> allObjects(totalObject);
 	CheckPerf(Util::GetRectangleSize(blockMap, allObjects));
 
-	//	Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
+		Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
 
 	//	RemoveSmallAndBigObjects(allObjects, frameAfterDiscrezated);
 

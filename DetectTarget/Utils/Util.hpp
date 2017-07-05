@@ -106,7 +106,7 @@ inline void Util::ShowCandidateRects(const cv::Mat& grayFrame, const std::vector
 inline void Util::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, uchar value)
 {
 	if (fieldType == FieldType::Eight)
-		DFSWithoutRecursionEightField(binaryFrame, bitMap, r, c, currentIndex,value);
+		DFSWithoutRecursionEightField(binaryFrame, bitMap, r, c, currentIndex, value);
 	else if (fieldType == FieldType::Four)
 		DFSWithoutRecursionFourField(binaryFrame, bitMap, r, c, currentIndex, value);
 	else
@@ -118,7 +118,7 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 	// top
 	for (auto r = 0; r < bitMap.rows; ++r)
 	{
-		auto ptr = bitMap.ptr<int>(r);
+		auto ptr = bitMap.ptr<int32_t>(r);
 		for (auto c = 0; c < bitMap.cols; ++c)
 		{
 			auto curIndex = ptr[c];
@@ -133,7 +133,7 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 	// bottom
 	for (auto r = bitMap.rows - 1; r >= 0; --r)
 	{
-		auto ptr = bitMap.ptr<int>(r);
+		auto ptr = bitMap.ptr<int32_t>(r);
 		for (auto c = 0; c < bitMap.cols; ++c)
 		{
 			auto curIndex = ptr[c];
@@ -141,29 +141,25 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 				allObject[curIndex].bottom = r;
 		}
 	}
-	cv::Mat transposedBitMap;
-	transpose(bitMap, transposedBitMap);
 
 	// left
-	for (auto r = 0; r < transposedBitMap.rows; ++r)
+	for (auto c = 0; c < bitMap.cols; ++c)
 	{
-		auto ptr = transposedBitMap.ptr(r);
-		for (auto c = 0; c < transposedBitMap.cols; ++c)
+		for (auto r = 0; r < bitMap.rows; ++r)
 		{
-			auto curIndex = ptr[c];
+			auto curIndex = bitMap.at<int32_t>(r, c);
 			if (curIndex != -1 && allObject[curIndex].left == -1)
-				allObject[curIndex].left = r;
+				allObject[curIndex].left = c;
 		}
 	}
 	// right
-	for (auto r = transposedBitMap.rows - 1; r >= 0; --r)
+	for (auto c = bitMap.cols - 1; c >= 0; --c)
 	{
-		auto ptr = transposedBitMap.ptr(r);
-		for (auto c = 0; c < transposedBitMap.cols; ++c)
+		for (auto r = 0; r < bitMap.rows; ++r)
 		{
-			auto curIndex = ptr[c];
-			if (curIndex != -1 && allObject[curIndex].left == -1)
-				allObject[curIndex].right = r;
+			auto curIndex = bitMap.at<int32_t>(r, c);
+			if (curIndex != -1 && allObject[curIndex].right == -1)
+				allObject[curIndex].right = c;
 		}
 	}
 }
@@ -465,7 +461,7 @@ inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::
 		auto curR = curPos.y;
 		auto curC = curPos.x;
 
-		
+
 		// up
 		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == value && bitMap.at<int32_t>(curR - 1, curC) == -1)
 		{
@@ -582,5 +578,5 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
 	threshHold = CalculateAverageValue(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
-//	threshHold += threshHold / 4;
+	//threshHold += threshHold / 4;
 }
