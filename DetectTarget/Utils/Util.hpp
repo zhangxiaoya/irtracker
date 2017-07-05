@@ -410,11 +410,12 @@ inline uchar Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int
 	for (auto r = leftTopY; r < rightBottomY; ++r)
 	{
 		auto sumRow = 0;
+		auto ptr = frame.ptr<uchar>(r);
 		for (auto c = leftTopX; c < rightBottomX; ++c)
 		{
-			sumRow += frame.at<uchar>(r, c);
+			sumRow += ptr[c];
 		}
-		sumAll += (sumRow / (rightBottomX - leftTopX));
+		sumAll += sumRow / (rightBottomX - leftTopX);
 	}
 
 	return static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
