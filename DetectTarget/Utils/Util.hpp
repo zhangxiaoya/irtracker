@@ -118,9 +118,10 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 	// top
 	for (auto r = 0; r < bitMap.rows; ++r)
 	{
+		auto ptr = bitMap.ptr<int>(r);
 		for (auto c = 0; c < bitMap.cols; ++c)
 		{
-			auto curIndex = bitMap.at<int32_t>(r, c);
+			auto curIndex = ptr[c];
 			if (curIndex != -1 && allObject[curIndex].top == -1)
 			{
 				allObject[curIndex].top = r;
@@ -132,31 +133,37 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 	// bottom
 	for (auto r = bitMap.rows - 1; r >= 0; --r)
 	{
+		auto ptr = bitMap.ptr<int>(r);
 		for (auto c = 0; c < bitMap.cols; ++c)
 		{
-			auto curIndex = bitMap.at<int32_t>(r, c);
+			auto curIndex = ptr[c];
 			if (curIndex != -1 && allObject[curIndex].bottom == -1)
 				allObject[curIndex].bottom = r;
 		}
 	}
+	cv::Mat transposedBitMap;
+	transpose(bitMap, transposedBitMap);
+
 	// left
-	for (auto c = 0; c < bitMap.cols; ++c)
+	for (auto r = 0; r < transposedBitMap.rows; ++r)
 	{
-		for (auto r = 0; r < bitMap.rows; ++r)
+		auto ptr = transposedBitMap.ptr(r);
+		for (auto c = 0; c < transposedBitMap.cols; ++c)
 		{
-			auto curIndex = bitMap.at<int32_t>(r, c);
+			auto curIndex = ptr[c];
 			if (curIndex != -1 && allObject[curIndex].left == -1)
-				allObject[curIndex].left = c;
+				allObject[curIndex].left = r;
 		}
 	}
 	// right
-	for (auto c = bitMap.cols - 1; c >= 0; --c)
+	for (auto r = transposedBitMap.rows - 1; r >= 0; --r)
 	{
-		for (auto r = 0; r < bitMap.rows; ++r)
+		auto ptr = transposedBitMap.ptr(r);
+		for (auto c = 0; c < transposedBitMap.cols; ++c)
 		{
-			auto curIndex = bitMap.at<int32_t>(r, c);
-			if (curIndex != -1 && allObject[curIndex].right == -1)
-				allObject[curIndex].right = c;
+			auto curIndex = ptr[c];
+			if (curIndex != -1 && allObject[curIndex].left == -1)
+				allObject[curIndex].right = r;
 		}
 	}
 }

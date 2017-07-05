@@ -471,11 +471,10 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	imshow("Max Filter and Discrezated", frameAfterDiscrezated);
 
 	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
-//	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
-	CheckPerf(GetBlocks(frameAfterDiscrezated, blockMap));
+	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
 
-	//	std::vector<FourLimits> allObjects(totalObject);
-	//	Util::GetRectangleSize(blockMap, allObjects);
+	std::vector<FourLimits> allObjects(totalObject);
+	CheckPerf(Util::GetRectangleSize(blockMap, allObjects));
 
 	//	Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
 
