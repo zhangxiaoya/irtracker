@@ -38,6 +38,8 @@ private:
 
 	static std::vector<DifferenceElem> GetMostMaxDiffBlock(std::vector<std::vector<uchar>> maxmindiff);
 
+	static void SearchNeighbors(const std::vector<std::vector<unsigned char>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal);
+
 	static void GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<uchar>> maxmindiff, std::vector<DifferenceElem>& diffElemVec);
 
 	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
@@ -318,17 +320,76 @@ inline std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold::GetMost
 {
 	std::vector<DifferenceElem> mostPossibleBlocks;
 
-	DifferenceElem diffElem;
-	GetMaxValueOfMatrix(maxmindiff, diffElem);
-	mostPossibleBlocks.push_back(diffElem);
+//	DifferenceElem diffElem;
+//	GetMaxValueOfMatrix(maxmindiff, diffElem);
+//	mostPossibleBlocks.push_back(diffElem);
 
-//	GetDiffValueOfMatrixBigThanThreshold(maxmindiff, mostPossibleBlocks);
+	GetDiffValueOfMatrixBigThanThreshold(maxmindiff, mostPossibleBlocks);
 
 	return mostPossibleBlocks;
 }
 
+inline void DetectByMaxFilterAndAdptiveThreshold::SearchNeighbors(const std::vector<std::vector<unsigned char>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal)
+{
+	auto threshold = 2;
+
+	std::stack<cv::Point> deepTrace;
+	deepTrace.push(cv::Point(bc, br));
+
+	while (deepTrace.empty() != true)
+	{
+		auto top = deepTrace.top();
+		deepTrace.pop();
+
+		auto c = top.x;
+		auto r = top.y;
+
+		if (r - 1 >= 0 && flag[r - 1][c] == false && abs(static_cast<int>(maxmindiff[r - 1][c]) - diffVal) < threshold)
+		{
+			flag[r - 1][c] = true;
+			deepTrace.push(cv::Point(c, r - 1));
+			DifferenceElem elem;
+			elem.diffVal = maxmindiff[r - 1][c];
+			elem.blockX = c;
+			elem.blockY = r - 1;
+			diffElemVec.push_back(elem);
+		}
+		if (r + 1 < countY && flag[r + 1][c] == false && abs(static_cast<int>(maxmindiff[r + 1][c]) - diffVal) < threshold)
+		{
+			flag[r + 1][c] = true;
+			deepTrace.push(cv::Point(c, r + 1));
+			DifferenceElem elem;
+			elem.diffVal = maxmindiff[r + 1][c];
+			elem.blockX = c;
+			elem.blockY = r + 1;
+			diffElemVec.push_back(elem);
+		}
+		if (c - 1 >= 0 && flag[r][c - 1] == false && abs(static_cast<int>(maxmindiff[r][c - 1]) - diffVal) < threshold)
+		{
+			flag[r][c - 1] = true;
+			deepTrace.push(cv::Point(c - 1, r));
+			DifferenceElem elem;
+			elem.diffVal = maxmindiff[r][c - 1];
+			elem.blockX = c - 1;
+			elem.blockY = r;
+			diffElemVec.push_back(elem);
+		}
+		if (c + 1 < countX && flag[r][c + 1] == false && abs(static_cast<int>(maxmindiff[r][c + 1]) - diffVal) < threshold)
+		{
+			flag[r][c + 1] = true;
+			deepTrace.push(cv::Point(c + 1, r));
+			DifferenceElem elem;
+			elem.diffVal = maxmindiff[r][c + 1];
+			elem.blockX = c + 1;
+			elem.blockY = r;
+			diffElemVec.push_back(elem);
+		}
+	}
+}
+
 inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<uchar>> maxmindiff, std::vector<DifferenceElem>& diffElemVec)
 {
+	std::vector< std::vector<bool>> flag(countY, std::vector<bool>(countX, false));
 	diffElemVec.clear();
 	for (auto br = 0; br < countY; ++br)
 	{
@@ -341,6 +402,10 @@ inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThr
 				diffElem.blockY = br;
 				diffElem.diffVal = static_cast<int>(maxmindiff[br][bc]);
 				diffElemVec.push_back(diffElem);
+
+				flag[br][bc] = true;
+
+				SearchNeighbors(maxmindiff, diffElemVec, flag, br, bc, static_cast<int>(maxmindiff[br][bc]));
 			}
 		}
 	}

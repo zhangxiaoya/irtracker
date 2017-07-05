@@ -507,6 +507,87 @@ void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawRe
 	}
 }
 
+bool CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& rect)
+{
+	auto centerX = rect.x + rect.width / 2;
+	auto centerY = rect.y + rect.height / 2;
+
+	auto boxLeftTopX = centerX - 2 * rect.width / 2 >= 0 ? centerX - 2 * rect.width / 2 : 0;
+	auto boxLeftTopY = centerY - 2 * rect.height / 2 >= 0 ? centerY - 2 * rect.height / 2 : 0;
+	auto boxRightBottomX = centerX + 2 * rect.width / 2 < IMAGE_WIDTH ? centerX + 2 * rect.width / 2 : IMAGE_WIDTH - 1;
+	auto boxRightBottomY = centerY + 2 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 2 * rect.height / 2 : IMAGE_HEIGHT - 1;
+
+	auto avgValOfSurroundingBox = Util::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
+	auto avgValOfCurrentRect = Util::AverageValue(grayFrame, rect);
+
+	auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 17;
+	auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 20;
+
+	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
+		return false;
+
+	auto centerVal = grayFrame.at<uchar>(centerY, centerX);
+
+	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold ||
+		centerVal > convexThreshold || centerVal < concaveThreshold)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect)
+{
+	auto centerX = rect.x + rect.width / 2;
+	auto centerY = rect.y + rect.height / 2;
+
+	auto boxLeftTopX = centerX - 2 * rect.width / 2 >= 0 ? centerX - 2 * rect.width / 2 : 0;
+	auto boxLeftTopY = centerY - 2 * rect.height / 2 >= 0 ? centerY - 2 * rect.height / 2 : 0;
+	auto boxRightBottomX = centerX + 2 * rect.width / 2 < IMAGE_WIDTH ? centerX + 2 * rect.width / 2 : IMAGE_WIDTH - 1;
+	auto boxRightBottomY = centerY + 2 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 2 * rect.height / 2 : IMAGE_HEIGHT - 1;
+
+	auto avgValOfSurroundingBox = Util::AverageValue(fdImg, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
+	auto avgValOfCurrentRect = Util::AverageValue(fdImg, rect);
+
+	auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 8;
+	auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 10;
+
+	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
+		return false;
+
+	auto centerVal = fdImg.at<uchar>(centerY, centerX);
+
+	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold ||
+		centerVal > convexThreshold || centerVal < concaveThreshold)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool CheckFourBlock(const cv::Mat& fdImg,  const cv::Rect& rect)
+{
+	auto curBlockX = rect.x / BLOCK_SIZE;
+	auto curBlockY = rect.y / BLOCK_SIZE;
+
+	if (curBlockX - 1 < 0 || curBlockX + 1 > countX || curBlockY - 1 < 0 || curBlockY + 1 > countY)
+		return false;
+
+	auto upAvg = Util::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY - 1);
+	auto downAvg = Util::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY + 1);
+
+	auto leftAvg = Util::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY - 1);
+	auto rightAvg = Util::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY + 1);
+
+	if(abs(static_cast<int>(upAvg) - static_cast<int>(downAvg)) > 8)
+		return false;
+
+	if (abs(static_cast<int>(leftAvg) - static_cast<int>(rightAvg)) > 8)
+		return false;
+
+	return true;
+}
+
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
@@ -565,29 +646,14 @@ int main(int argc, char* argv[])
 
 				for (auto rect : targetRects)
 				{
-					auto centerX = rect.x + rect.width / 2;
-					auto centerY = rect.y + rect.height / 2;
-
-					auto boxLeftTopX = centerX - 2 * rect.width / 2 >= 0 ? centerX - 2 * rect.width / 2 : 0;
-					auto boxLeftTopY = centerY - 2 * rect.height / 2 >= 0 ? centerY - 2 * rect.height / 2 : 0;
-					auto boxRightBottomX = centerX + 2 * rect.width / 2 < IMAGE_WIDTH ? centerX + 2 * rect.width / 2 : IMAGE_WIDTH - 1;
-					auto boxRightBottomY = centerY + 2 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 2 * rect.height / 2 : IMAGE_HEIGHT - 1;
-
-					auto avgValOfSurroundingBox = Util::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
-					auto avgValOfCurrentRect = Util::AverageValue(grayFrame, rect);
-
-					auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 17;
-					auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 20;
-
-					if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
-						continue;
-
-					auto centerVal = grayFrame.at<uchar>(centerY, centerX);
-
-					if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold ||
-						centerVal > convexThreshold || centerVal < concaveThreshold)
+					if ((CheckOriginalImageSuroundedBox(grayFrame, rect) || CheckDecreatizatedImageSuroundedBox(fdImg, rect))  && CheckFourBlock(fdImg,rect))
 					{
-						DrawResult(colorFrame, rect, DrawResultType::HalfRectangleWithLine);
+
+						DrawResult(colorFrame, rect, DrawResultType::Rectangle);
+					}
+					else
+					{
+						continue;
 					}
 				}
 

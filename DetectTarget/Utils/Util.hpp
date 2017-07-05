@@ -62,6 +62,8 @@ public:
 
 	static uchar CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
+	static uchar CalculateAverageValueWithBlockIndex(const cv::Mat& img, int blockX, int blockY);
+
 private:
 
 	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex);
@@ -411,6 +413,27 @@ inline uchar Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int
 		for (auto c = leftTopX; c < rightBottomX; ++c)
 		{
 			sumRow += frame.at<uchar>(r, c);
+		}
+		sumAll += (sumRow / (rightBottomX - leftTopX));
+	}
+
+	return static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
+}
+
+inline uchar Util::CalculateAverageValueWithBlockIndex(const cv::Mat& img, int blockX, int blockY)
+{
+	auto leftTopX = blockX * BLOCK_SIZE;
+	auto leftTopY = blockY * BLOCK_SIZE;
+	auto rightBottomX = leftTopX + BLOCK_SIZE >= IMAGE_WIDTH ? IMAGE_WIDTH : leftTopX + BLOCK_SIZE;
+	auto rightBottomY = leftTopY + BLOCK_SIZE >= IMAGE_HEIGHT ? IMAGE_HEIGHT : leftTopY + BLOCK_SIZE;
+
+	auto sumAll = 0;
+	for (auto r = leftTopY; r < rightBottomY; ++r)
+	{
+		auto sumRow = 0;
+		for (auto c = leftTopX; c < rightBottomX; ++c)
+		{
+			sumRow += img.at<uchar>(r, c);
 		}
 		sumAll += (sumRow / (rightBottomX - leftTopX));
 	}
