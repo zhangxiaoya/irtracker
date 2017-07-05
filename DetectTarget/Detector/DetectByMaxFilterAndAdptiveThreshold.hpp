@@ -414,13 +414,10 @@ inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThr
 template<typename DataType>
 std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& fdImg)
 {
-	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
-	auto kernelSize = 3;
-
 	StrengthenIntensityOfBlock(currentGrayFrame);
 
-	MaxFilter(currentGrayFrame, frameAfterMaxFilter, kernelSize);
-
+	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
+	MaxFilter(currentGrayFrame, frameAfterMaxFilter, DilateKernelSize);
 
 	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
@@ -465,12 +462,13 @@ inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filted
 	auto currentIndex = 0;
 	for (auto r = 0; r < filtedFrame.rows; ++r)
 	{
+		auto curRowPtr = filtedFrame.ptr<uchar>(r);
 		for (auto c = 0; c < filtedFrame.cols; ++c)
 		{
 			if (blockMap.at<int32_t>(r, c) != -1)
 				continue;
 
-			auto val = filtedFrame.at<uchar>(r, c);
+			auto val = curRowPtr[c];
 			Util::FindNeighbor(filtedFrame, blockMap, r, c, currentIndex++, FieldType::Four, val);
 		}
 	}
