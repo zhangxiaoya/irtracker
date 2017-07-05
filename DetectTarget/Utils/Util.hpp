@@ -66,7 +66,7 @@ public:
 
 private:
 
-	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex);
+	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
 
 	static void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
 
@@ -106,7 +106,7 @@ inline void Util::ShowCandidateRects(const cv::Mat& grayFrame, const std::vector
 inline void Util::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, uchar value)
 {
 	if (fieldType == FieldType::Eight)
-		DFSWithoutRecursionEightField(binaryFrame, bitMap, r, c, currentIndex);
+		DFSWithoutRecursionEightField(binaryFrame, bitMap, r, c, currentIndex,value);
 	else if (fieldType == FieldType::Four)
 		DFSWithoutRecursionFourField(binaryFrame, bitMap, r, c, currentIndex, value);
 	else
@@ -441,7 +441,7 @@ inline uchar Util::CalculateAverageValueWithBlockIndex(const cv::Mat& img, int b
 	return static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
 }
 
-inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
+inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0)
 {
 	std::stack<cv::Point> deepTrace;
 	bitMap.at<int32_t>(r, c) = currentIndex;
@@ -455,51 +455,52 @@ inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::
 		auto curR = curPos.y;
 		auto curC = curPos.x;
 
+		
 		// up
-		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == 0 && bitMap.at<int32_t>(curR - 1, curC) == -1)
+		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == value && bitMap.at<int32_t>(curR - 1, curC) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC) = currentIndex;
 			deepTrace.push(cv::Point(curC, curR - 1));
 		}
 		// down
-		if (curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC) == 0 && bitMap.at<int32_t>(curR + 1, curC) == -1)
+		if (curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC) == value && bitMap.at<int32_t>(curR + 1, curC) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC) = currentIndex;
 			deepTrace.push(cv::Point(curC, curR + 1));
 		}
 		// left
-		if (curC - 1 >= 0 && binaryFrame.at<uchar>(curR, curC - 1) == 0 && bitMap.at<int32_t>(curR, curC - 1) == -1)
+		if (curC - 1 >= 0 && binaryFrame.at<uchar>(curR, curC - 1) == value && bitMap.at<int32_t>(curR, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR));
 		}
 		// right
-		if (curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR, curC + 1) == 0 && bitMap.at<int32_t>(curR, curC + 1) == -1)
+		if (curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR, curC + 1) == value && bitMap.at<int32_t>(curR, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR));
 		}
 
 		// up and left
-		if (curR - 1 >= 0 && curC - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC - 1) == 0 && bitMap.at<int32_t>(curR - 1, curC - 1) == -1)
+		if (curR - 1 >= 0 && curC - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC - 1) == value && bitMap.at<int32_t>(curR - 1, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR - 1));
 		}
 		// down and right
-		if (curR + 1 < binaryFrame.rows && curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR + 1, curC + 1) == 0 && bitMap.at<int32_t>(curR + 1, curC + 1) == -1)
+		if (curR + 1 < binaryFrame.rows && curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR + 1, curC + 1) == value && bitMap.at<int32_t>(curR + 1, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR + 1));
 		}
 		// left and down
-		if (curC - 1 >= 0 && curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC - 1) == 0 && bitMap.at<int32_t>(curR + 1, curC - 1) == -1)
+		if (curC - 1 >= 0 && curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC - 1) == value && bitMap.at<int32_t>(curR + 1, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR + 1));
 		}
 		// right and up
-		if (curC + 1 < binaryFrame.cols && curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC + 1) == 0 && bitMap.at<int32_t>(curR - 1, curC + 1) == -1)
+		if (curC + 1 < binaryFrame.cols && curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC + 1) == value && bitMap.at<int32_t>(curR - 1, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR - 1));
