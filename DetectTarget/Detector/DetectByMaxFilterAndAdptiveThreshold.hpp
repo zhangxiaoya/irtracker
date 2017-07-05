@@ -287,13 +287,15 @@ inline void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv:
 
 		auto maxdiffBlockRightBottomX = (elem.blockX + 1) * BLOCK_SIZE > IMAGE_WIDTH ? IMAGE_WIDTH - 1 : (elem.blockX + 1) * BLOCK_SIZE;
 		auto maxdiffBlockRightBottomY = (elem.blockY + 1) * BLOCK_SIZE > IMAGE_HEIGHT ? IMAGE_HEIGHT - 1 : (elem.blockY + 1) * BLOCK_SIZE;
+
 		for (auto r = elem.blockY * BLOCK_SIZE; r < maxdiffBlockRightBottomY; ++r)
 		{
+			auto ptr = currentGrayFrame.ptr<uchar>(r);
 			for (auto c = elem.blockX * BLOCK_SIZE; c < maxdiffBlockRightBottomX; ++c)
 			{
-				if (currentGrayFrame.at<uchar>(r, c) > averageValue)
+				if (ptr[c] > averageValue)
 				{
-					currentGrayFrame.at<uchar>(r, c) = currentGrayFrame.at<uchar>(r, c) + 10 > 255 ? 255 : currentGrayFrame.at<uchar>(r, c) + 10;
+					ptr[c] = ptr[c] + 10 > 255 ? 255 : ptr[c] + 10;
 				}
 			}
 		}
