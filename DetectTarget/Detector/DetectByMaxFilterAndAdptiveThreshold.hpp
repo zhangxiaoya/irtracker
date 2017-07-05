@@ -426,13 +426,14 @@ inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filted
 	auto currentIndex = 0;
 	for (auto r = 0; r < filtedFrame.rows; ++r)
 	{
-		auto curRowPtr = filtedFrame.ptr<uchar>(r);
+		auto frameRowPtr = filtedFrame.ptr<uchar>(r);
+		auto maskRowPtr = blockMap.ptr<int>(r);
 		for (auto c = 0; c < filtedFrame.cols; ++c)
 		{
-			if (blockMap.at<int32_t>(r, c) != -1)
+			if (maskRowPtr[c] != -1)
 				continue;
 
-			auto val = curRowPtr[c];
+			auto val = frameRowPtr[c];
 			Util::FindNeighbor(filtedFrame, blockMap, r, c, currentIndex++, FieldType::Four, val);
 		}
 	}
@@ -457,7 +458,7 @@ template<typename DataType>
 std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& fdImg)
 {
 
-	CheckPerf(StrengthenIntensityOfBlock(currentGrayFrame));
+	StrengthenIntensityOfBlock(currentGrayFrame);
 
 	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 	MaxFilter(currentGrayFrame, frameAfterMaxFilter, DilateKernelSize);
@@ -470,7 +471,8 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	imshow("Max Filter and Discrezated", frameAfterDiscrezated);
 
 	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
-	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
+//	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
+	CheckPerf(GetBlocks(frameAfterDiscrezated, blockMap));
 
 	//	std::vector<FourLimits> allObjects(totalObject);
 	//	Util::GetRectangleSize(blockMap, allObjects);

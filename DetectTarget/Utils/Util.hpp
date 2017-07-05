@@ -526,28 +526,48 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 		auto curC = curPos.x;
 
 		// up
-		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == value && bitMap.at<int32_t>(curR - 1, curC) == -1)
+		if (curR - 1 >= 0)
 		{
-			bitMap.at<int32_t>(curR - 1, curC) = currentIndex;
-			deepTrace.push(cv::Point(curC, curR - 1));
+			auto frameRowPtr = binaryFrame.ptr<uchar>(curR - 1);
+			auto maskRowPtr = bitMap.ptr<int>(curR - 1);
+			if (frameRowPtr[curC] == value && maskRowPtr[curC] == -1)
+			{
+				maskRowPtr[curC] = currentIndex;
+				deepTrace.push(cv::Point(curC, curR - 1));
+			}
 		}
 		// down
-		if (curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC) == value && bitMap.at<int32_t>(curR + 1, curC) == -1)
+		if (curR + 1 < binaryFrame.rows)
 		{
-			bitMap.at<int32_t>(curR + 1, curC) = currentIndex;
-			deepTrace.push(cv::Point(curC, curR + 1));
+			auto frameRowPtr = binaryFrame.ptr<uchar>(curR + 1);
+			auto maskRowPtr = bitMap.ptr<int>(curR + 1);
+			if (frameRowPtr[curC] == value && maskRowPtr[curC] == -1)
+			{
+				maskRowPtr[curC] = currentIndex;
+				deepTrace.push(cv::Point(curC, curR + 1));
+			}
 		}
 		// left
-		if (curC - 1 >= 0 && binaryFrame.at<uchar>(curR, curC - 1) == value && bitMap.at<int32_t>(curR, curC - 1) == -1)
+		if (curC - 1 >= 0)
 		{
-			bitMap.at<int32_t>(curR, curC - 1) = currentIndex;
-			deepTrace.push(cv::Point(curC - 1, curR));
+			auto frameRowPtr = binaryFrame.ptr<uchar>(curR);
+			auto maskRowPtr = bitMap.ptr<int>(curR);
+			if (frameRowPtr[curC - 1] == value && maskRowPtr[curC - 1] == -1)
+			{
+				maskRowPtr[curC - 1] = currentIndex;
+				deepTrace.push(cv::Point(curC - 1, curR));
+			}
 		}
 		// right
-		if (curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR, curC + 1) == value && bitMap.at<int32_t>(curR, curC + 1) == -1)
+		if (curC + 1 < binaryFrame.cols)
 		{
-			bitMap.at<int32_t>(curR, curC + 1) = currentIndex;
-			deepTrace.push(cv::Point(curC + 1, curR));
+			auto frameRowPtr = binaryFrame.ptr<uchar>(curR);
+			auto maskRowPtr = bitMap.ptr<int>(curR);
+			if (frameRowPtr[curC + 1] == value && maskRowPtr[curC + 1] == -1)
+			{
+				maskRowPtr[curC + 1] = currentIndex;
+				deepTrace.push(cv::Point(curC + 1, curR));
+			}
 		}
 	}
 }
