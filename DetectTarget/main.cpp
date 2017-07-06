@@ -526,10 +526,10 @@ bool CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& re
 	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
 		return false;
 
-	auto centerVal = grayFrame.at<uchar>(centerY, centerX);
+	uchar centerValue = 0;
+	Util::CalCulateCenterValue(grayFrame, centerValue, rect);
 
-	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold ||
-		centerVal > convexThreshold || centerVal < concaveThreshold)
+	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold || centerValue > convexThreshold || centerValue < concaveThreshold)
 	{
 		return true;
 	}
@@ -555,10 +555,10 @@ bool CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRe
 	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
 		return false;
 
-	auto centerVal = fdImg.at<uchar>(centerY, centerX);
+	uchar centerValue = 0;
+	Util::CalCulateCenterValue(fdImg, centerValue, rect);
 
-	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold ||
-		centerVal > convexThreshold || centerVal < concaveThreshold)
+	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold || centerValue > convexThreshold || centerValue < concaveThreshold)
 	{
 		return true;
 	}
@@ -648,7 +648,6 @@ int main(int argc, char* argv[])
 				{
 					if ((CheckOriginalImageSuroundedBox(grayFrame, rect) || CheckDecreatizatedImageSuroundedBox(fdImg, rect))  && CheckFourBlock(fdImg,rect))
 					{
-
 						DrawResult(colorFrame, rect, DrawResultType::Rectangles);
 					}
 					else
