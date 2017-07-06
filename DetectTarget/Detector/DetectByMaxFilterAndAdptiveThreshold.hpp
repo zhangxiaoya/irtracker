@@ -7,6 +7,7 @@
 #include "../Utils/Util.hpp"
 #include "../DifferenceElem.hpp"
 #include "../Utils/PerformanceUtil.hpp"
+#include <valarray>
 
 cv::Mat previousFrame = cv::Mat(cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT), CV_32SC1, cv::Scalar(1));
 
@@ -118,6 +119,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(s
 	for (auto it = allObjects.begin(); it != allObjects.end();)
 	{
 		uchar threshold = 0;
+		uchar centerValue = 0;
 
 		auto width = it->right - it->left + 1;
 		auto height = it->bottom - it->top + 1;
@@ -154,7 +156,9 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(s
 
 		Util::CalculateThreshHold(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
-		if (frame.at<uchar>(it->top + 1, it->left + 1) < threshold)
+		Util::CalCulateCenterValue(frame, centerValue, cv::Rect(it->left, it->top, it->right - it->left + 1, it->bottom - it->top + 1));
+
+		if (std::abs((int)centerValue - (int)threshold) < 2)
 		{
 			it = allObjects.erase(it);
 		}

@@ -66,6 +66,8 @@ public:
 
 	static inline void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
+	static void CalCulateCenterValue(const cv::Mat& frame, uchar& centerValue, const cv::Rect& rect);
+
 private:
 
 	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
@@ -452,6 +454,19 @@ inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, i
 {
 	threshHold = CalculateAverageValue(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
 	//threshHold += threshHold / 4;
+}
+
+inline void Util::CalCulateCenterValue(const cv::Mat& frame, uchar& centerValue, const cv::Rect& rect)
+{
+	auto centerX = rect.x + rect.width / 2;
+	auto centerY = rect.y + rect.height / 2;
+
+	auto sumAll = 0;
+	sumAll += static_cast<int>(frame.at<uchar>(centerY, centerX));
+	sumAll += static_cast<int>(frame.at<uchar>(centerY, centerX - 1));
+	sumAll += static_cast<int>(frame.at<uchar>(centerY - 1, centerX));
+	sumAll += static_cast<int>(frame.at<uchar>(centerY - 1, centerX - 1));
+	centerValue = static_cast<uchar>(sumAll / 4);
 }
 
 inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value)
