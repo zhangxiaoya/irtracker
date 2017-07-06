@@ -158,7 +158,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(s
 
 		Util::CalCulateCenterValue(frame, centerValue, cv::Rect(it->left, it->top, it->right - it->left + 1, it->bottom - it->top + 1));
 
-		if (std::abs((int)centerValue - (int)threshold) < 2)
+		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(threshold)) < 2)
 		{
 			it = allObjects.erase(it);
 		}
