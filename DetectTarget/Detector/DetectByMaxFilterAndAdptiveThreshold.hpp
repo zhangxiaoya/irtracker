@@ -127,7 +127,8 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::
 		if (rightBottomY > frame.rows)
 			rightBottomY = frame.rows;
 
-		CalculateThreshold(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
+//		CalculateThreshold(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
+		Util::CalculateThreshHold(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
 		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
 			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT) ||

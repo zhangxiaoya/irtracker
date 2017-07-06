@@ -64,6 +64,8 @@ public:
 
 	static uchar CalculateAverageValueWithBlockIndex(const cv::Mat& img, int blockX, int blockY);
 
+	static inline void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
+
 private:
 
 	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
@@ -72,7 +74,6 @@ private:
 
 	static void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, int currentIndex) = delete;
 
-	static inline void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 };
 
 inline void Util::BinaryMat(cv::Mat& mat)
@@ -447,6 +448,12 @@ inline uchar Util::CalculateAverageValueWithBlockIndex(const cv::Mat& img, int b
 	return static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
 }
 
+inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+{
+	threshHold = CalculateAverageValue(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
+	//threshHold += threshHold / 4;
+}
+
 inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value)
 {
 	std::stack<cv::Point> deepTrace;
@@ -573,10 +580,4 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 			}
 		}
 	}
-}
-
-inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
-{
-	threshHold = CalculateAverageValue(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
-	//threshHold += threshHold / 4;
 }
