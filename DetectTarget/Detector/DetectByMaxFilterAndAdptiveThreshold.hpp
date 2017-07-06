@@ -47,7 +47,9 @@ private:
 
 	static void CalculateThreshold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
-	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame);
+	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects);
+
+	static void RemoveObjectsWithLowContrast(std::vector<FourLimits>& allObjects, const cv::Mat& frame);
 
 	static void FillRectToFrame(cv::Rect& rect);
 
@@ -96,7 +98,22 @@ inline void DetectByMaxFilterAndAdptiveThreshold::CalculateThreshold(const cv::M
 	//	threshHold += (threshHold) / 4;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame)
+inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects)
+{
+	for (auto it = allObjects.begin(); it != allObjects.end();)
+	{
+		auto width = it->right - it->left + 1;
+		auto height = it->bottom - it->top + 1;
+
+		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
+			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
+			it = allObjects.erase(it);
+		else
+			++it;
+	}
+}
+
+inline void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(std::vector<FourLimits>& allObjects, const cv::Mat& frame)
 {
 	for (auto it = allObjects.begin(); it != allObjects.end();)
 	{
@@ -113,29 +130,38 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::
 
 		auto leftTopX = centerX - surroundBoxWidth / 2;
 		if (leftTopX < 0)
+		{
 			leftTopX = 0;
+		}
 
 		auto leftTopY = centerY - surroundBoxHeight / 2;
 		if (leftTopY < 0)
+		{
 			leftTopY = 0;
+		}
 
 		auto rightBottomX = leftTopX + surroundBoxWidth;
 		if (rightBottomX > frame.cols)
+		{
 			rightBottomX = frame.cols;
+		}
 
 		auto rightBottomY = leftTopY + surroundBoxHeight;
 		if (rightBottomY > frame.rows)
+		{
 			rightBottomY = frame.rows;
+		}
 
-//		CalculateThreshold(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 		Util::CalculateThreshHold(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
-		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
-			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT) ||
-			frame.at<uchar>(it->top + 1, it->left + 1) < threshold)
+		if (frame.at<uchar>(it->top + 1, it->left + 1) < threshold)
+		{
 			it = allObjects.erase(it);
+		}
 		else
+		{
 			++it;
+		}
 	}
 }
 
@@ -480,9 +506,13 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 
 	Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
 
-	CheckPerf(RemoveSmallAndBigObjects(allObjects, frameAfterDiscrezated));
+	CheckPerf(RemoveSmallAndBigObjects(allObjects));
 
-	//	Util::ShowAllObject(currentGrayFrame, allObjects, "Before Merge");
+	Util::ShowAllObject(currentGrayFrame, allObjects, "After Remove Rect out range size");
+
+	CheckPerf(RemoveObjectsWithLowContrast(allObjects, frameAfterDiscrezated));
+
+	Util::ShowAllObject(frameAfterDiscrezated, allObjects, "After Remove Low contrast");
 
 	//	std::vector<FourLimits> afterMergeObjects;
 	//	MergeCrossedRectangles(allObjects, afterMergeObjects);
