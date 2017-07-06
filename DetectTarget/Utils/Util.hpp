@@ -408,9 +408,10 @@ inline uchar Util::CalculateAverageValueWithBlockIndex(const cv::Mat& img, int b
 	for (auto r = leftTopY; r < rightBottomY; ++r)
 	{
 		auto sumRow = 0;
+		auto ptr = img.ptr<uchar>(r);
 		for (auto c = leftTopX; c < rightBottomX; ++c)
 		{
-			sumRow += img.at<uchar>(r, c);
+			sumRow += ptr[c];
 		}
 		sumAll += (sumRow / (rightBottomX - leftTopX));
 	}
