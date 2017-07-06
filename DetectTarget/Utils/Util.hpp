@@ -48,7 +48,7 @@ public:
 
 	static uchar AverageValue(const cv::Mat& curFrame, const cv::Rect& object);
 
-	static std::vector<cv::Rect> GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects);
+	static std::vector<cv::Rect> GetCandidateTargets(const std::vector<FourLimits>& afterMergeObjects);
 
 	static int Sum(const std::vector<int>& valueVec);
 
@@ -291,42 +291,16 @@ inline uchar Util::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect)
 	return sumAll / rect.height;
 }
 
-inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects)
+inline std::vector<cv::Rect> Util::GetCandidateTargets(const std::vector<FourLimits>& afterMergeObjects)
 {
 	std::vector<cv::Rect> targetRect;
 
 	for (auto i = 0; i < afterMergeObjects.size(); ++i)
 	{
-		uchar threshHold = 0;
-
 		auto object = afterMergeObjects[i];
 
 		auto width = object.right - object.left + 1;
 		auto height = object.bottom - object.top + 1;
-
-		auto surroundBoxWidth = 2 * width;
-		auto surroundBoxHeight = 2 * height;
-
-		auto centerX = (object.right + object.left) / 2;
-		auto centerY = (object.bottom + object.top) / 2;
-
-		auto leftTopX = centerX - surroundBoxWidth / 2;
-		if (leftTopX < 0)
-			leftTopX = 0;
-
-		auto leftTopY = centerY - surroundBoxHeight / 2;
-		if (leftTopY < 0)
-			leftTopY = 0;
-
-		auto rightBottomX = leftTopX + surroundBoxWidth;
-		if (rightBottomX > curFrame.cols)
-			rightBottomX = curFrame.cols;
-
-		auto rightBottomY = leftTopY + surroundBoxHeight;
-		if (rightBottomY > curFrame.rows)
-			rightBottomY = curFrame.rows;
-
-		CalculateThreshHold(curFrame, threshHold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
 		if (width <= 0 || height <= 0)
 		{
@@ -334,16 +308,7 @@ inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, 
 			continue;
 		}
 
-		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
-			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
-			continue;
-
-		auto rect = cv::Rect(object.left, object.top, width, height);
-
-		if (curFrame.at<uchar>(centerY, centerX) < threshHold)
-			continue;
-
-		targetRect.push_back(rect);
+		targetRect.push_back(cv::Rect(object.left, object.top, width, height));
 	}
 	return targetRect;
 }

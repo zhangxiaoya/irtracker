@@ -52,6 +52,8 @@ private:
 
 	static void RemoveObjectsWithLowContrast(std::vector<FourLimits>& allObjects, const cv::Mat& frame);
 
+	static void DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects);
+
 	static void FillRectToFrame(cv::Rect& rect);
 
 	static bool CheckRect(cv::Rect& rect);
@@ -74,7 +76,7 @@ inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& o
 	auto centerXDiff = std::abs(firstCenterX - secondCenterX);
 	auto centerYDiff = std::abs(firstCenterY - secondCenterY);
 
-	if (centerXDiff <= (firstWidth + secondWidth) / 2 && centerYDiff <= (firstHeight + secondHeight) / 2)
+	if (centerXDiff <= (firstWidth + secondWidth) / 2 + 1 && centerYDiff <= (firstHeight + secondHeight) / 2 + 1)
 		return true;
 
 	return false;
@@ -167,6 +169,12 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(s
 			++it;
 		}
 	}
+}
+
+inline void DetectByMaxFilterAndAdptiveThreshold::DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects)
+{
+	RemoveSmallAndBigObjects(allObjects);
+	RemoveObjectsWithLowContrast(allObjects, frame);
 }
 
 inline void DetectByMaxFilterAndAdptiveThreshold::FillRectToFrame(cv::Rect& rect)
@@ -508,26 +516,26 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	std::vector<FourLimits> allObjects(totalObject);
 	Util::GetRectangleSize(blockMap, allObjects);
 
-	Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
+//	Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
 
-	CheckPerf(RemoveSmallAndBigObjects(allObjects));
+	RemoveSmallAndBigObjects(allObjects);
 
-	Util::ShowAllObject(currentGrayFrame, allObjects, "After Remove Rect out range size");
+//	Util::ShowAllObject(currentGrayFrame, allObjects, "After Remove Rect out range size");
 
-	CheckPerf(RemoveObjectsWithLowContrast(allObjects, frameAfterDiscrezated));
+	RemoveObjectsWithLowContrast(allObjects, frameAfterDiscrezated);
 
-	Util::ShowAllObject(frameAfterDiscrezated, allObjects, "After Remove Low contrast");
+//	Util::ShowAllObject(frameAfterDiscrezated, allObjects, "After Remove Low contrast");
 
-	//	std::vector<FourLimits> afterMergeObjects;
-	//	MergeCrossedRectangles(allObjects, afterMergeObjects);
+	std::vector<FourLimits> afterMergeObjects;
+	MergeCrossedRectangles(allObjects, afterMergeObjects);
 
-	//	Util::ShowAllObject(currentGrayFrame, afterMergeObjects, "After Merge Cross Rectangles");
+	Util::ShowAllObject(frameAfterDiscrezated, afterMergeObjects, "After Merge Cross Rectangles");
 
-	//	auto rects = Util::GetCandidateTargets(frameAfterDiscrezated, afterMergeObjects);
+	DoubleCheckAfterMerge(frameAfterDiscrezated, afterMergeObjects);
 
-	//	Util::ShowAllCandidateTargets(currentGrayFrame, rects);
-	//	std::cout << "Count = " << rects.size() << std::endl;
+	auto rects = Util::GetCandidateTargets(afterMergeObjects);
 
-	std::vector<cv::Rect> rects;
+	Util::ShowAllCandidateTargets(currentGrayFrame, rects);
+
 	return rects;
 }
