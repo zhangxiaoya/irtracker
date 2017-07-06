@@ -283,8 +283,11 @@ inline uchar Util::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect)
 	for (auto r = rect.y; r < rect.y + rect.height; ++r)
 	{
 		auto sumRow = 0;
+		auto ptr = curFrame.ptr<uchar>(r);
 		for (auto c = rect.x; c < rect.x + rect.width; ++c)
-			sumRow += curFrame.at<uchar>(r, c);
+		{
+			sumRow += ptr[c];
+		}
 		sumAll += (sumRow / rect.width);
 	}
 
