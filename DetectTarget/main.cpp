@@ -654,8 +654,8 @@ int main(int argc, char* argv[])
 						(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect)) ||
 						(CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(fdImg, rect))
 						)
-//						&&
-//						CheckFourBlock(fdImg,rect)
+						&&
+						CheckFourBlock(fdImg,rect)
 						)
 					{
 						DrawResult(colorFrame, rect, DrawResultType::Rectangles);

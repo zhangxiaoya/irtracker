@@ -39,5 +39,6 @@ static auto CV_DATA_TYPE = CV_8UC1;
 const auto DilateKernelSize = 3;
 
 bool CHECK_ORIGIN_FLAG = true;
-//bool CHECK_DECRETIZATED_FLAG = true;
-bool CHECK_DECRETIZATED_FLAG = false;
+bool CHECK_DECRETIZATED_FLAG = true;
+
+const auto LowContrastThreshold = 3;
