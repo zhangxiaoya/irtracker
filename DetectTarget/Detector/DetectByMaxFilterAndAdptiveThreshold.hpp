@@ -433,13 +433,15 @@ inline void DetectByMaxFilterAndAdptiveThreshold::SearchNeighbors(const std::vec
 
 inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<uchar>> maxmindiff, std::vector<DifferenceElem>& diffElemVec)
 {
+	const auto threshold = 30;
+
 	std::vector< std::vector<bool>> flag(countY, std::vector<bool>(countX, false));
 	diffElemVec.clear();
 	for (auto br = 0; br < countY; ++br)
 	{
 		for (auto bc = 0; bc < countX; ++bc)
 		{
-			if (3 <= static_cast<int>(maxmindiff[br][bc]))
+			if (threshold <= static_cast<int>(maxmindiff[br][bc]))
 			{
 				DifferenceElem diffElem;
 				diffElem.blockX = bc;
