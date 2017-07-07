@@ -126,8 +126,8 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(s
 		auto width = it->right - it->left + 1;
 		auto height = it->bottom - it->top + 1;
 
-		auto surroundBoxWidth = 2 * width;
-		auto surroundBoxHeight = 2 * height;
+		auto surroundBoxWidth = 3 * width;
+		auto surroundBoxHeight = 3 * height;
 
 		auto centerX = (it->right + it->left) / 2;
 		auto centerY = (it->bottom + it->top) / 2;
@@ -160,7 +160,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(s
 
 		Util::CalCulateCenterValue(frame, centerValue, cv::Rect(it->left, it->top, it->right - it->left + 1, it->bottom - it->top + 1));
 
-		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(threshold)) < 2)
+		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(threshold)) < 3)
 		{
 			it = allObjects.erase(it);
 		}
