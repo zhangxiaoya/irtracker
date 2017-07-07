@@ -649,7 +649,14 @@ int main(int argc, char* argv[])
 
 				for (auto rect : targetRects)
 				{
-					if ((CheckOriginalImageSuroundedBox(grayFrame, rect) || CheckDecreatizatedImageSuroundedBox(fdImg, rect))  && CheckFourBlock(fdImg,rect))
+					if (
+						(
+						(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect)) ||
+						(CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(fdImg, rect))
+						)
+//						&&
+//						CheckFourBlock(fdImg,rect)
+						)
 					{
 						DrawResult(colorFrame, rect, DrawResultType::Rectangles);
 					}
