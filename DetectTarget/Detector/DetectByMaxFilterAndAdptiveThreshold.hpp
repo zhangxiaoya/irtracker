@@ -6,6 +6,8 @@
 #include "../Models/FourLimits.hpp"
 #include "../Utils/Util.hpp"
 #include "../DifferenceElem.hpp"
+#include "../Utils/PerformanceUtil.hpp"
+#include <valarray>
 
 cv::Mat previousFrame = cv::Mat(cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT), CV_32SC1, cv::Scalar(1));
 
@@ -46,7 +48,11 @@ private:
 
 	static void CalculateThreshold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
-	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame);
+	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects);
+
+	static void RemoveObjectsWithLowContrast(std::vector<FourLimits>& allObjects, const cv::Mat& frame);
+
+	static void DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects);
 
 	static void FillRectToFrame(cv::Rect& rect);
 
@@ -70,7 +76,7 @@ inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& o
 	auto centerXDiff = std::abs(firstCenterX - secondCenterX);
 	auto centerYDiff = std::abs(firstCenterY - secondCenterY);
 
-	if (centerXDiff <= (firstWidth + secondWidth) / 2 && centerYDiff <= (firstHeight + secondHeight) / 2)
+	if (centerXDiff <= (firstWidth + secondWidth) / 2 + 1 && centerYDiff <= (firstHeight + secondHeight) / 2 + 1)
 		return true;
 
 	return false;
@@ -82,58 +88,93 @@ inline void DetectByMaxFilterAndAdptiveThreshold::CalculateThreshold(const cv::M
 	for (auto r = leftTopY; r < rightBottomY; ++ r)
 	{
 		auto sumRow = 0;
+		auto ptr = frame.ptr<uchar>(r);
 		for (auto c = leftTopX; c < rightBottomX; ++c)
 		{
-			sumRow += frame.at<uchar>(r, c);
+			sumRow += static_cast<int>(ptr[c]);
 		}
-		sumAll += (sumRow / (rightBottomX - leftTopX));
+		sumAll += static_cast<int>(sumRow / (rightBottomX - leftTopX));
 	}
 
-	threshHold = sumAll / (rightBottomY - leftTopY);
+	threshHold = static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
 
 	//	threshHold += (threshHold) / 4;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame)
+inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects)
+{
+	for (auto it = allObjects.begin(); it != allObjects.end();)
+	{
+		auto width = it->right - it->left + 1;
+		auto height = it->bottom - it->top + 1;
+
+		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
+			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
+			it = allObjects.erase(it);
+		else
+			++it;
+	}
+}
+
+inline void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(std::vector<FourLimits>& allObjects, const cv::Mat& frame)
 {
 	for (auto it = allObjects.begin(); it != allObjects.end();)
 	{
 		uchar threshold = 0;
+		uchar centerValue = 0;
 
 		auto width = it->right - it->left + 1;
 		auto height = it->bottom - it->top + 1;
 
-		auto surroundBoxWidth = 2 * width;
-		auto surroundBoxHeight = 2 * height;
+		auto surroundBoxWidth = 3 * width;
+		auto surroundBoxHeight = 3 * height;
 
 		auto centerX = (it->right + it->left) / 2;
 		auto centerY = (it->bottom + it->top) / 2;
 
 		auto leftTopX = centerX - surroundBoxWidth / 2;
 		if (leftTopX < 0)
+		{
 			leftTopX = 0;
+		}
 
 		auto leftTopY = centerY - surroundBoxHeight / 2;
 		if (leftTopY < 0)
+		{
 			leftTopY = 0;
+		}
 
 		auto rightBottomX = leftTopX + surroundBoxWidth;
 		if (rightBottomX > frame.cols)
+		{
 			rightBottomX = frame.cols;
+		}
 
 		auto rightBottomY = leftTopY + surroundBoxHeight;
 		if (rightBottomY > frame.rows)
+		{
 			rightBottomY = frame.rows;
+		}
 
-		CalculateThreshold(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
+		Util::CalculateThreshHold(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
-		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
-			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT) ||
-			frame.at<uchar>(it->top + 1, it->left + 1) < threshold)
+		Util::CalCulateCenterValue(frame, centerValue, cv::Rect(it->left, it->top, it->right - it->left + 1, it->bottom - it->top + 1));
+
+		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(threshold)) < 3)
+		{
 			it = allObjects.erase(it);
+		}
 		else
+		{
 			++it;
+		}
 	}
+}
+
+inline void DetectByMaxFilterAndAdptiveThreshold::DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects)
+{
+	RemoveSmallAndBigObjects(allObjects);
+	RemoveObjectsWithLowContrast(allObjects, frame);
 }
 
 inline void DetectByMaxFilterAndAdptiveThreshold::FillRectToFrame(cv::Rect& rect)
@@ -283,17 +324,20 @@ inline void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv:
 		auto boundingBoxLeftTopY = centerY - BLOCK_SIZE >= 0 ? centerY - BLOCK_SIZE : 0;
 		auto boundingBoxRightBottomX = centerX + BLOCK_SIZE < IMAGE_WIDTH ? centerX + BLOCK_SIZE : IMAGE_WIDTH - 1;
 		auto boundingBoxRightBottomY = centerY + BLOCK_SIZE < IMAGE_HEIGHT ? centerY + BLOCK_SIZE : IMAGE_HEIGHT - 1;
+
 		auto averageValue = Util::CalculateAverageValue(currentGrayFrame, boundingBoxLeftTopX, boundingBoxLeftTopY, boundingBoxRightBottomX, boundingBoxRightBottomY);
 
 		auto maxdiffBlockRightBottomX = (elem.blockX + 1) * BLOCK_SIZE > IMAGE_WIDTH ? IMAGE_WIDTH - 1 : (elem.blockX + 1) * BLOCK_SIZE;
 		auto maxdiffBlockRightBottomY = (elem.blockY + 1) * BLOCK_SIZE > IMAGE_HEIGHT ? IMAGE_HEIGHT - 1 : (elem.blockY + 1) * BLOCK_SIZE;
+
 		for (auto r = elem.blockY * BLOCK_SIZE; r < maxdiffBlockRightBottomY; ++r)
 		{
+			auto ptr = currentGrayFrame.ptr<uchar>(r);
 			for (auto c = elem.blockX * BLOCK_SIZE; c < maxdiffBlockRightBottomX; ++c)
 			{
-				if (currentGrayFrame.at<uchar>(r, c) > averageValue)
+				if (ptr[c] > averageValue)
 				{
-					currentGrayFrame.at<uchar>(r, c) = currentGrayFrame.at<uchar>(r, c) + 10 > 255 ? 255 : currentGrayFrame.at<uchar>(r, c) + 10;
+					ptr[c] = ptr[c] + 10 > 255 ? 255 : ptr[c] + 10;
 				}
 			}
 		}
@@ -389,13 +433,14 @@ inline void DetectByMaxFilterAndAdptiveThreshold::SearchNeighbors(const std::vec
 
 inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<uchar>> maxmindiff, std::vector<DifferenceElem>& diffElemVec)
 {
+
 	std::vector< std::vector<bool>> flag(countY, std::vector<bool>(countX, false));
 	diffElemVec.clear();
 	for (auto br = 0; br < countY; ++br)
 	{
 		for (auto bc = 0; bc < countX; ++bc)
 		{
-			if (3 <= static_cast<int>(maxmindiff[br][bc]))
+			if (LowContrastThreshold <= static_cast<int>(maxmindiff[br][bc]))
 			{
 				DifferenceElem diffElem;
 				diffElem.blockX = bc;
@@ -411,16 +456,53 @@ inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThr
 	}
 }
 
+inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize)
+{
+	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
+	dilate(curFrame, filtedFrame, kernel);
+}
+
+inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
+{
+	auto currentIndex = 0;
+	for (auto r = 0; r < filtedFrame.rows; ++r)
+	{
+		auto frameRowPtr = filtedFrame.ptr<uchar>(r);
+		auto maskRowPtr = blockMap.ptr<int>(r);
+		for (auto c = 0; c < filtedFrame.cols; ++c)
+		{
+			if (maskRowPtr[c] != -1)
+				continue;
+
+			auto val = frameRowPtr[c];
+			Util::FindNeighbor(filtedFrame, blockMap, r, c, currentIndex++, FieldType::Four, val);
+		}
+	}
+	return currentIndex;
+}
+
+inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame)
+{
+	for (auto r = 0; r < filtedFrame.rows; ++r)
+	{
+		auto srcImgPtr = filtedFrame.ptr<uchar>(r);
+		auto destImgPtr = discretizatedFrame.ptr<uchar>(r);
+
+		for (auto c = 0; c < filtedFrame.cols; ++c)
+		{
+			destImgPtr[c] = (srcImgPtr[c] / DISCRATED_BIN) * DISCRATED_BIN;
+		}
+	}
+}
+
 template<typename DataType>
 std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& fdImg)
 {
-	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
-	auto kernelSize = 3;
 
 	StrengthenIntensityOfBlock(currentGrayFrame);
 
-	MaxFilter(currentGrayFrame, frameAfterMaxFilter, kernelSize);
-
+	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
+	MaxFilter(currentGrayFrame, frameAfterMaxFilter, DilateKernelSize);
 
 	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
@@ -435,51 +517,26 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	std::vector<FourLimits> allObjects(totalObject);
 	Util::GetRectangleSize(blockMap, allObjects);
 
-	Util::ShowAllObject(currentGrayFrame, allObjects, "Before Merge and Remove out scale Objects");
+//	Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
 
-	RemoveSmallAndBigObjects(allObjects, frameAfterDiscrezated);
+	RemoveSmallAndBigObjects(allObjects);
 
-	Util::ShowAllObject(currentGrayFrame, allObjects, "Before Merge");
+//	Util::ShowAllObject(currentGrayFrame, allObjects, "After Remove Rect out range size");
+
+	RemoveObjectsWithLowContrast(allObjects, frameAfterDiscrezated);
+
+//	Util::ShowAllObject(frameAfterDiscrezated, allObjects, "After Remove Low contrast");
 
 	std::vector<FourLimits> afterMergeObjects;
 	MergeCrossedRectangles(allObjects, afterMergeObjects);
 
-	Util::ShowAllObject(currentGrayFrame, afterMergeObjects, "After Merge Cross Rectangles");
+	Util::ShowAllObject(frameAfterDiscrezated, afterMergeObjects, "After Merge Cross Rectangles");
 
-	auto rects = Util::GetCandidateTargets(frameAfterDiscrezated, afterMergeObjects);
+	DoubleCheckAfterMerge(frameAfterDiscrezated, afterMergeObjects);
+
+	auto rects = Util::GetCandidateTargets(afterMergeObjects);
 
 	Util::ShowAllCandidateTargets(currentGrayFrame, rects);
-	std::cout << "Count = " << rects.size() << std::endl;
 
 	return rects;
-}
-
-inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize)
-{
-	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
-	dilate(curFrame, filtedFrame, kernel);
-}
-
-inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
-{
-	auto currentIndex = 0;
-	for (auto r = 0; r < filtedFrame.rows; ++r)
-	{
-		for (auto c = 0; c < filtedFrame.cols; ++c)
-		{
-			if (blockMap.at<int32_t>(r, c) != -1)
-				continue;
-
-			auto val = filtedFrame.at<uchar>(r, c);
-			Util::FindNeighbor(filtedFrame, blockMap, r, c, currentIndex++, FieldType::Four, val);
-		}
-	}
-	return currentIndex;
-}
-
-inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame)
-{
-	for (auto r = 0; r < filtedFrame.rows; ++r)
-		for (auto c = 0; c < filtedFrame.cols; ++c)
-			discretizatedFrame.at<uint8_t>(r, c) = (filtedFrame.at<uint8_t>(r, c) / DISCRATED_BIN) * DISCRATED_BIN;
 }

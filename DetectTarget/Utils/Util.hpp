@@ -48,7 +48,7 @@ public:
 
 	static uchar AverageValue(const cv::Mat& curFrame, const cv::Rect& object);
 
-	static std::vector<cv::Rect> GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects);
+	static std::vector<cv::Rect> GetCandidateTargets(const std::vector<FourLimits>& afterMergeObjects);
 
 	static int Sum(const std::vector<int>& valueVec);
 
@@ -64,15 +64,18 @@ public:
 
 	static uchar CalculateAverageValueWithBlockIndex(const cv::Mat& img, int blockX, int blockY);
 
+	static inline void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
+
+	static void CalCulateCenterValue(const cv::Mat& frame, uchar& centerValue, const cv::Rect& rect);
+
 private:
 
-	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex);
+	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
 
 	static void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
 
 	static void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, int currentIndex) = delete;
 
-	static inline void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 };
 
 inline void Util::BinaryMat(cv::Mat& mat)
@@ -106,7 +109,7 @@ inline void Util::ShowCandidateRects(const cv::Mat& grayFrame, const std::vector
 inline void Util::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, uchar value)
 {
 	if (fieldType == FieldType::Eight)
-		DFSWithoutRecursionEightField(binaryFrame, bitMap, r, c, currentIndex);
+		DFSWithoutRecursionEightField(binaryFrame, bitMap, r, c, currentIndex, value);
 	else if (fieldType == FieldType::Four)
 		DFSWithoutRecursionFourField(binaryFrame, bitMap, r, c, currentIndex, value);
 	else
@@ -118,9 +121,10 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 	// top
 	for (auto r = 0; r < bitMap.rows; ++r)
 	{
+		auto ptr = bitMap.ptr<int32_t>(r);
 		for (auto c = 0; c < bitMap.cols; ++c)
 		{
-			auto curIndex = bitMap.at<int32_t>(r, c);
+			auto curIndex = ptr[c];
 			if (curIndex != -1 && allObject[curIndex].top == -1)
 			{
 				allObject[curIndex].top = r;
@@ -132,13 +136,15 @@ inline void Util::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits
 	// bottom
 	for (auto r = bitMap.rows - 1; r >= 0; --r)
 	{
+		auto ptr = bitMap.ptr<int32_t>(r);
 		for (auto c = 0; c < bitMap.cols; ++c)
 		{
-			auto curIndex = bitMap.at<int32_t>(r, c);
+			auto curIndex = ptr[c];
 			if (curIndex != -1 && allObject[curIndex].bottom == -1)
 				allObject[curIndex].bottom = r;
 		}
 	}
+
 	// left
 	for (auto c = 0; c < bitMap.cols; ++c)
 	{
@@ -277,50 +283,27 @@ inline uchar Util::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect)
 	for (auto r = rect.y; r < rect.y + rect.height; ++r)
 	{
 		auto sumRow = 0;
+		auto ptr = curFrame.ptr<uchar>(r);
 		for (auto c = rect.x; c < rect.x + rect.width; ++c)
-			sumRow += curFrame.at<uchar>(r, c);
+		{
+			sumRow += ptr[c];
+		}
 		sumAll += (sumRow / rect.width);
 	}
 
 	return sumAll / rect.height;
 }
 
-inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& afterMergeObjects)
+inline std::vector<cv::Rect> Util::GetCandidateTargets(const std::vector<FourLimits>& afterMergeObjects)
 {
 	std::vector<cv::Rect> targetRect;
 
 	for (auto i = 0; i < afterMergeObjects.size(); ++i)
 	{
-		uchar threshHold = 0;
-
 		auto object = afterMergeObjects[i];
 
 		auto width = object.right - object.left + 1;
 		auto height = object.bottom - object.top + 1;
-
-		auto surroundBoxWidth = 2 * width;
-		auto surroundBoxHeight = 2 * height;
-
-		auto centerX = (object.right + object.left) / 2;
-		auto centerY = (object.bottom + object.top) / 2;
-
-		auto leftTopX = centerX - surroundBoxWidth / 2;
-		if (leftTopX < 0)
-			leftTopX = 0;
-
-		auto leftTopY = centerY - surroundBoxHeight / 2;
-		if (leftTopY < 0)
-			leftTopY = 0;
-
-		auto rightBottomX = leftTopX + surroundBoxWidth;
-		if (rightBottomX > curFrame.cols)
-			rightBottomX = curFrame.cols;
-
-		auto rightBottomY = leftTopY + surroundBoxHeight;
-		if (rightBottomY > curFrame.rows)
-			rightBottomY = curFrame.rows;
-
-		CalculateThreshHold(curFrame, threshHold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
 		if (width <= 0 || height <= 0)
 		{
@@ -328,16 +311,7 @@ inline std::vector<cv::Rect> Util::GetCandidateTargets(const cv::Mat& curFrame, 
 			continue;
 		}
 
-		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
-			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
-			continue;
-
-		auto rect = cv::Rect(object.left, object.top, width, height);
-
-		if (curFrame.at<uchar>(centerY, centerX) < threshHold)
-			continue;
-
-		targetRect.push_back(rect);
+		targetRect.push_back(cv::Rect(object.left, object.top, width, height));
 	}
 	return targetRect;
 }
@@ -381,10 +355,11 @@ inline uchar Util::GetMinValueOfBlock(const cv::Mat& mat)
 	uchar minVal = 255;
 	for (auto r = 0; r < mat.rows; ++r)
 	{
+		auto ptr = mat.ptr<uchar>(r);
 		for (auto c = 0; c < mat.cols; ++c)
 		{
-			if (minVal > mat.at<uchar>(r, c))
-				minVal = mat.at<uchar>(r, c);
+			if (minVal > ptr[c])
+				minVal = ptr[c];
 		}
 	}
 	return minVal;
@@ -395,10 +370,11 @@ inline uchar Util::GetMaxValueOfBlock(const cv::Mat& mat)
 	uchar maxVal = 0;
 	for (auto r = 0; r < mat.rows; ++r)
 	{
+		auto ptr = mat.ptr<uchar>(r);
 		for (auto c = 0; c < mat.cols; ++c)
 		{
-			if (maxVal < mat.at<uchar>(r, c))
-				maxVal = mat.at<uchar>(r, c);
+			if (maxVal < ptr[c])
+				maxVal = ptr[c];
 		}
 	}
 	return maxVal;
@@ -410,11 +386,12 @@ inline uchar Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int
 	for (auto r = leftTopY; r < rightBottomY; ++r)
 	{
 		auto sumRow = 0;
+		auto ptr = frame.ptr<uchar>(r);
 		for (auto c = leftTopX; c < rightBottomX; ++c)
 		{
-			sumRow += frame.at<uchar>(r, c);
+			sumRow += ptr[c];
 		}
-		sumAll += (sumRow / (rightBottomX - leftTopX));
+		sumAll += sumRow / (rightBottomX - leftTopX);
 	}
 
 	return static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
@@ -431,9 +408,10 @@ inline uchar Util::CalculateAverageValueWithBlockIndex(const cv::Mat& img, int b
 	for (auto r = leftTopY; r < rightBottomY; ++r)
 	{
 		auto sumRow = 0;
+		auto ptr = img.ptr<uchar>(r);
 		for (auto c = leftTopX; c < rightBottomX; ++c)
 		{
-			sumRow += img.at<uchar>(r, c);
+			sumRow += ptr[c];
 		}
 		sumAll += (sumRow / (rightBottomX - leftTopX));
 	}
@@ -441,73 +419,26 @@ inline uchar Util::CalculateAverageValueWithBlockIndex(const cv::Mat& img, int b
 	return static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
 }
 
-inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex)
+inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
-	std::stack<cv::Point> deepTrace;
-	bitMap.at<int32_t>(r, c) = currentIndex;
-	deepTrace.push(cv::Point(c, r));
-
-	while (!deepTrace.empty())
-	{
-		auto curPos = deepTrace.top();
-		deepTrace.pop();
-
-		auto curR = curPos.y;
-		auto curC = curPos.x;
-
-		// up
-		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == 0 && bitMap.at<int32_t>(curR - 1, curC) == -1)
-		{
-			bitMap.at<int32_t>(curR - 1, curC) = currentIndex;
-			deepTrace.push(cv::Point(curC, curR - 1));
-		}
-		// down
-		if (curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC) == 0 && bitMap.at<int32_t>(curR + 1, curC) == -1)
-		{
-			bitMap.at<int32_t>(curR + 1, curC) = currentIndex;
-			deepTrace.push(cv::Point(curC, curR + 1));
-		}
-		// left
-		if (curC - 1 >= 0 && binaryFrame.at<uchar>(curR, curC - 1) == 0 && bitMap.at<int32_t>(curR, curC - 1) == -1)
-		{
-			bitMap.at<int32_t>(curR, curC - 1) = currentIndex;
-			deepTrace.push(cv::Point(curC - 1, curR));
-		}
-		// right
-		if (curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR, curC + 1) == 0 && bitMap.at<int32_t>(curR, curC + 1) == -1)
-		{
-			bitMap.at<int32_t>(curR, curC + 1) = currentIndex;
-			deepTrace.push(cv::Point(curC + 1, curR));
-		}
-
-		// up and left
-		if (curR - 1 >= 0 && curC - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC - 1) == 0 && bitMap.at<int32_t>(curR - 1, curC - 1) == -1)
-		{
-			bitMap.at<int32_t>(curR - 1, curC - 1) = currentIndex;
-			deepTrace.push(cv::Point(curC - 1, curR - 1));
-		}
-		// down and right
-		if (curR + 1 < binaryFrame.rows && curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR + 1, curC + 1) == 0 && bitMap.at<int32_t>(curR + 1, curC + 1) == -1)
-		{
-			bitMap.at<int32_t>(curR + 1, curC + 1) = currentIndex;
-			deepTrace.push(cv::Point(curC + 1, curR + 1));
-		}
-		// left and down
-		if (curC - 1 >= 0 && curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC - 1) == 0 && bitMap.at<int32_t>(curR + 1, curC - 1) == -1)
-		{
-			bitMap.at<int32_t>(curR + 1, curC - 1) = currentIndex;
-			deepTrace.push(cv::Point(curC - 1, curR + 1));
-		}
-		// right and up
-		if (curC + 1 < binaryFrame.cols && curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC + 1) == 0 && bitMap.at<int32_t>(curR - 1, curC + 1) == -1)
-		{
-			bitMap.at<int32_t>(curR - 1, curC + 1) = currentIndex;
-			deepTrace.push(cv::Point(curC + 1, curR - 1));
-		}
-	}
+	threshHold = CalculateAverageValue(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
+	//threshHold += threshHold / 4;
 }
 
-inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value)
+inline void Util::CalCulateCenterValue(const cv::Mat& frame, uchar& centerValue, const cv::Rect& rect)
+{
+	auto centerX = rect.x + rect.width / 2;
+	auto centerY = rect.y + rect.height / 2;
+
+	auto sumAll = 0;
+	sumAll += static_cast<int>(frame.at<uchar>(centerY, centerX));
+	sumAll += static_cast<int>(frame.at<uchar>(centerY, centerX - 1));
+	sumAll += static_cast<int>(frame.at<uchar>(centerY - 1, centerX));
+	sumAll += static_cast<int>(frame.at<uchar>(centerY - 1, centerX - 1));
+	centerValue = static_cast<uchar>(sumAll / 4);
+}
+
+inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value)
 {
 	std::stack<cv::Point> deepTrace;
 	bitMap.at<int32_t>(r, c) = currentIndex;
@@ -520,6 +451,7 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 
 		auto curR = curPos.y;
 		auto curC = curPos.x;
+
 
 		// up
 		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == value && bitMap.at<int32_t>(curR - 1, curC) == -1)
@@ -545,11 +477,91 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 			bitMap.at<int32_t>(curR, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR));
 		}
+
+		// up and left
+		if (curR - 1 >= 0 && curC - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC - 1) == value && bitMap.at<int32_t>(curR - 1, curC - 1) == -1)
+		{
+			bitMap.at<int32_t>(curR - 1, curC - 1) = currentIndex;
+			deepTrace.push(cv::Point(curC - 1, curR - 1));
+		}
+		// down and right
+		if (curR + 1 < binaryFrame.rows && curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR + 1, curC + 1) == value && bitMap.at<int32_t>(curR + 1, curC + 1) == -1)
+		{
+			bitMap.at<int32_t>(curR + 1, curC + 1) = currentIndex;
+			deepTrace.push(cv::Point(curC + 1, curR + 1));
+		}
+		// left and down
+		if (curC - 1 >= 0 && curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC - 1) == value && bitMap.at<int32_t>(curR + 1, curC - 1) == -1)
+		{
+			bitMap.at<int32_t>(curR + 1, curC - 1) = currentIndex;
+			deepTrace.push(cv::Point(curC - 1, curR + 1));
+		}
+		// right and up
+		if (curC + 1 < binaryFrame.cols && curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC + 1) == value && bitMap.at<int32_t>(curR - 1, curC + 1) == -1)
+		{
+			bitMap.at<int32_t>(curR - 1, curC + 1) = currentIndex;
+			deepTrace.push(cv::Point(curC + 1, curR - 1));
+		}
 	}
 }
 
-inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value)
 {
-	threshHold = CalculateAverageValue(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
-//	threshHold += threshHold / 4;
+	std::stack<cv::Point> deepTrace;
+	bitMap.at<int32_t>(r, c) = currentIndex;
+	deepTrace.push(cv::Point(c, r));
+
+	while (!deepTrace.empty())
+	{
+		auto curPos = deepTrace.top();
+		deepTrace.pop();
+
+		auto curR = curPos.y;
+		auto curC = curPos.x;
+
+		// up
+		if (curR - 1 >= 0)
+		{
+			auto frameRowPtr = binaryFrame.ptr<uchar>(curR - 1);
+			auto maskRowPtr = bitMap.ptr<int>(curR - 1);
+			if (frameRowPtr[curC] == value && maskRowPtr[curC] == -1)
+			{
+				maskRowPtr[curC] = currentIndex;
+				deepTrace.push(cv::Point(curC, curR - 1));
+			}
+		}
+		// down
+		if (curR + 1 < binaryFrame.rows)
+		{
+			auto frameRowPtr = binaryFrame.ptr<uchar>(curR + 1);
+			auto maskRowPtr = bitMap.ptr<int>(curR + 1);
+			if (frameRowPtr[curC] == value && maskRowPtr[curC] == -1)
+			{
+				maskRowPtr[curC] = currentIndex;
+				deepTrace.push(cv::Point(curC, curR + 1));
+			}
+		}
+		// left
+		if (curC - 1 >= 0)
+		{
+			auto frameRowPtr = binaryFrame.ptr<uchar>(curR);
+			auto maskRowPtr = bitMap.ptr<int>(curR);
+			if (frameRowPtr[curC - 1] == value && maskRowPtr[curC - 1] == -1)
+			{
+				maskRowPtr[curC - 1] = currentIndex;
+				deepTrace.push(cv::Point(curC - 1, curR));
+			}
+		}
+		// right
+		if (curC + 1 < binaryFrame.cols)
+		{
+			auto frameRowPtr = binaryFrame.ptr<uchar>(curR);
+			auto maskRowPtr = bitMap.ptr<int>(curR);
+			if (frameRowPtr[curC + 1] == value && maskRowPtr[curC + 1] == -1)
+			{
+				maskRowPtr[curC + 1] = currentIndex;
+				deepTrace.push(cv::Point(curC + 1, curR));
+			}
+		}
+	}
 }

@@ -135,6 +135,7 @@
     <ClInclude Include="Tracker\TargetTracker.hpp" />
     <ClInclude Include="Utils\ConfidenceMapUtil.hpp" />
     <ClInclude Include="Utils\GlobalInitialUtil.hpp" />
+    <ClInclude Include="Utils\PerformanceUtil.hpp" />
     <ClInclude Include="Utils\SpecialUtil.hpp" />
     <ClInclude Include="Utils\Util.hpp" />
   </ItemGroup>

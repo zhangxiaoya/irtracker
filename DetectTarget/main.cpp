@@ -459,7 +459,7 @@ void DrawHalfRectangle(cv::Mat& colorFrame, const int left, const int top, const
 	line(colorFrame, cv::Point(right, bottom), cv::Point(right - 3, bottom), lineColor, 1, CV_AA);
 }
 
-void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangle)
+void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangles)
 {
 	auto left = rect.x - 2 < 0 ? 0 : rect.x - 2;
 	auto top = rect.y - 2 < 0 ? 0 : rect.y - 2;
@@ -469,7 +469,7 @@ void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawRe
 
 	switch (drawResultType)
 	{
-	case DrawResultType::Rectangle:
+	case DrawResultType::Rectangles:
 		{
 			rectangle(colorFrame, cv::Rect(left, top, rect.width + 4, rect.height + 4), COLOR_RED);
 			break;
@@ -512,10 +512,13 @@ bool CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& re
 	auto centerX = rect.x + rect.width / 2;
 	auto centerY = rect.y + rect.height / 2;
 
-	auto boxLeftTopX = centerX - 2 * rect.width / 2 >= 0 ? centerX - 2 * rect.width / 2 : 0;
-	auto boxLeftTopY = centerY - 2 * rect.height / 2 >= 0 ? centerY - 2 * rect.height / 2 : 0;
-	auto boxRightBottomX = centerX + 2 * rect.width / 2 < IMAGE_WIDTH ? centerX + 2 * rect.width / 2 : IMAGE_WIDTH - 1;
-	auto boxRightBottomY = centerY + 2 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 2 * rect.height / 2 : IMAGE_HEIGHT - 1;
+	auto surroundingBoxWidth = 3 * rect.width;
+	auto surroundingBoxHeight = 3 * rect.height;
+
+	auto boxLeftTopX = centerX - surroundingBoxWidth / 2 >= 0 ? centerX - surroundingBoxWidth / 2 : 0;
+	auto boxLeftTopY = centerY - surroundingBoxHeight / 2 >= 0 ? centerY - surroundingBoxHeight / 2 : 0;
+	auto boxRightBottomX = centerX + surroundingBoxWidth / 2 < IMAGE_WIDTH ? centerX + surroundingBoxWidth / 2 : IMAGE_WIDTH - 1;
+	auto boxRightBottomY = centerY + surroundingBoxHeight / 2 < IMAGE_HEIGHT ? centerY + surroundingBoxHeight / 2 : IMAGE_HEIGHT - 1;
 
 	auto avgValOfSurroundingBox = Util::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
 	auto avgValOfCurrentRect = Util::AverageValue(grayFrame, rect);
@@ -526,10 +529,10 @@ bool CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& re
 	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
 		return false;
 
-	auto centerVal = grayFrame.at<uchar>(centerY, centerX);
+	uchar centerValue = 0;
+	Util::CalCulateCenterValue(grayFrame, centerValue, rect);
 
-	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold ||
-		centerVal > convexThreshold || centerVal < concaveThreshold)
+	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold || centerValue > convexThreshold || centerValue < concaveThreshold)
 	{
 		return true;
 	}
@@ -555,10 +558,10 @@ bool CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRe
 	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
 		return false;
 
-	auto centerVal = fdImg.at<uchar>(centerY, centerX);
+	uchar centerValue = 0;
+	Util::CalCulateCenterValue(fdImg, centerValue, rect);
 
-	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold ||
-		centerVal > convexThreshold || centerVal < concaveThreshold)
+	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold || centerValue > convexThreshold || centerValue < concaveThreshold)
 	{
 		return true;
 	}
@@ -646,10 +649,16 @@ int main(int argc, char* argv[])
 
 				for (auto rect : targetRects)
 				{
-					if ((CheckOriginalImageSuroundedBox(grayFrame, rect) || CheckDecreatizatedImageSuroundedBox(fdImg, rect))  && CheckFourBlock(fdImg,rect))
+					if (
+						(
+						(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect)) ||
+						(CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(fdImg, rect))
+						)
+						&&
+						CheckFourBlock(fdImg,rect)
+						)
 					{
-
-						DrawResult(colorFrame, rect, DrawResultType::Rectangle);
+						DrawResult(colorFrame, rect, DrawResultType::Rectangles);
 					}
 					else
 					{
