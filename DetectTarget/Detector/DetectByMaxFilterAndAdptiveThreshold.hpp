@@ -7,7 +7,6 @@
 #include "../Utils/Util.hpp"
 #include "../DifferenceElem.hpp"
 #include "../Utils/PerformanceUtil.hpp"
-#include <valarray>
 
 cv::Mat previousFrame = cv::Mat(cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT), CV_32SC1, cv::Scalar(1));
 
