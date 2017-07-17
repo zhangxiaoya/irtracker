@@ -595,10 +595,9 @@ bool CheckFourBlock(const cv::Mat& fdImg,  const cv::Rect& rect)
 
 int main(int argc, char* argv[])
 {
-	cv::VideoCapture video_capture;
-	auto frameSource = FrameSourceFactory::createFrameSourceFromImageList(GlobalImageListNameFormat, 0);
+	InitConfigure();
 
-	InitVideoReader(video_capture);
+	auto frameSource = FrameSourceFactory::createFrameSourceFromImageList(GlobalImageListNameFormat, 0);
 
 	cv::Mat curFrame;
 	cv::Mat grayFrame;
@@ -617,13 +616,12 @@ int main(int argc, char* argv[])
 	std::vector<ConfidenceElem> vectorOfConfidenceQueueMap(countX * countY);
 	std::vector<ConfidenceElem> vectorOfConfidenceValueMap(countX * countY);
 
-	if (video_capture.isOpened())
+	if (ImageListReadFlag == true)
 	{
 		std::cout << "Open Image List Success!" << std::endl;
 
 		while (!curFrame.empty() || frameIndex == 0)
 		{
-//			video_capture >> curFrame;
 			frameSource->nextFrame(curFrame);
 
 			if (!curFrame.empty())
