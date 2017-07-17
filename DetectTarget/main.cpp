@@ -10,7 +10,6 @@
 #include "Tracker/TargetTracker.hpp"
 #include "Detector/DetectByMaxFilterAndAdptiveThreshold.hpp"
 #include "Utils/SpecialUtil.hpp"
-#include <imgproc/types_c.h>
 #include <imgproc/imgproc.hpp>
 #include "Utils/Util.hpp"
 #include "Models/ConfidenceElem.hpp"
