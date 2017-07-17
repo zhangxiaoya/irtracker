@@ -15,6 +15,9 @@
 #include "Models/ConfidenceElem.hpp"
 #include "Models/DrawResultType.hpp"
 
+#include "FrameSource/ImageListFrameSource.hpp"
+#include "FrameSource/FrameSourceFactory.hpp"
+
 void UpdateConfidenceQueueMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects, FieldType fieldType = Four)
 {
 	std::vector<std::vector<bool>> updateFlag(countY, std::vector<bool>(countX, false));
@@ -593,6 +596,7 @@ bool CheckFourBlock(const cv::Mat& fdImg,  const cv::Rect& rect)
 int main(int argc, char* argv[])
 {
 	cv::VideoCapture video_capture;
+	auto frameSource = FrameSourceFactory::createFrameSourceFromImageList(GlobalImageListNameFormat, 0);
 
 	InitVideoReader(video_capture);
 
@@ -604,7 +608,6 @@ int main(int argc, char* argv[])
 	static auto queueEndIndex = 0;
 
 	char writeFileName[WRITE_FILE_NAME_BUFFER_SIZE];
-	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
 
 	std::vector<std::vector<std::vector<int>>> confidenceQueueMap(countY, std::vector<std::vector<int>>(countX, std::vector<int>(QUEUE_SIZE, 0)));
 	std::vector<std::vector<int>> confidenceValueMap(countY, std::vector<int>(countX, 0));
@@ -621,9 +624,7 @@ int main(int argc, char* argv[])
 		while (!curFrame.empty() || frameIndex == 0)
 		{
 //			video_capture >> curFrame;
-
-			sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalImageListNameFormat, frameIndex);
-			curFrame = cv::imread(imageFullName);
+			frameSource->nextFrame(curFrame);
 
 			if (!curFrame.empty())
 			{

@@ -52,6 +52,30 @@
     <ClInclude Include="Utils\PerformanceUtil.hpp">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="FrameSource\FrameSource.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameSource\EmptyFrameSource.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameSource\FrameSourceFactory.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameSource\ImageListFrameSource.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameSource\ImageListReader\ImageListReaderBase.hpp">
+      <Filter>FrameSource\ImageListReader</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameSource\ImageListReader\ImageListReader.hpp">
+      <Filter>FrameSource\ImageListReader</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameSource\VideoFrameSource.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameSource\CaptureFrameSource.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Models">
@@ -68,6 +92,12 @@
     </Filter>
     <Filter Include="Headers">
       <UniqueIdentifier>{284cd885-f466-4290-ba0b-28c508c41a49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FrameSource">
+      <UniqueIdentifier>{031905c7-15db-4e6d-95eb-c62ba7a2c83f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FrameSource\ImageListReader">
+      <UniqueIdentifier>{4743ddfb-0824-4e12-9cef-ac8d0ff264a0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -127,6 +127,14 @@
     <ClInclude Include="Detector\DetectByMaxFilterAndAdptiveThreshold.hpp" />
     <ClInclude Include="Detector\DetectByMultiscaleLocalDifference.hpp" />
     <ClInclude Include="DifferenceElem.hpp" />
+    <ClInclude Include="FrameSource\CaptureFrameSource.hpp" />
+    <ClInclude Include="FrameSource\EmptyFrameSource.hpp" />
+    <ClInclude Include="FrameSource\FrameSource.hpp" />
+    <ClInclude Include="FrameSource\FrameSourceFactory.hpp" />
+    <ClInclude Include="FrameSource\ImageListFrameSource.hpp" />
+    <ClInclude Include="FrameSource\ImageListReader\ImageListReader.hpp" />
+    <ClInclude Include="FrameSource\ImageListReader\ImageListReaderBase.hpp" />
+    <ClInclude Include="FrameSource\VideoFrameSource.hpp" />
     <ClInclude Include="Headers\GlobalConstantConfigure.h" />
     <ClInclude Include="Models\ConfidenceElem.hpp" />
     <ClInclude Include="Models\DrawResultType.hpp" />
