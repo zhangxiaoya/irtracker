@@ -76,6 +76,12 @@
     <ClInclude Include="FrameSource\CaptureFrameSource.hpp">
       <Filter>FrameSource</Filter>
     </ClInclude>
+    <ClInclude Include="FramePersistance\FramePersistance.hpp">
+      <Filter>FramePersistace</Filter>
+    </ClInclude>
+    <ClInclude Include="FramePersistance\FramePersistanceFactory.hpp">
+      <Filter>FramePersistace</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Models">
@@ -98,6 +104,9 @@
     </Filter>
     <Filter Include="FrameSource\ImageListReader">
       <UniqueIdentifier>{4743ddfb-0824-4e12-9cef-ac8d0ff264a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FramePersistace">
+      <UniqueIdentifier>{7144ee5e-062d-42d2-ae35-5a67ddde221e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -127,6 +127,8 @@
     <ClInclude Include="Detector\DetectByMaxFilterAndAdptiveThreshold.hpp" />
     <ClInclude Include="Detector\DetectByMultiscaleLocalDifference.hpp" />
     <ClInclude Include="DifferenceElem.hpp" />
+    <ClInclude Include="FramePersistance\FramePersistance.hpp" />
+    <ClInclude Include="FramePersistance\FramePersistanceFactory.hpp" />
     <ClInclude Include="FrameSource\CaptureFrameSource.hpp" />
     <ClInclude Include="FrameSource\EmptyFrameSource.hpp" />
     <ClInclude Include="FrameSource\FrameSource.hpp" />

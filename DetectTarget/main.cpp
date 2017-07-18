@@ -17,6 +17,7 @@
 
 #include "FrameSource/ImageListFrameSource.hpp"
 #include "FrameSource/FrameSourceFactory.hpp"
+#include "FramePersistance/FramePersistanceFactory.hpp"
 
 void UpdateConfidenceQueueMap(int queueEndIndex, std::vector<std::vector<std::vector<int>>>& confidenceMap, const std::vector<cv::Rect>& targetRects, FieldType fieldType = Four)
 {
@@ -194,12 +195,6 @@ void DrawRectangleForAllDetectedTargetsAndUpdateBlockConfidence(cv::Mat& colorFr
 				break;
 		}
 	}
-}
-
-void WriteLastResultToDisk(const cv::Mat& colorFrame, const int frameIndex, char writeFileName[])
-{
-	sprintf_s(writeFileName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalWriteFileNameFormat, frameIndex);
-	imwrite(writeFileName, colorFrame);
 }
 
 int MaxNeighbor(const std::vector<std::vector<int>>& confidenceValueMap, int y, int x)
@@ -598,6 +593,7 @@ int main(int argc, char* argv[])
 	InitConfigure();
 
 	auto frameSource = FrameSourceFactory::createFrameSourceFromImageList(GlobalImageListNameFormat, 0);
+	auto framePersistance = FramePersistanceFactory::createFramePersistance(GlobalWriteFileNameFormat);
 
 	cv::Mat curFrame;
 	cv::Mat grayFrame;
@@ -832,13 +828,13 @@ int main(int argc, char* argv[])
 
 				imshow("Last Detect and Tracking Result", colorFrame);
 
-				WriteLastResultToDisk(colorFrame, frameIndex, writeFileName);
+				framePersistance->Persistance(colorFrame);
 
 				std::cout << "Index : " << std::setw(4) << frameIndex++ << std::endl;
 			}
 		}
 
-		cv::destroyAllWindows();
+		destroyAllWindows();
 	}
 
 	else
