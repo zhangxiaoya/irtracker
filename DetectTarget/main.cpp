@@ -10,7 +10,6 @@
 #include "Utils/SpecialUtil.hpp"
 #include <imgproc/imgproc.hpp>
 #include "Utils/Util.hpp"
-#include "Models/ConfidenceElem.hpp"
 #include "Models/DrawResultType.hpp"
 
 #include "FrameSource/ImageListFrameSource.hpp"
@@ -176,15 +175,9 @@ int main(int argc, char* argv[])
 	cv::Mat grayFrame;
 	cv::Mat colorFrame;
 
+	cv::Mat fdImg;
+
 	auto frameIndex = 0;
-
-	std::vector<std::vector<std::vector<int>>> confidenceQueueMap(countY, std::vector<std::vector<int>>(countX, std::vector<int>(QUEUE_SIZE, 0)));
-	std::vector<std::vector<int>> confidenceValueMap(countY, std::vector<int>(countX, 0));
-
-	std::vector<std::vector<int>> rectLayoutMatrix(countY, std::vector<int>(countX, 0));
-
-	std::vector<ConfidenceElem> vectorOfConfidenceQueueMap(countX * countY);
-	std::vector<ConfidenceElem> vectorOfConfidenceValueMap(countX * countY);
 
 	if (ImageListReadFlag == true)
 	{
@@ -207,10 +200,6 @@ int main(int argc, char* argv[])
 					colorFrame = curFrame;
 				}
 
-//				SpecialUtil::RemoveInvalidPixel(grayFrame);
-
-				cv::Mat fdImg;
-				
 				auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect<uchar>(grayFrame, fdImg);
 
 				for (auto rect : targetRects)
