@@ -142,6 +142,8 @@
     <ClInclude Include="Models\DrawResultType.hpp" />
     <ClInclude Include="Models\FieldType.hpp" />
     <ClInclude Include="Models\FourLimits.hpp" />
+    <ClInclude Include="Monitor\Monitor.hpp" />
+    <ClInclude Include="Monitor\MonitorFactory.hpp" />
     <ClInclude Include="Tracker\TargetTracker.hpp" />
     <ClInclude Include="Utils\ConfidenceMapUtil.hpp" />
     <ClInclude Include="Utils\GlobalInitialUtil.hpp" />

@@ -82,6 +82,12 @@
     <ClInclude Include="FramePersistance\FramePersistanceFactory.hpp">
       <Filter>FramePersistace</Filter>
     </ClInclude>
+    <ClInclude Include="Monitor\Monitor.hpp">
+      <Filter>Monitor</Filter>
+    </ClInclude>
+    <ClInclude Include="Monitor\MonitorFactory.hpp">
+      <Filter>Monitor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Models">
@@ -107,6 +113,9 @@
     </Filter>
     <Filter Include="FramePersistace">
       <UniqueIdentifier>{7144ee5e-062d-42d2-ae35-5a67ddde221e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Monitor">
+      <UniqueIdentifier>{ea7ff88c-7254-4c12-bb00-3dea163a3ea0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
