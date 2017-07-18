@@ -15,7 +15,7 @@ class DetectByMaxFilterAndAdptiveThreshold
 public:
 
 	template<typename DataType>
-	static std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& fdImg);
+	static std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame, cv::Mat& detectedResultFrame);
 
 private:
 
@@ -495,7 +495,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& 
 }
 
 template<typename DataType>
-std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& fdImg)
+std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame, cv::Mat& detectedResultFrame)
 {
 
 	StrengthenIntensityOfBlock(currentGrayFrame);
@@ -506,7 +506,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
 
-	fdImg = frameAfterDiscrezated;
+	preprocessResultFrame = frameAfterDiscrezated;
 
 	imshow("Max Filter and Discrezated", frameAfterDiscrezated);
 

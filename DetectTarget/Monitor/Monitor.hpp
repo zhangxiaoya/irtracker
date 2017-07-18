@@ -23,13 +23,14 @@ protected:
 private:
 	void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangles) const;
 
-	void DrawHalfRectangle(cv::Mat& colorFrame, const int left, const int top, const int right, const int bottom, const cv::Scalar& lineColor) const;
+	static void DrawHalfRectangle(cv::Mat& colorFrame, const int left, const int top, const int right, const int bottom, const cv::Scalar& lineColor);
 
 	cv::Mat curFrame;
 	cv::Mat grayFrame;
 	cv::Mat colorFrame;
 
-	cv::Mat fdImg;
+	cv::Mat preprocessResultFrame;
+	cv::Mat detectedResultFrame;
 
 	int frameIndex;
 	
@@ -62,17 +63,17 @@ inline void Monitor::Process()
 				colorFrame = curFrame;
 			}
 
-			auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect<uchar>(grayFrame, fdImg);
+			auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect<uchar>(grayFrame,preprocessResultFrame, detectedResultFrame);
 
 			for (auto rect : targetRects)
 			{
 				if (
 					(
 					(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect)) ||
-						(CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(fdImg, rect))
+						(CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
 						)
 					&&
-					CheckFourBlock(fdImg, rect)
+					CheckFourBlock(preprocessResultFrame, rect)
 					)
 				{
 					DrawResult(colorFrame, rect, DrawResultType::Rectangles);
@@ -220,7 +221,7 @@ inline void Monitor::DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawR
 	}
 }
 
-inline void Monitor::DrawHalfRectangle(cv::Mat& colorFrame, const int left, const int top, const int right, const int bottom, const cv::Scalar& lineColor) const
+inline void Monitor::DrawHalfRectangle(cv::Mat& colorFrame, const int left, const int top, const int right, const int bottom, const cv::Scalar& lineColor)
 {
 	line(colorFrame, cv::Point(left, top), cv::Point(left, top + 3), lineColor, 1, CV_AA);
 	line(colorFrame, cv::Point(left, top), cv::Point(left + 3, top), lineColor, 1, CV_AA);

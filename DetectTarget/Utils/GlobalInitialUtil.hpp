@@ -68,7 +68,7 @@ inline bool UpdateConstants()
 	return false;
 }
 
-inline void InitConfigure()
+inline void InitGlobalConfigure()
 {
 //	ForTwoBins();
 
