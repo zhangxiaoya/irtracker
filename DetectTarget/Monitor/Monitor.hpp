@@ -11,6 +11,8 @@ class Monitor
 public:
 	Monitor(Ptr<FrameSource> frameSource, Ptr<FramePersistance> framePersistance);
 
+	~Monitor();
+
 	void Process();
 
 protected:
@@ -50,13 +52,20 @@ private:
 	cv::Ptr<FrameSource> frameSource;
 	cv::Ptr<FramePersistance> framePersistance;
 
-	DetectByMaxFilterAndAdptiveThreshold detector;
+	DetectByMaxFilterAndAdptiveThreshold* detector;
 };
 
 inline Monitor::Monitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance): frameIndex(0)
 {
 	this->framePersistance = framePersistance;
 	this->frameSource = frameSource;
+
+	this->detector = new DetectByMaxFilterAndAdptiveThreshold(IMAGE_WIDTH,IMAGE_HEIGHT);
+}
+
+inline Monitor::~Monitor()
+{
+	delete detector;
 }
 
 inline void Monitor::ConvertToGray()
@@ -160,7 +169,7 @@ inline void Monitor::Process()
 
 			cv::Mat preprocessedFrame;
 
-			auto detectedTargetRects = detector.Detect<uchar>(grayFrame, preprocessedFrame);
+			auto detectedTargetRects = detector->Detect<uchar>(grayFrame, preprocessedFrame);
 
 			GetPreprocessedResult(preprocessedFrame);
 

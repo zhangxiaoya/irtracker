@@ -13,6 +13,14 @@ class DetectByMaxFilterAndAdptiveThreshold
 {
 public:
 
+
+	DetectByMaxFilterAndAdptiveThreshold(int image_width, int image_height)
+		: imageWidth(image_width),
+		  imageHeight(image_height)
+	{
+		frameAfterMaxFilter = Mat(imageHeight, imageWidth, CV_8UC1);
+	}
+
 	template<typename DataType>
 	std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
 
@@ -55,6 +63,12 @@ private:
 	void FillRectToFrame(cv::Rect& rect);
 
 	bool CheckRect(cv::Rect& rect);
+
+private:
+	int imageWidth;
+	int imageHeight;
+
+	cv::Mat frameAfterMaxFilter;
 };
 
 template<typename DataType>
@@ -62,7 +76,6 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 {
 	StrengthenIntensityOfBlock(currentGrayFrame);
 
-	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 	MaxFilter(currentGrayFrame, frameAfterMaxFilter, DilateKernelSize);
 
 	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
