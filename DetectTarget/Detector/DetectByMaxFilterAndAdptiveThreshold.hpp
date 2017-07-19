@@ -1,6 +1,5 @@
 #pragma once
 #include <core/core.hpp>
-#include <highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <filesystem>
 #include "../Models/FourLimits.hpp"
@@ -15,7 +14,7 @@ class DetectByMaxFilterAndAdptiveThreshold
 public:
 
 	template<typename DataType>
-	static std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame, cv::Mat& detectedResultFrame);
+	static std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
 
 private:
 
@@ -495,9 +494,8 @@ inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& 
 }
 
 template<typename DataType>
-std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame, cv::Mat& detectedResultFrame)
+std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
 {
-
 	StrengthenIntensityOfBlock(currentGrayFrame);
 
 	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
@@ -508,7 +506,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 
 	preprocessResultFrame = frameAfterDiscrezated;
 
-	imshow("Max Filter and Discrezated", frameAfterDiscrezated);
+//	imshow("Max Filter and Discrezated", frameAfterDiscrezated);
 
 	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
 	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
@@ -529,13 +527,13 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	std::vector<FourLimits> afterMergeObjects;
 	MergeCrossedRectangles(allObjects, afterMergeObjects);
 
-	Util::ShowAllObject(frameAfterDiscrezated, afterMergeObjects, "After Merge Cross Rectangles");
+//	Util::ShowAllObject(frameAfterDiscrezated, afterMergeObjects, "After Merge Cross Rectangles");
 
 	DoubleCheckAfterMerge(frameAfterDiscrezated, afterMergeObjects);
 
 	auto rects = Util::GetCandidateTargets(afterMergeObjects);
 
-	Util::ShowAllCandidateTargets(currentGrayFrame, rects);
+//	Util::ShowAllCandidateTargets(currentGrayFrame, rects);
 
 	return rects;
 }

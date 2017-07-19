@@ -21,6 +21,14 @@ protected:
 	bool CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rect) const;
 
 private:
+	void ConvertToGray();
+
+	std::vector<cv::Rect> Tracking(std::vector<cv::Rect> targetRects) const;
+
+	void GetDetectedResult(std::vector<cv::Rect> targetRects);
+
+	void GetTrackedResult(std::vector<cv::Rect> trackedTargetRects);
+
 	void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangles) const;
 
 	static void DrawHalfRectangle(cv::Mat& colorFrame, const int left, const int top, const int right, const int bottom, const cv::Scalar& lineColor);
@@ -31,6 +39,7 @@ private:
 
 	cv::Mat preprocessResultFrame;
 	cv::Mat detectedResultFrame;
+	cv::Mat trackedResultFrame;
 
 	int frameIndex;
 	
@@ -44,6 +53,58 @@ inline Monitor::Monitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistan
 	this->frameSource = frameSource;
 }
 
+inline void Monitor::ConvertToGray()
+{
+	if (SpecialUtil::CheckFrameIsGray(curFrame, grayFrame))
+	{
+		cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
+	}
+	else
+	{
+		colorFrame = curFrame;
+	}
+}
+
+inline std::vector<cv::Rect> Monitor::Tracking(std::vector<cv::Rect> targetRects) const
+{
+	std::vector<cv::Rect> trackingResult = {};
+	for (auto rect : targetRects)
+	{
+		if (
+			(
+				(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect)) ||
+				(CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
+			)
+			&&
+			CheckFourBlock(preprocessResultFrame, rect)
+		)
+		{
+			trackingResult.push_back(rect);
+		}
+	}
+	return trackingResult;
+}
+
+inline void Monitor::GetDetectedResult(std::vector<cv::Rect> targetRects)
+{
+	colorFrame.copyTo(detectedResultFrame);
+
+	for (auto i = 0; i < targetRects.size(); ++i)
+	{
+		rectangle(detectedResultFrame, targetRects[i], COLOR_BLUE);
+	}
+}
+
+inline void Monitor::GetTrackedResult(std::vector<cv::Rect> trackedTargetRects)
+{
+	colorFrame.copyTo(trackedResultFrame);
+
+	for (auto rect : trackedTargetRects)
+	{
+		DrawResult(colorFrame, rect, DrawResultType::Rectangles);
+	}
+}
+
 inline void Monitor::Process()
 {
 	while (!curFrame.empty() || frameIndex == 0)
@@ -54,37 +115,19 @@ inline void Monitor::Process()
 		{
 			Util::ShowImage(curFrame);
 
-			if (SpecialUtil::CheckFrameIsGray(curFrame, grayFrame))
-			{
-				cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
-			}
-			else
-			{
-				colorFrame = curFrame;
-			}
+			ConvertToGray();
 
-			auto targetRects = DetectByMaxFilterAndAdptiveThreshold::Detect<uchar>(grayFrame,preprocessResultFrame, detectedResultFrame);
+			auto detectedTargetRects = DetectByMaxFilterAndAdptiveThreshold::Detect<uchar>(grayFrame,preprocessResultFrame);
 
-			for (auto rect : targetRects)
-			{
-				if (
-					(
-					(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect)) ||
-						(CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
-						)
-					&&
-					CheckFourBlock(preprocessResultFrame, rect)
-					)
-				{
-					DrawResult(colorFrame, rect, DrawResultType::Rectangles);
-				}
-			}
+			GetDetectedResult(detectedTargetRects);
 
-			imshow("Last Detect and Tracking Result", colorFrame);
+			auto trackedTargetRects = Tracking(detectedTargetRects);
 
-			framePersistance->Persistance(colorFrame);
+			GetTrackedResult(trackedTargetRects);
 
-			std::cout << "Index : " << std::setw(4) << frameIndex++ << std::endl;
+//			framePersistance->Persistance(trackedResultFrame);
+
+			std::cout << "Current Index : " << std::setw(4) << frameIndex++ << std::endl;
 		}
 	}
 }
