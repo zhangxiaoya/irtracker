@@ -25,9 +25,13 @@ private:
 
 	std::vector<cv::Rect> Tracking(std::vector<cv::Rect> targetRects) const;
 
+	void GetPreprocessedResult(const Mat& mat);
+
 	void GetDetectedResult(std::vector<cv::Rect> targetRects);
 
 	void GetTrackedResult(std::vector<cv::Rect> trackedTargetRects);
+
+	void CombineResultFrames();
 
 	void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangles) const;
 
@@ -85,6 +89,11 @@ inline std::vector<cv::Rect> Monitor::Tracking(std::vector<cv::Rect> targetRects
 	return trackingResult;
 }
 
+inline void Monitor::GetPreprocessedResult(const Mat& mat)
+{
+	cvtColor(mat, preprocessResultFrame, CV_GRAY2RGB);
+}
+
 inline void Monitor::GetDetectedResult(std::vector<cv::Rect> targetRects)
 {
 	colorFrame.copyTo(detectedResultFrame);
@@ -101,8 +110,40 @@ inline void Monitor::GetTrackedResult(std::vector<cv::Rect> trackedTargetRects)
 
 	for (auto rect : trackedTargetRects)
 	{
-		DrawResult(colorFrame, rect, DrawResultType::Rectangles);
+		DrawResult(trackedResultFrame, rect, DrawResultType::Rectangles);
 	}
+}
+
+inline void Monitor::CombineResultFrames()
+{
+	Mat combinedResultFrame(colorFrame.rows * 2 + 1, colorFrame.cols * 2 + 1, CV_8UC3);
+
+	auto col = colorFrame.cols;
+	for (auto r = 0; r < combinedResultFrame.rows; ++r)
+	{
+		combinedResultFrame.at<Vec3b>(r, col)[0] = 255;
+		combinedResultFrame.at<Vec3b>(r, col)[1] = 255;
+		combinedResultFrame.at<Vec3b>(r, col)[2] = 255;
+	}
+
+	auto row = colorFrame.rows;
+	auto rowPtr = combinedResultFrame.ptr<Vec3b>(row);
+	for (auto c = 0; c < combinedResultFrame.rows; ++c)
+	{
+		rowPtr[c][0] = 255;
+		rowPtr[c][1] = 255;
+		rowPtr[c][2] = 255;
+	}
+
+	colorFrame.copyTo(combinedResultFrame(Rect(0, 0, colorFrame.cols, colorFrame.rows)));
+	preprocessResultFrame.copyTo(combinedResultFrame(Rect(col+1, 0, colorFrame.cols, colorFrame.rows)));
+	detectedResultFrame.copyTo(combinedResultFrame(Rect(0, row+1, colorFrame.cols, colorFrame.rows)));
+	trackedResultFrame.copyTo(combinedResultFrame(Rect(col+1, row+1, colorFrame.cols, colorFrame.rows)));
+
+	framePersistance->Persistance(combinedResultFrame);
+
+	imshow("Combined Result", combinedResultFrame);
+	waitKey(10);
 }
 
 inline void Monitor::Process()
@@ -113,11 +154,13 @@ inline void Monitor::Process()
 
 		if (curFrame.empty() != true)
 		{
-			Util::ShowImage(curFrame);
-
 			ConvertToGray();
 
-			auto detectedTargetRects = DetectByMaxFilterAndAdptiveThreshold::Detect<uchar>(grayFrame,preprocessResultFrame);
+			cv::Mat preprocessedFrame;
+
+			auto detectedTargetRects = DetectByMaxFilterAndAdptiveThreshold::Detect<uchar>(grayFrame, preprocessedFrame);
+
+			GetPreprocessedResult(preprocessedFrame);
 
 			GetDetectedResult(detectedTargetRects);
 
@@ -125,7 +168,7 @@ inline void Monitor::Process()
 
 			GetTrackedResult(trackedTargetRects);
 
-//			framePersistance->Persistance(trackedResultFrame);
+			CombineResultFrames();
 
 			std::cout << "Current Index : " << std::setw(4) << frameIndex++ << std::endl;
 		}
