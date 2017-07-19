@@ -56,9 +56,11 @@ public:
 
 	static int FeatureDiff(const std::vector<unsigned char>& featureOne, const std::vector<unsigned char>& featureTwo);
 
-	static uchar GetMinValueOfBlock(const cv::Mat& cuFrame);
+	template<typename DataType>
+	static DataType GetMinValueOfBlock(const cv::Mat& cuFrame);
 
-	static uchar GetMaxValueOfBlock(const cv::Mat& mat);
+	template<typename DataType>
+	static DataType GetMaxValueOfBlock(const cv::Mat& mat);
 
 	static uchar CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
@@ -350,12 +352,13 @@ inline int Util::FeatureDiff(const std::vector<unsigned char>& featureOne, const
 	return sum;
 }
 
-inline uchar Util::GetMinValueOfBlock(const cv::Mat& mat)
+template<typename DataType>
+DataType Util::GetMinValueOfBlock(const cv::Mat& mat)
 {
-	uchar minVal = 255;
+	uchar minVal = (1 << (sizeof(DataType)) * 8) - 1;;
 	for (auto r = 0; r < mat.rows; ++r)
 	{
-		auto ptr = mat.ptr<uchar>(r);
+		auto ptr = mat.ptr<DataType>(r);
 		for (auto c = 0; c < mat.cols; ++c)
 		{
 			if (minVal > ptr[c])
@@ -365,12 +368,13 @@ inline uchar Util::GetMinValueOfBlock(const cv::Mat& mat)
 	return minVal;
 }
 
-inline uchar Util::GetMaxValueOfBlock(const cv::Mat& mat)
+template<typename DataType>
+DataType Util::GetMaxValueOfBlock(const cv::Mat& mat)
 {
-	uchar maxVal = 0;
+	DataType maxVal = 0;
 	for (auto r = 0; r < mat.rows; ++r)
 	{
-		auto ptr = mat.ptr<uchar>(r);
+		auto ptr = mat.ptr<DataType>(r);
 		for (auto c = 0; c < mat.cols; ++c)
 		{
 			if (maxVal < ptr[c])

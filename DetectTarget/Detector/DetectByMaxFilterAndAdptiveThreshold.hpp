@@ -38,8 +38,10 @@ private:
 
 	void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
 
+	template<typename DataType>
 	std::vector<std::vector<uchar>> GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame);
 
+	template<typename DataType>
 	void StrengthenIntensityOfBlock(cv::Mat& curFrame);
 
 	void GetMaxValueOfMatrix(std::vector<std::vector<uchar>> maxmindiff, DifferenceElem& diffElem);
@@ -77,7 +79,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 {
 	frameNeedDetect = currentGrayFrame;
 
-	StrengthenIntensityOfBlock(frameNeedDetect);
+	StrengthenIntensityOfBlock<DataType>(frameNeedDetect);
 
 	MaxFilter(DilateKernelSize);
 
@@ -342,24 +344,28 @@ inline void DetectByMaxFilterAndAdptiveThreshold::FilterRectByContinuty(cv::Mat 
 		RefreshMask(curFrame, rects);
 }
 
-inline std::vector<std::vector<uchar>> DetectByMaxFilterAndAdptiveThreshold::GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame)
+template<typename DataType>
+std::vector<std::vector<uchar>> DetectByMaxFilterAndAdptiveThreshold::GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame)
 {
-	std::vector<std::vector<uchar>> maxmindiff(countY, std::vector<uchar>(countX, 0));
+	std::vector<std::vector<DataType>> maxmindiff(countY, std::vector<DataType>(countX, static_cast<DataType>(0)));
 	for (auto br = 0; br < countY; ++br)
 	{
 		auto height = br == (countY - 1) ? IMAGE_HEIGHT - (countY - 1) * BLOCK_SIZE : BLOCK_SIZE;
 		for (auto bc = 0; bc < countX; ++bc)
 		{
 			auto width = bc == (countX - 1) ? IMAGE_WIDTH - (countX - 1) * BLOCK_SIZE : BLOCK_SIZE;
-			maxmindiff[br][bc] = Util::GetMaxValueOfBlock(curFrame(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height))) - Util::GetMinValueOfBlock(curFrame(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height)));
+			maxmindiff[br][bc] =
+				Util::GetMaxValueOfBlock<DataType>(curFrame(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height))) -
+				Util::GetMinValueOfBlock<DataType>(curFrame(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height)));
 		}
 	}
 	return maxmindiff;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv::Mat& currentGrayFrame)
+template<typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv::Mat& currentGrayFrame)
 {
-	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap(currentGrayFrame);
+	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap<DataType>(currentGrayFrame);
 
 	auto differenceElems = GetMostMaxDiffBlock(maxmindiffMatrix);
 
