@@ -49,6 +49,8 @@ private:
 	
 	cv::Ptr<FrameSource> frameSource;
 	cv::Ptr<FramePersistance> framePersistance;
+
+	DetectByMaxFilterAndAdptiveThreshold detector;
 };
 
 inline Monitor::Monitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance): frameIndex(0)
@@ -158,7 +160,7 @@ inline void Monitor::Process()
 
 			cv::Mat preprocessedFrame;
 
-			auto detectedTargetRects = DetectByMaxFilterAndAdptiveThreshold::Detect<uchar>(grayFrame, preprocessedFrame);
+			auto detectedTargetRects = detector.Detect<uchar>(grayFrame, preprocessedFrame);
 
 			GetPreprocessedResult(preprocessedFrame);
 

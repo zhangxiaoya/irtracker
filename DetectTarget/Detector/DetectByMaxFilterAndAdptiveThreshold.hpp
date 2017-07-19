@@ -14,48 +14,81 @@ class DetectByMaxFilterAndAdptiveThreshold
 public:
 
 	template<typename DataType>
-	static std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
+	std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
 
 private:
 
-	static void MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize);
+	void MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize);
 
-	static int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
+	int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
 
-	static void Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame);
+	void Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame);
 
-	static void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects);
+	void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects);
 
-	static void RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result);
+	void RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result);
 
-	static void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
+	void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
 
-	static std::vector<std::vector<uchar>> GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame);
+	std::vector<std::vector<uchar>> GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame);
 
-	static void StrengthenIntensityOfBlock(cv::Mat& curFrame);
+	void StrengthenIntensityOfBlock(cv::Mat& curFrame);
 
-	static void GetMaxValueOfMatrix(std::vector<std::vector<uchar>> maxmindiff, DifferenceElem& diffElem);
+	void GetMaxValueOfMatrix(std::vector<std::vector<uchar>> maxmindiff, DifferenceElem& diffElem);
 
-	static std::vector<DifferenceElem> GetMostMaxDiffBlock(std::vector<std::vector<uchar>> maxmindiff);
+	std::vector<DifferenceElem> GetMostMaxDiffBlock(std::vector<std::vector<uchar>> maxmindiff);
 
-	static void SearchNeighbors(const std::vector<std::vector<unsigned char>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal);
+	void SearchNeighbors(const std::vector<std::vector<unsigned char>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal);
 
-	static void GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<uchar>> maxmindiff, std::vector<DifferenceElem>& diffElemVec);
+	void GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<uchar>> maxmindiff, std::vector<DifferenceElem>& diffElemVec);
 
-	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
+	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
 
-	static void CalculateThreshold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
+	void CalculateThreshold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
-	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects);
+	void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects);
 
-	static void RemoveObjectsWithLowContrast(std::vector<FourLimits>& allObjects, const cv::Mat& frame);
+	void RemoveObjectsWithLowContrast(std::vector<FourLimits>& allObjects, const cv::Mat& frame);
 
-	static void DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects);
+	void DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects);
 
-	static void FillRectToFrame(cv::Rect& rect);
+	void FillRectToFrame(cv::Rect& rect);
 
-	static bool CheckRect(cv::Rect& rect);
+	bool CheckRect(cv::Rect& rect);
 };
+
+template<typename DataType>
+std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
+{
+	StrengthenIntensityOfBlock(currentGrayFrame);
+
+	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
+	MaxFilter(currentGrayFrame, frameAfterMaxFilter, DilateKernelSize);
+
+	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
+	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
+
+	preprocessResultFrame = frameAfterDiscrezated;
+
+	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
+	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
+
+	std::vector<FourLimits> allObjects(totalObject);
+	Util::GetRectangleSize(blockMap, allObjects);
+
+	RemoveSmallAndBigObjects(allObjects);
+
+	RemoveObjectsWithLowContrast(allObjects, frameAfterDiscrezated);
+
+	std::vector<FourLimits> afterMergeObjects;
+	MergeCrossedRectangles(allObjects, afterMergeObjects);
+
+	DoubleCheckAfterMerge(frameAfterDiscrezated, afterMergeObjects);
+
+	auto rects = Util::GetCandidateTargets(afterMergeObjects);
+
+	return rects;
+}
 
 inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond)
 {
@@ -493,35 +526,3 @@ inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& 
 	}
 }
 
-template<typename DataType>
-std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
-{
-	StrengthenIntensityOfBlock(currentGrayFrame);
-
-	cv::Mat frameAfterMaxFilter(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
-	MaxFilter(currentGrayFrame, frameAfterMaxFilter, DilateKernelSize);
-
-	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
-	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
-
-	preprocessResultFrame = frameAfterDiscrezated;
-
-	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
-	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
-
-	std::vector<FourLimits> allObjects(totalObject);
-	Util::GetRectangleSize(blockMap, allObjects);
-
-	RemoveSmallAndBigObjects(allObjects);
-
-	RemoveObjectsWithLowContrast(allObjects, frameAfterDiscrezated);
-
-	std::vector<FourLimits> afterMergeObjects;
-	MergeCrossedRectangles(allObjects, afterMergeObjects);
-
-	DoubleCheckAfterMerge(frameAfterDiscrezated, afterMergeObjects);
-
-	auto rects = Util::GetCandidateTargets(afterMergeObjects);
-
-	return rects;
-}
