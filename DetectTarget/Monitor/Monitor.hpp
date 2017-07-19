@@ -128,7 +128,7 @@ inline void Monitor::CombineResultFrames()
 
 	auto row = colorFrame.rows;
 	auto rowPtr = combinedResultFrame.ptr<Vec3b>(row);
-	for (auto c = 0; c < combinedResultFrame.rows; ++c)
+	for (auto c = 0; c < combinedResultFrame.cols; ++c)
 	{
 		rowPtr[c][0] = 255;
 		rowPtr[c][1] = 255;
@@ -136,9 +136,9 @@ inline void Monitor::CombineResultFrames()
 	}
 
 	colorFrame.copyTo(combinedResultFrame(Rect(0, 0, colorFrame.cols, colorFrame.rows)));
-	preprocessResultFrame.copyTo(combinedResultFrame(Rect(col+1, 0, colorFrame.cols, colorFrame.rows)));
-	detectedResultFrame.copyTo(combinedResultFrame(Rect(0, row+1, colorFrame.cols, colorFrame.rows)));
-	trackedResultFrame.copyTo(combinedResultFrame(Rect(col+1, row+1, colorFrame.cols, colorFrame.rows)));
+	preprocessResultFrame.copyTo(combinedResultFrame(Rect(col + 1, 0, colorFrame.cols, colorFrame.rows)));
+	detectedResultFrame.copyTo(combinedResultFrame(Rect(0, row + 1, colorFrame.cols, colorFrame.rows)));
+	trackedResultFrame.copyTo(combinedResultFrame(Rect(col + 1, row + 1, colorFrame.cols, colorFrame.rows)));
 
 	framePersistance->Persistance(combinedResultFrame);
 
