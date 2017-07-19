@@ -26,7 +26,7 @@ public:
 
 private:
 
-	void MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize);
+	void MaxFilter(int kernelSize);
 
 	int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
 
@@ -69,14 +69,17 @@ private:
 	int imageHeight;
 
 	cv::Mat frameAfterMaxFilter;
+	cv::Mat frameNeedDetect;
 };
 
 template<typename DataType>
 std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
 {
-	StrengthenIntensityOfBlock(currentGrayFrame);
+	frameNeedDetect = currentGrayFrame;
 
-	MaxFilter(currentGrayFrame, frameAfterMaxFilter, DilateKernelSize);
+	StrengthenIntensityOfBlock(frameNeedDetect);
+
+	MaxFilter(DilateKernelSize);
 
 	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
 	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
@@ -500,10 +503,10 @@ inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThr
 	}
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize)
+inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(int kernelSize)
 {
 	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
-	dilate(curFrame, filtedFrame, kernel);
+	dilate(frameNeedDetect, frameAfterMaxFilter, kernel);
 }
 
 inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
