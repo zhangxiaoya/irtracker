@@ -506,34 +506,22 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 
 	preprocessResultFrame = frameAfterDiscrezated;
 
-//	imshow("Max Filter and Discrezated", frameAfterDiscrezated);
-
 	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
 	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
 
 	std::vector<FourLimits> allObjects(totalObject);
 	Util::GetRectangleSize(blockMap, allObjects);
 
-//	Util::ShowAllObject(currentGrayFrame, allObjects, "All Rectangles Checked by Mask");
-
 	RemoveSmallAndBigObjects(allObjects);
 
-//	Util::ShowAllObject(currentGrayFrame, allObjects, "After Remove Rect out range size");
-
 	RemoveObjectsWithLowContrast(allObjects, frameAfterDiscrezated);
-
-//	Util::ShowAllObject(frameAfterDiscrezated, allObjects, "After Remove Low contrast");
 
 	std::vector<FourLimits> afterMergeObjects;
 	MergeCrossedRectangles(allObjects, afterMergeObjects);
 
-//	Util::ShowAllObject(frameAfterDiscrezated, afterMergeObjects, "After Merge Cross Rectangles");
-
 	DoubleCheckAfterMerge(frameAfterDiscrezated, afterMergeObjects);
 
 	auto rects = Util::GetCandidateTargets(afterMergeObjects);
-
-//	Util::ShowAllCandidateTargets(currentGrayFrame, rects);
 
 	return rects;
 }
