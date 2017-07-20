@@ -31,6 +31,7 @@ private:
 
 	int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
 
+	template<typename DataType>
 	void Discretization();
 
 	void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects);
@@ -88,7 +89,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 
 	MaxFilter(DilateKernelSize);
 
-	Discretization();
+	Discretization<DataType>();
 
 	preprocessResultFrame = frameAfterDiscrezated;
 
@@ -541,12 +542,13 @@ inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filted
 	return currentIndex;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::Discretization()
+template<typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold::Discretization()
 {
 	for (auto r = 0; r < frameAfterMaxFilter.rows; ++r)
 	{
-		auto srcImgPtr = frameAfterMaxFilter.ptr<uchar>(r);
-		auto destImgPtr = frameAfterDiscrezated.ptr<uchar>(r);
+		auto srcImgPtr = frameAfterMaxFilter.ptr<DataType>(r);
+		auto destImgPtr = frameAfterDiscrezated.ptr<DataType>(r);
 
 		for (auto c = 0; c < frameAfterMaxFilter.cols; ++c)
 		{
