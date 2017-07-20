@@ -13,7 +13,8 @@ public:
 
 	DetectByMaxFilterAndAdptiveThreshold(int image_width, int image_height)
 		: imageWidth(image_width),
-		  imageHeight(image_height)
+		  imageHeight(image_height),
+		  totalObject(0)
 	{
 		frameAfterMaxFilter = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
 		frameAfterDiscrezated = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
@@ -30,7 +31,7 @@ private:
 	void MaxFilter(int kernelSize);
 
 	template <typename DataType>
-	int GetBlocks();
+	void GetBlocks();
 
 	template <typename DataType>
 	void Discretization();
@@ -54,18 +55,21 @@ private:
 
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
-	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects);
+	void RemoveSmallAndBigObjects();
 
 	template <typename DataType>
 	void RemoveObjectsWithLowContrast(std::vector<FourLimits>& allObjects, const cv::Mat& frame) const;
 
 	template <typename DataType>
-	void DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects) const;
+	void DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects);
 
 private:
 
 	int imageWidth;
 	int imageHeight;
+
+	int totalObject;
+	std::vector<FourLimits> fourLimitsOfAllObjects;
 
 	cv::Mat frameNeedDetect;
 	cv::Mat frameAfterMaxFilter;
@@ -77,6 +81,9 @@ template <typename DataType>
 std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
 {
 	frameNeedDetect = currentGrayFrame;
+	RefreshBlockMap();
+	totalObject = 0;
+	fourLimitsOfAllObjects.clear();
 
 	StrengthenIntensityOfBlock<DataType>();
 
@@ -84,19 +91,17 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 
 	Discretization<DataType>();
 
-	RefreshBlockMap();
+	GetBlocks<DataType>();
+	fourLimitsOfAllObjects.resize(totalObject);
 
-	auto totalObject = GetBlocks<DataType>();
+	Util::GetRectangleSize(blockMap, fourLimitsOfAllObjects);
 
-	std::vector<FourLimits> allObjects(totalObject);
-	Util::GetRectangleSize(blockMap, allObjects);
+	RemoveSmallAndBigObjects();
 
-	RemoveSmallAndBigObjects(allObjects);
-
-	RemoveObjectsWithLowContrast<DataType>(allObjects, frameAfterDiscrezated);
+	RemoveObjectsWithLowContrast<DataType>(fourLimitsOfAllObjects, frameAfterDiscrezated);
 
 	std::vector<FourLimits> afterMergeObjects;
-	MergeCrossedRectangles(allObjects, afterMergeObjects);
+	MergeCrossedRectangles(fourLimitsOfAllObjects, afterMergeObjects);
 
 	DoubleCheckAfterMerge<DataType>(frameAfterDiscrezated, afterMergeObjects);
 
@@ -130,16 +135,16 @@ inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& o
 	return false;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects)
+inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects()
 {
-	for (auto it = allObjects.begin(); it != allObjects.end();)
+	for (auto it = fourLimitsOfAllObjects.begin(); it != fourLimitsOfAllObjects.end();)
 	{
 		auto width = it->right - it->left + 1;
 		auto height = it->bottom - it->top + 1;
 
 		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
 			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
-			it = allObjects.erase(it);
+			it = fourLimitsOfAllObjects.erase(it);
 		else
 			++it;
 	}
@@ -202,9 +207,9 @@ void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(std::vec
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects) const
+void DetectByMaxFilterAndAdptiveThreshold::DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects)
 {
-	RemoveSmallAndBigObjects(allObjects);
+	RemoveSmallAndBigObjects();
 	RemoveObjectsWithLowContrast<DataType>(allObjects, frame);
 }
 
@@ -437,7 +442,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(int kernelSize)
 }
 
 template <typename DataType>
-int DetectByMaxFilterAndAdptiveThreshold::GetBlocks()
+void DetectByMaxFilterAndAdptiveThreshold::GetBlocks()
 {
 	auto currentIndex = 0;
 	for (auto r = 0; r < imageHeight; ++r)
@@ -453,7 +458,7 @@ int DetectByMaxFilterAndAdptiveThreshold::GetBlocks()
 			Util::FindNeighbor<DataType>(frameAfterDiscrezated, blockMap, r, c, currentIndex++, FieldType::Four, val);
 		}
 	}
-	return currentIndex;
+	totalObject = currentIndex;
 }
 
 template <typename DataType>
