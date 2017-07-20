@@ -38,7 +38,7 @@ private:
 
 	void MergeCrossedRectangles();
 
-	std::vector<std::vector<DataType>> GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame);
+	std::vector<std::vector<DataType>> GetMaxMinPixelValueDifferenceMap();
 
 	void StrengthenIntensityOfBlock();
 
@@ -280,7 +280,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::MergeCrossedRectangles()
 }
 
 template <typename DataType>
-std::vector<std::vector<DataType>> DetectByMaxFilterAndAdptiveThreshold<DataType>::GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame)
+std::vector<std::vector<DataType>> DetectByMaxFilterAndAdptiveThreshold<DataType>::GetMaxMinPixelValueDifferenceMap()
 {
 	std::vector<std::vector<DataType>> maxmindiff(countY, std::vector<DataType>(countX, static_cast<DataType>(0)));
 	for (auto br = 0; br < countY; ++br)
@@ -290,8 +290,8 @@ std::vector<std::vector<DataType>> DetectByMaxFilterAndAdptiveThreshold<DataType
 		{
 			auto width = bc == (countX - 1) ? IMAGE_WIDTH - (countX - 1) * BLOCK_SIZE : BLOCK_SIZE;
 			maxmindiff[br][bc] =
-				Util::GetMaxValueOfBlock<DataType>(curFrame(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height))) -
-				Util::GetMinValueOfBlock<DataType>(curFrame(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height)));
+				Util::GetMaxValueOfBlock<DataType>(frameNeedDetect(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height))) -
+				Util::GetMinValueOfBlock<DataType>(frameNeedDetect(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height)));
 		}
 	}
 	return maxmindiff;
@@ -300,7 +300,7 @@ std::vector<std::vector<DataType>> DetectByMaxFilterAndAdptiveThreshold<DataType
 template <typename DataType>
 void DetectByMaxFilterAndAdptiveThreshold<DataType>::StrengthenIntensityOfBlock()
 {
-	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap(frameNeedDetect);
+	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap();
 
 	auto differenceElems = GetMostMaxDiffBlock(maxmindiffMatrix);
 
