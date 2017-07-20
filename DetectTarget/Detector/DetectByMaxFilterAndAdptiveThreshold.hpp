@@ -36,7 +36,7 @@ private:
 	template <typename DataType>
 	void Discretization();
 
-	void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects) const;
+	void MergeCrossedRectangles();
 
 	template <typename DataType>
 	std::vector<std::vector<DataType>> GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame);
@@ -61,7 +61,7 @@ private:
 	void RemoveObjectsWithLowContrast();
 
 	template <typename DataType>
-	void DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects);
+	void DoubleCheckAfterMerge();
 
 private:
 
@@ -70,6 +70,7 @@ private:
 
 	int totalObject;
 	std::vector<FourLimits> fourLimitsOfAllObjects;
+	std::vector<FourLimits> fourLimitsAfterMergeObjects;
 
 	cv::Mat frameNeedDetect;
 	cv::Mat frameAfterMaxFilter;
@@ -84,6 +85,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	RefreshBlockMap();
 	totalObject = 0;
 	fourLimitsOfAllObjects.clear();
+	fourLimitsAfterMergeObjects.clear();
 
 	StrengthenIntensityOfBlock<DataType>();
 
@@ -100,12 +102,11 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 
 	RemoveObjectsWithLowContrast<DataType>();
 
-	std::vector<FourLimits> afterMergeObjects;
-	MergeCrossedRectangles(fourLimitsOfAllObjects, afterMergeObjects);
+	MergeCrossedRectangles();
 
-	DoubleCheckAfterMerge<DataType>(frameAfterDiscrezated, afterMergeObjects);
+	DoubleCheckAfterMerge<DataType>();
 
-	auto rects = Util::GetCandidateTargets(afterMergeObjects);
+	auto rects = Util::GetCandidateTargets(fourLimitsAfterMergeObjects);
 
 	preprocessResultFrame = frameAfterDiscrezated;
 
@@ -207,72 +208,72 @@ void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast()
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects)
+void DetectByMaxFilterAndAdptiveThreshold::DoubleCheckAfterMerge()
 {
 	RemoveSmallAndBigObjects();
 	RemoveObjectsWithLowContrast<DataType>();
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects) const
+inline void DetectByMaxFilterAndAdptiveThreshold::MergeCrossedRectangles()
 {
-	for (auto i = 0; i < allObjects.size(); ++i)
+	for (auto i = 0; i < fourLimitsOfAllObjects.size(); ++i)
 	{
-		if (allObjects[i].identify == -1)
+		if (fourLimitsOfAllObjects[i].identify == -1)
 			continue;
-		for (auto j = 0; j < allObjects.size(); ++j)
+		for (auto j = 0; j < fourLimitsOfAllObjects.size(); ++j)
 		{
-			if (i == j || allObjects[j].identify == -1)
+			if (i == j || fourLimitsOfAllObjects[j].identify == -1)
 				continue;
-			if (CheckCross(allObjects[i], allObjects[j]))
+			if (CheckCross(fourLimitsOfAllObjects[i], fourLimitsOfAllObjects[j]))
 			{
-				allObjects[j].identify = -1;
+				fourLimitsOfAllObjects[j].identify = -1;
 
-				if (allObjects[i].top > allObjects[j].top)
-					allObjects[i].top = allObjects[j].top;
+				if (fourLimitsOfAllObjects[i].top > fourLimitsOfAllObjects[j].top)
+					fourLimitsOfAllObjects[i].top = fourLimitsOfAllObjects[j].top;
 
-				if (allObjects[i].left > allObjects[j].left)
-					allObjects[i].left = allObjects[j].left;
+				if (fourLimitsOfAllObjects[i].left > fourLimitsOfAllObjects[j].left)
+					fourLimitsOfAllObjects[i].left = fourLimitsOfAllObjects[j].left;
 
-				if (allObjects[i].right < allObjects[j].right)
-					allObjects[i].right = allObjects[j].right;
+				if (fourLimitsOfAllObjects[i].right < fourLimitsOfAllObjects[j].right)
+					fourLimitsOfAllObjects[i].right = fourLimitsOfAllObjects[j].right;
 
-				if (allObjects[i].bottom < allObjects[j].bottom)
-					allObjects[i].bottom = allObjects[j].bottom;
+				if (fourLimitsOfAllObjects[i].bottom < fourLimitsOfAllObjects[j].bottom)
+					fourLimitsOfAllObjects[i].bottom = fourLimitsOfAllObjects[j].bottom;
 			}
 		}
 	}
 	// for left top may be missed, so need double check
-	for (auto i = 0; i < allObjects.size(); ++i)
+	for (auto i = 0; i < fourLimitsOfAllObjects.size(); ++i)
 	{
-		if (allObjects[i].identify == -1)
+		if (fourLimitsOfAllObjects[i].identify == -1)
 			continue;
-		for (auto j = 0; j < allObjects.size(); ++j)
+		for (auto j = 0; j < fourLimitsOfAllObjects.size(); ++j)
 		{
-			if (i == j || allObjects[j].identify == -1)
+			if (i == j || fourLimitsOfAllObjects[j].identify == -1)
 				continue;
-			if (CheckCross(allObjects[i], allObjects[j]))
+			if (CheckCross(fourLimitsOfAllObjects[i], fourLimitsOfAllObjects[j]))
 			{
-				allObjects[j].identify = -1;
+				fourLimitsOfAllObjects[j].identify = -1;
 
-				if (allObjects[i].top > allObjects[j].top)
-					allObjects[i].top = allObjects[j].top;
+				if (fourLimitsOfAllObjects[i].top > fourLimitsOfAllObjects[j].top)
+					fourLimitsOfAllObjects[i].top = fourLimitsOfAllObjects[j].top;
 
-				if (allObjects[i].left > allObjects[j].left)
-					allObjects[i].left = allObjects[j].left;
+				if (fourLimitsOfAllObjects[i].left > fourLimitsOfAllObjects[j].left)
+					fourLimitsOfAllObjects[i].left = fourLimitsOfAllObjects[j].left;
 
-				if (allObjects[i].right < allObjects[j].right)
-					allObjects[i].right = allObjects[j].right;
+				if (fourLimitsOfAllObjects[i].right < fourLimitsOfAllObjects[j].right)
+					fourLimitsOfAllObjects[i].right = fourLimitsOfAllObjects[j].right;
 
-				if (allObjects[i].bottom < allObjects[j].bottom)
-					allObjects[i].bottom = allObjects[j].bottom;
+				if (fourLimitsOfAllObjects[i].bottom < fourLimitsOfAllObjects[j].bottom)
+					fourLimitsOfAllObjects[i].bottom = fourLimitsOfAllObjects[j].bottom;
 			}
 		}
 	}
 
-	for (auto i = 0; i < allObjects.size(); ++i)
+	for (auto i = 0; i < fourLimitsOfAllObjects.size(); ++i)
 	{
-		if (allObjects[i].identify != -1)
-			afterMergeObjects.push_back(allObjects[i]);
+		if (fourLimitsOfAllObjects[i].identify != -1)
+			fourLimitsAfterMergeObjects.push_back(fourLimitsOfAllObjects[i]);
 	}
 }
 
