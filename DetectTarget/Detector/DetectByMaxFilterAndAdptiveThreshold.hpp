@@ -30,7 +30,7 @@ private:
 	void MaxFilter(int kernelSize);
 
 	template <typename DataType>
-	int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
+	int GetBlocks();
 
 	template <typename DataType>
 	void Discretization();
@@ -86,7 +86,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 
 	RefreshBlockMap();
 
-	auto totalObject = GetBlocks<DataType>(frameAfterDiscrezated, blockMap);
+	auto totalObject = GetBlocks<DataType>();
 
 	std::vector<FourLimits> allObjects(totalObject);
 	Util::GetRectangleSize(blockMap, allObjects);
@@ -437,20 +437,20 @@ inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(int kernelSize)
 }
 
 template <typename DataType>
-int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
+int DetectByMaxFilterAndAdptiveThreshold::GetBlocks()
 {
 	auto currentIndex = 0;
-	for (auto r = 0; r < filtedFrame.rows; ++r)
+	for (auto r = 0; r < imageHeight; ++r)
 	{
-		auto frameRowPtr = filtedFrame.ptr<DataType>(r);
+		auto frameRowPtr = frameAfterDiscrezated.ptr<DataType>(r);
 		auto maskRowPtr = blockMap.ptr<int>(r);
-		for (auto c = 0; c < filtedFrame.cols; ++c)
+		for (auto c = 0; c < imageWidth; ++c)
 		{
 			if (maskRowPtr[c] != -1)
 				continue;
 
 			auto val = frameRowPtr[c];
-			Util::FindNeighbor<DataType>(filtedFrame, blockMap, r, c, currentIndex++, FieldType::Four, val);
+			Util::FindNeighbor<DataType>(frameAfterDiscrezated, blockMap, r, c, currentIndex++, FieldType::Four, val);
 		}
 	}
 	return currentIndex;
