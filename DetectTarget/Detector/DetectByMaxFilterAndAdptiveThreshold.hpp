@@ -18,7 +18,8 @@ public:
 		: imageWidth(image_width),
 		  imageHeight(image_height)
 	{
-		frameAfterMaxFilter = Mat(imageHeight, imageWidth, CV_8UC1);
+		frameAfterMaxFilter = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
+		frameAfterDiscrezated = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
 	}
 
 	template<typename DataType>
@@ -30,7 +31,7 @@ private:
 
 	int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
 
-	void Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame);
+	void Discretization();
 
 	void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects);
 
@@ -42,15 +43,18 @@ private:
 	std::vector<std::vector<uchar>> GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame);
 
 	template<typename DataType>
-	void StrengthenIntensityOfBlock(cv::Mat& curFrame);
+	void StrengthenIntensityOfBlock();
 
 	void GetMaxValueOfMatrix(std::vector<std::vector<uchar>> maxmindiff, DifferenceElem& diffElem);
 
-	std::vector<DifferenceElem> GetMostMaxDiffBlock(std::vector<std::vector<uchar>> maxmindiff);
+	template<typename DataType>
+	std::vector<DifferenceElem> GetMostMaxDiffBlock(std::vector<std::vector<DataType>> maxmindiff);
 
-	void SearchNeighbors(const std::vector<std::vector<unsigned char>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal);
+	template<typename DataType>
+	void SearchNeighbors(const std::vector<std::vector<DataType>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal);
 
-	void GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<uchar>> maxmindiff, std::vector<DifferenceElem>& diffElemVec);
+	template<typename DataType>
+	void GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<DataType>> maxmindiff, std::vector<DifferenceElem>& diffElemVec);
 
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
 
@@ -70,8 +74,9 @@ private:
 	int imageWidth;
 	int imageHeight;
 
-	cv::Mat frameAfterMaxFilter;
 	cv::Mat frameNeedDetect;
+	cv::Mat frameAfterMaxFilter;
+	cv::Mat frameAfterDiscrezated;
 };
 
 template<typename DataType>
@@ -79,12 +84,11 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 {
 	frameNeedDetect = currentGrayFrame;
 
-	StrengthenIntensityOfBlock<DataType>(frameNeedDetect);
+	StrengthenIntensityOfBlock<DataType>();
 
 	MaxFilter(DilateKernelSize);
 
-	cv::Mat frameAfterDiscrezated(cv::Size(currentGrayFrame.cols, currentGrayFrame.rows), CV_8UC1);
-	Discretization(frameAfterMaxFilter, frameAfterDiscrezated);
+	Discretization();
 
 	preprocessResultFrame = frameAfterDiscrezated;
 
@@ -363,11 +367,11 @@ std::vector<std::vector<uchar>> DetectByMaxFilterAndAdptiveThreshold::GetMaxMinP
 }
 
 template<typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv::Mat& currentGrayFrame)
+void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock()
 {
-	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap<DataType>(currentGrayFrame);
+	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap<DataType>(frameNeedDetect);
 
-	auto differenceElems = GetMostMaxDiffBlock(maxmindiffMatrix);
+	auto differenceElems = GetMostMaxDiffBlock<DataType>(maxmindiffMatrix);
 
 	for (auto elem : differenceElems)
 	{
@@ -378,14 +382,14 @@ void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock(cv::Mat& c
 		auto boundingBoxRightBottomX = centerX + BLOCK_SIZE < IMAGE_WIDTH ? centerX + BLOCK_SIZE : IMAGE_WIDTH - 1;
 		auto boundingBoxRightBottomY = centerY + BLOCK_SIZE < IMAGE_HEIGHT ? centerY + BLOCK_SIZE : IMAGE_HEIGHT - 1;
 
-		auto averageValue = Util::CalculateAverageValue(currentGrayFrame, boundingBoxLeftTopX, boundingBoxLeftTopY, boundingBoxRightBottomX, boundingBoxRightBottomY);
+		auto averageValue = Util::CalculateAverageValue(frameNeedDetect, boundingBoxLeftTopX, boundingBoxLeftTopY, boundingBoxRightBottomX, boundingBoxRightBottomY);
 
 		auto maxdiffBlockRightBottomX = (elem.blockX + 1) * BLOCK_SIZE > IMAGE_WIDTH ? IMAGE_WIDTH - 1 : (elem.blockX + 1) * BLOCK_SIZE;
 		auto maxdiffBlockRightBottomY = (elem.blockY + 1) * BLOCK_SIZE > IMAGE_HEIGHT ? IMAGE_HEIGHT - 1 : (elem.blockY + 1) * BLOCK_SIZE;
 
 		for (auto r = elem.blockY * BLOCK_SIZE; r < maxdiffBlockRightBottomY; ++r)
 		{
-			auto ptr = currentGrayFrame.ptr<uchar>(r);
+			auto ptr = frameNeedDetect.ptr<DataType>(r);
 			for (auto c = elem.blockX * BLOCK_SIZE; c < maxdiffBlockRightBottomX; ++c)
 			{
 				if (ptr[c] > averageValue)
@@ -413,7 +417,8 @@ inline void DetectByMaxFilterAndAdptiveThreshold::GetMaxValueOfMatrix(std::vecto
 	}
 }
 
-inline std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold::GetMostMaxDiffBlock(std::vector<std::vector<uchar>> maxmindiff)
+template<typename DataType>
+std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold::GetMostMaxDiffBlock(std::vector<std::vector<DataType>> maxmindiff)
 {
 	std::vector<DifferenceElem> mostPossibleBlocks;
 
@@ -421,12 +426,13 @@ inline std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold::GetMost
 //	GetMaxValueOfMatrix(maxmindiff, diffElem);
 //	mostPossibleBlocks.push_back(diffElem);
 
-	GetDiffValueOfMatrixBigThanThreshold(maxmindiff, mostPossibleBlocks);
+	GetDiffValueOfMatrixBigThanThreshold<DataType>(maxmindiff, mostPossibleBlocks);
 
 	return mostPossibleBlocks;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::SearchNeighbors(const std::vector<std::vector<unsigned char>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal)
+template<typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold::SearchNeighbors(const std::vector<std::vector<DataType>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal)
 {
 	auto threshold = 2;
 
@@ -484,7 +490,8 @@ inline void DetectByMaxFilterAndAdptiveThreshold::SearchNeighbors(const std::vec
 	}
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<uchar>> maxmindiff, std::vector<DifferenceElem>& diffElemVec)
+template<typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<DataType>> maxmindiff, std::vector<DifferenceElem>& diffElemVec)
 {
 
 	std::vector< std::vector<bool>> flag(countY, std::vector<bool>(countX, false));
@@ -503,7 +510,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThr
 
 				flag[br][bc] = true;
 
-				SearchNeighbors(maxmindiff, diffElemVec, flag, br, bc, static_cast<int>(maxmindiff[br][bc]));
+				SearchNeighbors<DataType>(maxmindiff, diffElemVec, flag, br, bc, static_cast<int>(maxmindiff[br][bc]));
 			}
 		}
 	}
@@ -534,14 +541,14 @@ inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filted
 	return currentIndex;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame)
+inline void DetectByMaxFilterAndAdptiveThreshold::Discretization()
 {
-	for (auto r = 0; r < filtedFrame.rows; ++r)
+	for (auto r = 0; r < frameAfterMaxFilter.rows; ++r)
 	{
-		auto srcImgPtr = filtedFrame.ptr<uchar>(r);
-		auto destImgPtr = discretizatedFrame.ptr<uchar>(r);
+		auto srcImgPtr = frameAfterMaxFilter.ptr<uchar>(r);
+		auto destImgPtr = frameAfterDiscrezated.ptr<uchar>(r);
 
-		for (auto c = 0; c < filtedFrame.cols; ++c)
+		for (auto c = 0; c < frameAfterMaxFilter.cols; ++c)
 		{
 			destImgPtr[c] = (srcImgPtr[c] / DISCRATED_BIN) * DISCRATED_BIN;
 		}

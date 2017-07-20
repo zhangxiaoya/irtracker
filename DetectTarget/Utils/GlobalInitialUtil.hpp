@@ -47,19 +47,22 @@ inline void UpdateImageSize(cv::Mat& img)
 
 inline void UpdateDataType(const cv::Mat& img)
 {
-	std::cout << "Update Image Size" << std::endl;
+	std::cout << "Update Image DataType" << std::endl;
 
 	CV_DATA_TYPE = img.type();
 }
 
 inline bool UpdateConstants()
 {
-	auto img = GetTheFirstImage();
-	if (!img.empty())
-	{
-		UpdateImageSize(img);
+	auto colorImg = GetTheFirstImage();
+	cv::Mat grayImg;
+	cvtColor(colorImg, grayImg, CV_RGB2GRAY);
 
-		UpdateDataType(img);
+	if (!colorImg.empty())
+	{
+		UpdateImageSize(grayImg);
+
+		UpdateDataType(grayImg);
 
 		return true;
 	}
