@@ -24,7 +24,8 @@ public:
 
 	static void ShowCandidateRects(const cv::Mat& grayFrame, const std::vector<cv::Rect_<int>>& candidate_rects);
 
-	static void FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, uchar value = 0);
+	template<typename DataType>
+	static void FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, DataType value = 0);
 
 	static void GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject);
 
@@ -72,9 +73,11 @@ public:
 
 private:
 
-	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
-
-	static void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value = 0);
+	template<typename DataType>
+	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DataType value = 0);
+	
+	template<typename DataType>
+	static void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DataType value = 0);
 
 	static void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, int currentIndex) = delete;
 
@@ -108,12 +111,13 @@ inline void Util::ShowCandidateRects(const cv::Mat& grayFrame, const std::vector
 	imshow("Color Frame", colorFrame);
 }
 
-inline void Util::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, uchar value)
+template<typename DataType>
+void Util::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, DataType value)
 {
 	if (fieldType == FieldType::Eight)
-		DFSWithoutRecursionEightField(binaryFrame, bitMap, r, c, currentIndex, value);
+		DFSWithoutRecursionEightField<DataType>(binaryFrame, bitMap, r, c, currentIndex, value);
 	else if (fieldType == FieldType::Four)
-		DFSWithoutRecursionFourField(binaryFrame, bitMap, r, c, currentIndex, value);
+		DFSWithoutRecursionFourField<DataType>(binaryFrame, bitMap, r, c, currentIndex, value);
 	else
 		std::cout << "FieldType Error!" << std::endl;
 }
@@ -442,7 +446,8 @@ inline void Util::CalCulateCenterValue(const cv::Mat& frame, uchar& centerValue,
 	centerValue = static_cast<uchar>(sumAll / 4);
 }
 
-inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value)
+template<typename DataType>
+void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DataType value)
 {
 	std::stack<cv::Point> deepTrace;
 	bitMap.at<int32_t>(r, c) = currentIndex;
@@ -456,52 +461,51 @@ inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::
 		auto curR = curPos.y;
 		auto curC = curPos.x;
 
-
 		// up
-		if (curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC) == value && bitMap.at<int32_t>(curR - 1, curC) == -1)
+		if (curR - 1 >= 0 && binaryFrame.at<DataType>(curR - 1, curC) == value && bitMap.at<int32_t>(curR - 1, curC) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC) = currentIndex;
 			deepTrace.push(cv::Point(curC, curR - 1));
 		}
 		// down
-		if (curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC) == value && bitMap.at<int32_t>(curR + 1, curC) == -1)
+		if (curR + 1 < binaryFrame.rows && binaryFrame.at<DataType>(curR + 1, curC) == value && bitMap.at<int32_t>(curR + 1, curC) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC) = currentIndex;
 			deepTrace.push(cv::Point(curC, curR + 1));
 		}
 		// left
-		if (curC - 1 >= 0 && binaryFrame.at<uchar>(curR, curC - 1) == value && bitMap.at<int32_t>(curR, curC - 1) == -1)
+		if (curC - 1 >= 0 && binaryFrame.at<DataType>(curR, curC - 1) == value && bitMap.at<int32_t>(curR, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR));
 		}
 		// right
-		if (curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR, curC + 1) == value && bitMap.at<int32_t>(curR, curC + 1) == -1)
+		if (curC + 1 < binaryFrame.cols && binaryFrame.at<DataType>(curR, curC + 1) == value && bitMap.at<int32_t>(curR, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR));
 		}
 
 		// up and left
-		if (curR - 1 >= 0 && curC - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC - 1) == value && bitMap.at<int32_t>(curR - 1, curC - 1) == -1)
+		if (curR - 1 >= 0 && curC - 1 >= 0 && binaryFrame.at<DataType>(curR - 1, curC - 1) == value && bitMap.at<int32_t>(curR - 1, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR - 1));
 		}
 		// down and right
-		if (curR + 1 < binaryFrame.rows && curC + 1 < binaryFrame.cols && binaryFrame.at<uchar>(curR + 1, curC + 1) == value && bitMap.at<int32_t>(curR + 1, curC + 1) == -1)
+		if (curR + 1 < binaryFrame.rows && curC + 1 < binaryFrame.cols && binaryFrame.at<DataType>(curR + 1, curC + 1) == value && bitMap.at<int32_t>(curR + 1, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR + 1));
 		}
 		// left and down
-		if (curC - 1 >= 0 && curR + 1 < binaryFrame.rows && binaryFrame.at<uchar>(curR + 1, curC - 1) == value && bitMap.at<int32_t>(curR + 1, curC - 1) == -1)
+		if (curC - 1 >= 0 && curR + 1 < binaryFrame.rows && binaryFrame.at<DataType>(curR + 1, curC - 1) == value && bitMap.at<int32_t>(curR + 1, curC - 1) == -1)
 		{
 			bitMap.at<int32_t>(curR + 1, curC - 1) = currentIndex;
 			deepTrace.push(cv::Point(curC - 1, curR + 1));
 		}
 		// right and up
-		if (curC + 1 < binaryFrame.cols && curR - 1 >= 0 && binaryFrame.at<uchar>(curR - 1, curC + 1) == value && bitMap.at<int32_t>(curR - 1, curC + 1) == -1)
+		if (curC + 1 < binaryFrame.cols && curR - 1 >= 0 && binaryFrame.at<DataType>(curR - 1, curC + 1) == value && bitMap.at<int32_t>(curR - 1, curC + 1) == -1)
 		{
 			bitMap.at<int32_t>(curR - 1, curC + 1) = currentIndex;
 			deepTrace.push(cv::Point(curC + 1, curR - 1));
@@ -509,7 +513,8 @@ inline void Util::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::
 	}
 }
 
-inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, uchar value)
+template<typename DataType>
+void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DataType value)
 {
 	std::stack<cv::Point> deepTrace;
 	bitMap.at<int32_t>(r, c) = currentIndex;
@@ -526,7 +531,7 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 		// up
 		if (curR - 1 >= 0)
 		{
-			auto frameRowPtr = binaryFrame.ptr<uchar>(curR - 1);
+			auto frameRowPtr = binaryFrame.ptr<DataType>(curR - 1);
 			auto maskRowPtr = bitMap.ptr<int>(curR - 1);
 			if (frameRowPtr[curC] == value && maskRowPtr[curC] == -1)
 			{
@@ -537,7 +542,7 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 		// down
 		if (curR + 1 < binaryFrame.rows)
 		{
-			auto frameRowPtr = binaryFrame.ptr<uchar>(curR + 1);
+			auto frameRowPtr = binaryFrame.ptr<DataType>(curR + 1);
 			auto maskRowPtr = bitMap.ptr<int>(curR + 1);
 			if (frameRowPtr[curC] == value && maskRowPtr[curC] == -1)
 			{
@@ -548,7 +553,7 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 		// left
 		if (curC - 1 >= 0)
 		{
-			auto frameRowPtr = binaryFrame.ptr<uchar>(curR);
+			auto frameRowPtr = binaryFrame.ptr<DataType>(curR);
 			auto maskRowPtr = bitMap.ptr<int>(curR);
 			if (frameRowPtr[curC - 1] == value && maskRowPtr[curC - 1] == -1)
 			{
@@ -559,7 +564,7 @@ inline void Util::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::M
 		// right
 		if (curC + 1 < binaryFrame.cols)
 		{
-			auto frameRowPtr = binaryFrame.ptr<uchar>(curR);
+			auto frameRowPtr = binaryFrame.ptr<DataType>(curR);
 			auto maskRowPtr = bitMap.ptr<int>(curR);
 			if (frameRowPtr[curC + 1] == value && maskRowPtr[curC + 1] == -1)
 			{

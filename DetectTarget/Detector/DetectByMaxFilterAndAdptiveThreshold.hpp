@@ -29,6 +29,7 @@ private:
 
 	void MaxFilter(int kernelSize);
 
+	template<typename DataType>
 	int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
 
 	template<typename DataType>
@@ -91,10 +92,8 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 
 	Discretization<DataType>();
 
-	preprocessResultFrame = frameAfterDiscrezated;
-
 	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
-	auto totalObject = GetBlocks(frameAfterDiscrezated, blockMap);
+	auto totalObject = GetBlocks<DataType>(frameAfterDiscrezated, blockMap);
 
 	std::vector<FourLimits> allObjects(totalObject);
 	Util::GetRectangleSize(blockMap, allObjects);
@@ -109,6 +108,8 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	DoubleCheckAfterMerge(frameAfterDiscrezated, afterMergeObjects);
 
 	auto rects = Util::GetCandidateTargets(afterMergeObjects);
+
+	preprocessResultFrame = frameAfterDiscrezated;
 
 	return rects;
 }
@@ -523,12 +524,13 @@ inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(int kernelSize)
 	dilate(frameNeedDetect, frameAfterMaxFilter, kernel);
 }
 
-inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
+template<typename DataType>
+int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
 {
 	auto currentIndex = 0;
 	for (auto r = 0; r < filtedFrame.rows; ++r)
 	{
-		auto frameRowPtr = filtedFrame.ptr<uchar>(r);
+		auto frameRowPtr = filtedFrame.ptr<DataType>(r);
 		auto maskRowPtr = blockMap.ptr<int>(r);
 		for (auto c = 0; c < filtedFrame.cols; ++c)
 		{
@@ -536,7 +538,7 @@ inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filted
 				continue;
 
 			auto val = frameRowPtr[c];
-			Util::FindNeighbor(filtedFrame, blockMap, r, c, currentIndex++, FieldType::Four, val);
+			Util::FindNeighbor<DataType>(filtedFrame, blockMap, r, c, currentIndex++, FieldType::Four, val);
 		}
 	}
 	return currentIndex;
