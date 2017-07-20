@@ -58,7 +58,7 @@ private:
 	void RemoveSmallAndBigObjects();
 
 	template <typename DataType>
-	void RemoveObjectsWithLowContrast(std::vector<FourLimits>& allObjects, const cv::Mat& frame) const;
+	void RemoveObjectsWithLowContrast();
 
 	template <typename DataType>
 	void DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects);
@@ -98,7 +98,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 
 	RemoveSmallAndBigObjects();
 
-	RemoveObjectsWithLowContrast<DataType>(fourLimitsOfAllObjects, frameAfterDiscrezated);
+	RemoveObjectsWithLowContrast<DataType>();
 
 	std::vector<FourLimits> afterMergeObjects;
 	MergeCrossedRectangles(fourLimitsOfAllObjects, afterMergeObjects);
@@ -151,9 +151,9 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects()
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(std::vector<FourLimits>& allObjects, const cv::Mat& frame) const
+void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast()
 {
-	for (auto it = allObjects.begin(); it != allObjects.end();)
+	for (auto it = fourLimitsOfAllObjects.begin(); it != fourLimitsOfAllObjects.end();)
 	{
 		DataType threshold = 0;
 		DataType centerValue = 0;
@@ -180,24 +180,24 @@ void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast(std::vec
 		}
 
 		auto rightBottomX = leftTopX + surroundBoxWidth;
-		if (rightBottomX > frame.cols)
+		if (rightBottomX > imageWidth)
 		{
-			rightBottomX = frame.cols;
+			rightBottomX = imageWidth;
 		}
 
 		auto rightBottomY = leftTopY + surroundBoxHeight;
-		if (rightBottomY > frame.rows)
+		if (rightBottomY > imageHeight)
 		{
-			rightBottomY = frame.rows;
+			rightBottomY = imageHeight;
 		}
 
-		Util::CalculateThreshHold<DataType>(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
+		Util::CalculateThreshHold<DataType>(frameAfterDiscrezated, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
-		Util::CalCulateCenterValue<DataType>(frame, centerValue, cv::Rect(it->left, it->top, it->right - it->left + 1, it->bottom - it->top + 1));
+		Util::CalCulateCenterValue<DataType>(frameAfterDiscrezated, centerValue, cv::Rect(it->left, it->top, it->right - it->left + 1, it->bottom - it->top + 1));
 
 		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(threshold)) < 3)
 		{
-			it = allObjects.erase(it);
+			it = fourLimitsOfAllObjects.erase(it);
 		}
 		else
 		{
@@ -210,7 +210,7 @@ template <typename DataType>
 void DetectByMaxFilterAndAdptiveThreshold::DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects)
 {
 	RemoveSmallAndBigObjects();
-	RemoveObjectsWithLowContrast<DataType>(allObjects, frame);
+	RemoveObjectsWithLowContrast<DataType>();
 }
 
 inline void DetectByMaxFilterAndAdptiveThreshold::MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects) const
