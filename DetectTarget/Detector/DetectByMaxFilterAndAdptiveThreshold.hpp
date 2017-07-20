@@ -7,6 +7,7 @@
 #include "../DifferenceElem.hpp"
 #include "../Utils/PerformanceUtil.hpp"
 
+template <class DataType>
 class DetectByMaxFilterAndAdptiveThreshold
 {
 public:
@@ -21,9 +22,8 @@ public:
 		blockMap = Mat(imageHeight, imageWidth, CV_32SC1, cv::Scalar(-1));
 	}
 
-	template <class DataType>
 	void Reset(cv::Mat& currentGrayFrame);
-	template <typename DataType>
+
 	std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
 
 private:
@@ -31,38 +31,29 @@ private:
 	void RefreshBlockMap();
 
 	void MaxFilter(int kernelSize);
-
-	template <typename DataType>
+	
 	void GetBlocks();
 
-	template <typename DataType>
 	void Discretization();
 
 	void MergeCrossedRectangles();
 
-	template <typename DataType>
 	std::vector<std::vector<DataType>> GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame);
 
-	template <typename DataType>
 	void StrengthenIntensityOfBlock();
 
-	template <typename DataType>
 	std::vector<DifferenceElem> GetMostMaxDiffBlock(std::vector<std::vector<DataType>> maxmindiff);
 
-	template <typename DataType>
 	void SearchNeighbors(const std::vector<std::vector<DataType>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal);
 
-	template <typename DataType>
 	void GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<DataType>> maxmindiff, std::vector<DifferenceElem>& diffElemVec);
 
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
 	void RemoveSmallAndBigObjects();
 
-	template <typename DataType>
 	void RemoveObjectsWithLowContrast();
 
-	template <typename DataType>
 	void DoubleCheckAfterMerge();
 
 private:
@@ -81,9 +72,10 @@ private:
 };
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::Reset(cv::Mat& currentGrayFrame)
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::Reset(cv::Mat& currentGrayFrame)
 {
 	frameNeedDetect = currentGrayFrame;
+
 	RefreshBlockMap();
 	totalObject = 0;
 	fourLimitsOfAllObjects.clear();
@@ -91,27 +83,27 @@ void DetectByMaxFilterAndAdptiveThreshold::Reset(cv::Mat& currentGrayFrame)
 }
 
 template <typename DataType>
-std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
+std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
 {
-	Reset<DataType>(currentGrayFrame);
+	Reset(currentGrayFrame);
 
-	StrengthenIntensityOfBlock<DataType>();
+	StrengthenIntensityOfBlock();
 
 	MaxFilter(DilateKernelSize);
 
-	Discretization<DataType>();
+	Discretization();
 
-	GetBlocks<DataType>();
+	GetBlocks();
 
 	Util::GetRectangleSize(blockMap, fourLimitsOfAllObjects);
 
 	RemoveSmallAndBigObjects();
 
-	RemoveObjectsWithLowContrast<DataType>();
+	RemoveObjectsWithLowContrast();
 
 	MergeCrossedRectangles();
 
-	DoubleCheckAfterMerge<DataType>();
+	DoubleCheckAfterMerge();
 
 	auto rects = Util::GetCandidateTargets(fourLimitsAfterMergeObjects);
 
@@ -120,7 +112,8 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	return rects;
 }
 
-inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const
+template <typename DataType>
+bool DetectByMaxFilterAndAdptiveThreshold<DataType>::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const
 {
 	auto firstCenterX = (objectFirst.right + objectFirst.left) / 2;
 	auto firstCenterY = (objectFirst.bottom + objectFirst.top) / 2;
@@ -143,7 +136,8 @@ inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& o
 	return false;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects()
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveSmallAndBigObjects()
 {
 	for (auto it = fourLimitsOfAllObjects.begin(); it != fourLimitsOfAllObjects.end();)
 	{
@@ -159,7 +153,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects()
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast()
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveObjectsWithLowContrast()
 {
 	for (auto it = fourLimitsOfAllObjects.begin(); it != fourLimitsOfAllObjects.end();)
 	{
@@ -215,13 +209,14 @@ void DetectByMaxFilterAndAdptiveThreshold::RemoveObjectsWithLowContrast()
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::DoubleCheckAfterMerge()
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::DoubleCheckAfterMerge()
 {
 	RemoveSmallAndBigObjects();
-	RemoveObjectsWithLowContrast<DataType>();
+	RemoveObjectsWithLowContrast();
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::MergeCrossedRectangles()
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::MergeCrossedRectangles()
 {
 	for (auto i = 0; i < fourLimitsOfAllObjects.size(); ++i)
 	{
@@ -285,7 +280,7 @@ inline void DetectByMaxFilterAndAdptiveThreshold::MergeCrossedRectangles()
 }
 
 template <typename DataType>
-std::vector<std::vector<DataType>> DetectByMaxFilterAndAdptiveThreshold::GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame)
+std::vector<std::vector<DataType>> DetectByMaxFilterAndAdptiveThreshold<DataType>::GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame)
 {
 	std::vector<std::vector<DataType>> maxmindiff(countY, std::vector<DataType>(countX, static_cast<DataType>(0)));
 	for (auto br = 0; br < countY; ++br)
@@ -303,11 +298,11 @@ std::vector<std::vector<DataType>> DetectByMaxFilterAndAdptiveThreshold::GetMaxM
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock()
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::StrengthenIntensityOfBlock()
 {
-	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap<DataType>(frameNeedDetect);
+	auto maxmindiffMatrix = GetMaxMinPixelValueDifferenceMap(frameNeedDetect);
 
-	auto differenceElems = GetMostMaxDiffBlock<DataType>(maxmindiffMatrix);
+	auto differenceElems = GetMostMaxDiffBlock(maxmindiffMatrix);
 
 	for (auto elem : differenceElems)
 	{
@@ -338,17 +333,17 @@ void DetectByMaxFilterAndAdptiveThreshold::StrengthenIntensityOfBlock()
 }
 
 template <typename DataType>
-std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold::GetMostMaxDiffBlock(std::vector<std::vector<DataType>> maxmindiff)
+std::vector<DifferenceElem> DetectByMaxFilterAndAdptiveThreshold<DataType>::GetMostMaxDiffBlock(std::vector<std::vector<DataType>> maxmindiff)
 {
 	std::vector<DifferenceElem> mostPossibleBlocks;
 
-	GetDiffValueOfMatrixBigThanThreshold<DataType>(maxmindiff, mostPossibleBlocks);
+	GetDiffValueOfMatrixBigThanThreshold(maxmindiff, mostPossibleBlocks);
 
 	return mostPossibleBlocks;
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::SearchNeighbors(const std::vector<std::vector<DataType>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal)
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::SearchNeighbors(const std::vector<std::vector<DataType>>& maxmindiff, std::vector<DifferenceElem>& diffElemVec, std::vector<std::vector<bool>>& flag, int br, int bc, int diffVal)
 {
 	auto threshold = 2;
 
@@ -407,7 +402,7 @@ void DetectByMaxFilterAndAdptiveThreshold::SearchNeighbors(const std::vector<std
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<DataType>> maxmindiff, std::vector<DifferenceElem>& diffElemVec)
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<DataType>> maxmindiff, std::vector<DifferenceElem>& diffElemVec)
 {
 	std::vector<std::vector<bool>> flag(countY, std::vector<bool>(countX, false));
 	diffElemVec.clear();
@@ -425,13 +420,14 @@ void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThreshold(
 
 				flag[br][bc] = true;
 
-				SearchNeighbors<DataType>(maxmindiff, diffElemVec, flag, br, bc, static_cast<int>(maxmindiff[br][bc]));
+				SearchNeighbors(maxmindiff, diffElemVec, flag, br, bc, static_cast<int>(maxmindiff[br][bc]));
 			}
 		}
 	}
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::RefreshBlockMap()
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::RefreshBlockMap()
 {
 	for (auto r = 0; r < imageHeight; ++r)
 	{
@@ -443,14 +439,15 @@ inline void DetectByMaxFilterAndAdptiveThreshold::RefreshBlockMap()
 	}
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(int kernelSize)
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::MaxFilter(int kernelSize)
 {
 	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
 	dilate(frameNeedDetect, frameAfterMaxFilter, kernel);
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::GetBlocks()
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetBlocks()
 {
 	auto currentIndex = 0;
 	for (auto r = 0; r < imageHeight; ++r)
@@ -471,7 +468,7 @@ void DetectByMaxFilterAndAdptiveThreshold::GetBlocks()
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold::Discretization()
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::Discretization()
 {
 	for (auto r = 0; r < frameAfterMaxFilter.rows; ++r)
 	{
