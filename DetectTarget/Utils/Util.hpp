@@ -63,13 +63,16 @@ public:
 	template<typename DataType>
 	static DataType GetMaxValueOfBlock(const cv::Mat& mat);
 
-	static uchar CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
+	template<typename DataType>
+	static DataType CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
 	static uchar CalculateAverageValueWithBlockIndex(const cv::Mat& img, int blockX, int blockY);
 
-	static inline void CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
+	template<typename DataType>
+	static void CalculateThreshHold(const cv::Mat& frame, DataType& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
-	static void CalCulateCenterValue(const cv::Mat& frame, uchar& centerValue, const cv::Rect& rect);
+	template<typename DataType>
+	static void CalCulateCenterValue(const cv::Mat& frame, DataType& centerValue, const cv::Rect& rect);
 
 private:
 
@@ -388,13 +391,14 @@ DataType Util::GetMaxValueOfBlock(const cv::Mat& mat)
 	return maxVal;
 }
 
-inline uchar Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+template<typename DataType>
+DataType Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
 	auto sumAll = 0;
 	for (auto r = leftTopY; r < rightBottomY; ++r)
 	{
 		auto sumRow = 0;
-		auto ptr = frame.ptr<uchar>(r);
+		auto ptr = frame.ptr<DataType>(r);
 		for (auto c = leftTopX; c < rightBottomX; ++c)
 		{
 			sumRow += ptr[c];
@@ -402,7 +406,7 @@ inline uchar Util::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int
 		sumAll += sumRow / (rightBottomX - leftTopX);
 	}
 
-	return static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
+	return static_cast<DataType>(sumAll / (rightBottomY - leftTopY));
 }
 
 inline uchar Util::CalculateAverageValueWithBlockIndex(const cv::Mat& img, int blockX, int blockY)
@@ -427,23 +431,25 @@ inline uchar Util::CalculateAverageValueWithBlockIndex(const cv::Mat& img, int b
 	return static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
 }
 
-inline void Util::CalculateThreshHold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+template<typename DataType>
+void Util::CalculateThreshHold(const cv::Mat& frame, DataType& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
-	threshHold = CalculateAverageValue(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
+	threshHold = CalculateAverageValue<DataType>(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
 	//threshHold += threshHold / 4;
 }
 
-inline void Util::CalCulateCenterValue(const cv::Mat& frame, uchar& centerValue, const cv::Rect& rect)
+template<typename DataType>
+void Util::CalCulateCenterValue(const cv::Mat& frame, DataType& centerValue, const cv::Rect& rect)
 {
 	auto centerX = rect.x + rect.width / 2;
 	auto centerY = rect.y + rect.height / 2;
 
 	auto sumAll = 0;
-	sumAll += static_cast<int>(frame.at<uchar>(centerY, centerX));
-	sumAll += static_cast<int>(frame.at<uchar>(centerY, centerX - 1));
-	sumAll += static_cast<int>(frame.at<uchar>(centerY - 1, centerX));
-	sumAll += static_cast<int>(frame.at<uchar>(centerY - 1, centerX - 1));
-	centerValue = static_cast<uchar>(sumAll / 4);
+	sumAll += static_cast<int>(frame.at<DataType>(centerY, centerX));
+	sumAll += static_cast<int>(frame.at<DataType>(centerY, centerX - 1));
+	sumAll += static_cast<int>(frame.at<DataType>(centerY - 1, centerX));
+	sumAll += static_cast<int>(frame.at<DataType>(centerY - 1, centerX - 1));
+	centerValue = static_cast<DataType>(sumAll / 4);
 }
 
 template<typename DataType>
