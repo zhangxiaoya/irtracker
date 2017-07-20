@@ -21,6 +21,8 @@ public:
 		blockMap = Mat(imageHeight, imageWidth, CV_32SC1, cv::Scalar(-1));
 	}
 
+	template <class DataType>
+	void Reset(cv::Mat& currentGrayFrame);
 	template <typename DataType>
 	std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
 
@@ -79,13 +81,19 @@ private:
 };
 
 template <typename DataType>
-std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
+void DetectByMaxFilterAndAdptiveThreshold::Reset(cv::Mat& currentGrayFrame)
 {
 	frameNeedDetect = currentGrayFrame;
 	RefreshBlockMap();
 	totalObject = 0;
 	fourLimitsOfAllObjects.clear();
 	fourLimitsAfterMergeObjects.clear();
+}
+
+template <typename DataType>
+std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
+{
+	Reset<DataType>(currentGrayFrame);
 
 	StrengthenIntensityOfBlock<DataType>();
 
@@ -94,7 +102,6 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	Discretization<DataType>();
 
 	GetBlocks<DataType>();
-	fourLimitsOfAllObjects.resize(totalObject);
 
 	Util::GetRectangleSize(blockMap, fourLimitsOfAllObjects);
 
@@ -460,6 +467,7 @@ void DetectByMaxFilterAndAdptiveThreshold::GetBlocks()
 		}
 	}
 	totalObject = currentIndex;
+	fourLimitsOfAllObjects.resize(totalObject);
 }
 
 template <typename DataType>
