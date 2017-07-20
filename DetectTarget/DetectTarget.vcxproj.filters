@@ -87,6 +87,8 @@
     </ClInclude>
     <ClInclude Include="Models\DifferenceElem.hpp">
       <Filter>Models</Filter>
+    <ClInclude Include="PreProcessor\PreProcessor.hpp">
+      <Filter>PreProcessor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -116,6 +118,9 @@
     </Filter>
     <Filter Include="Monitor">
       <UniqueIdentifier>{ea7ff88c-7254-4c12-bb00-3dea163a3ea0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PreProcessor">
+      <UniqueIdentifier>{17dab3c0-c119-40c4-b864-3ae99313c0df}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
