@@ -17,12 +17,15 @@ public:
 	{
 		frameAfterMaxFilter = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
 		frameAfterDiscrezated = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
+		blockMap = Mat(imageHeight, imageWidth, CV_32SC1, cv::Scalar(-1));
 	}
 
 	template <typename DataType>
 	std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
 
 private:
+
+	void RefreshBlockMap();
 
 	void MaxFilter(int kernelSize);
 
@@ -67,6 +70,7 @@ private:
 	cv::Mat frameNeedDetect;
 	cv::Mat frameAfterMaxFilter;
 	cv::Mat frameAfterDiscrezated;
+	cv::Mat blockMap;
 };
 
 template <typename DataType>
@@ -80,7 +84,8 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 
 	Discretization<DataType>();
 
-	cv::Mat blockMap(cv::Size(frameAfterDiscrezated.cols, frameAfterDiscrezated.rows), CV_32SC1, cv::Scalar(-1));
+	RefreshBlockMap();
+
 	auto totalObject = GetBlocks<DataType>(frameAfterDiscrezated, blockMap);
 
 	std::vector<FourLimits> allObjects(totalObject);
@@ -409,6 +414,18 @@ void DetectByMaxFilterAndAdptiveThreshold::GetDiffValueOfMatrixBigThanThreshold(
 
 				SearchNeighbors<DataType>(maxmindiff, diffElemVec, flag, br, bc, static_cast<int>(maxmindiff[br][bc]));
 			}
+		}
+	}
+}
+
+inline void DetectByMaxFilterAndAdptiveThreshold::RefreshBlockMap()
+{
+	for (auto r = 0; r < imageHeight; ++r)
+	{
+		auto ptr = blockMap.ptr<int>(r);
+		for (auto c = 0; c < imageWidth; ++c)
+		{
+			ptr[c] = -1;
 		}
 	}
 }
