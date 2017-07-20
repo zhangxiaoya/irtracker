@@ -7,8 +7,6 @@
 #include "../DifferenceElem.hpp"
 #include "../Utils/PerformanceUtil.hpp"
 
-cv::Mat previousFrame = cv::Mat(cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT), CV_32SC1, cv::Scalar(1));
-
 class DetectByMaxFilterAndAdptiveThreshold
 {
 public:
@@ -34,11 +32,7 @@ private:
 	template <typename DataType>
 	void Discretization();
 
-	void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects);
-
-	void RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result);
-
-	void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
+	void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects) const;
 
 	template <typename DataType>
 	std::vector<std::vector<DataType>> GetMaxMinPixelValueDifferenceMap(cv::Mat& curFrame);
@@ -55,7 +49,7 @@ private:
 	template <typename DataType>
 	void GetDiffValueOfMatrixBigThanThreshold(std::vector<std::vector<DataType>> maxmindiff, std::vector<DifferenceElem>& diffElemVec);
 
-	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
+	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
 	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects);
 
@@ -65,11 +59,8 @@ private:
 	template <typename DataType>
 	void DoubleCheckAfterMerge(const cv::Mat& frame, std::vector<FourLimits>& allObjects) const;
 
-	void FillRectToFrame(cv::Rect& rect);
-
-	bool CheckRect(cv::Rect& rect);
-
 private:
+
 	int imageWidth;
 	int imageHeight;
 
@@ -111,7 +102,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat& curr
 	return rects;
 }
 
-inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond)
+inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const
 {
 	auto firstCenterX = (objectFirst.right + objectFirst.left) / 2;
 	auto firstCenterY = (objectFirst.bottom + objectFirst.top) / 2;
@@ -212,40 +203,7 @@ void DetectByMaxFilterAndAdptiveThreshold::DoubleCheckAfterMerge(const cv::Mat& 
 	RemoveObjectsWithLowContrast<DataType>(allObjects, frame);
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::FillRectToFrame(cv::Rect& rect)
-{
-	for (auto r = rect.y; r < rect.y + rect.height; ++r)
-	{
-		for (auto c = rect.x; c < rect.x + rect.width; ++c)
-		{
-			previousFrame.at<int32_t>(r, c) = 1;
-		}
-	}
-}
-
-inline bool DetectByMaxFilterAndAdptiveThreshold::CheckRect(cv::Rect& rect)
-{
-	auto leftTopX = rect.x - rect.width > 0 ? rect.x - rect.width > 0 : 0;
-	auto leftTopY = rect.y - rect.height > 0 ? rect.y - rect.height > 0 : 0;
-	auto rightBottomX = rect.x + 2 * rect.width < previousFrame.cols ? rect.x + 2 * rect.width : previousFrame.cols - 1;
-	auto rightBottomY = rect.y + 2 * rect.height < previousFrame.rows ? rect.y + 2 * rect.height : previousFrame.rows - 1;
-
-	auto count = 0;
-	for (auto r = leftTopY; r <= rightBottomY; ++r)
-	{
-		for (auto c = leftTopX; c <= rightBottomX; ++c)
-		{
-			if (previousFrame.at<int32_t>(r, c) == 1)
-				++count;
-		}
-	}
-	auto x = static_cast<double>(count) / (rect.width * rect.height * 4);
-	if (x > 0.2)
-		return true;
-	return false;
-}
-
-inline void DetectByMaxFilterAndAdptiveThreshold::MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects)
+inline void DetectByMaxFilterAndAdptiveThreshold::MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects) const
 {
 	for (auto i = 0; i < allObjects.size(); ++i)
 	{
@@ -306,28 +264,6 @@ inline void DetectByMaxFilterAndAdptiveThreshold::MergeCrossedRectangles(std::ve
 		if (allObjects[i].identify != -1)
 			afterMergeObjects.push_back(allObjects[i]);
 	}
-}
-
-inline void DetectByMaxFilterAndAdptiveThreshold::RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result)
-{
-	previousFrame.release();
-	previousFrame = cv::Mat(cv::Size(curFrame.cols, curFrame.rows), CV_32SC1, cv::Scalar(-1));
-	for (auto i = 0; i < result.size(); ++i)
-		FillRectToFrame(result[i]);
-}
-
-inline void DetectByMaxFilterAndAdptiveThreshold::FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result)
-{
-	for (auto it = rects.begin(); it != rects.end(); ++it)
-	{
-		if (CheckRect(*it))
-			result.push_back(*it);
-	}
-
-	if (result.size() >= 2)
-		RefreshMask(curFrame, result);
-	else
-		RefreshMask(curFrame, rects);
 }
 
 template <typename DataType>
@@ -517,4 +453,3 @@ void DetectByMaxFilterAndAdptiveThreshold::Discretization()
 		}
 	}
 }
-
