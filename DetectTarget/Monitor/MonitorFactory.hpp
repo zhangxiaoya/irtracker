@@ -4,10 +4,12 @@
 class MonitorFactory
 {
 public:
-	static cv::Ptr<Monitor> CreateMonitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance);
+	template<typename DataType>
+	static cv::Ptr<Monitor<DataType>> CreateMonitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance);
 };
 
-inline cv::Ptr<Monitor> MonitorFactory::CreateMonitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance)
+template <typename DataType>
+cv::Ptr<Monitor<DataType>> MonitorFactory::CreateMonitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance)
 {
-	return new Monitor(frameSource, framePersistance);
+	return new Monitor<DataType>(frameSource, framePersistance);
 }
