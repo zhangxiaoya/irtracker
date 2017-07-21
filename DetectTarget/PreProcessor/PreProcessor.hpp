@@ -11,11 +11,11 @@ class PreProcessor
 public:
 	PreProcessor();
 
-	PreProcessor(unsigned int image_width, unsigned int image_height);
+	PreProcessor(int image_width, int image_height);
 
 	void InitParameters();
 
-	void SetSourceFrame(const cv::Mat& frame);
+	void SetSourceFrame(cv::Mat& frame);
 
 	void SetBlockSize(int blockSize);
 
@@ -32,6 +32,8 @@ private:
 
 	void UpdateConfigure();
 
+	void AssertGray();
+
 public:
 
 	void Dilate(cv::Mat& resultFrame) const;
@@ -42,7 +44,7 @@ public:
 
 	void Smooth(cv::Mat& resultFrame);
 
-	void SetDilationKernelSize(const unsigned int& kernelSize);
+	void SetDilationKernelSize(const int& kernelSize);
 
 	void StrengthenIntensityOfBlock();
 
@@ -79,7 +81,7 @@ PreProcessor<DataType>::PreProcessor()
 }
 
 template <typename DataType>
-PreProcessor<DataType>::PreProcessor(unsigned image_width, unsigned image_height)
+PreProcessor<DataType>::PreProcessor(int image_width, int image_height)
 	: imageWidth(image_width),
 	imageHeight(image_height),
 	dilateKernelSize(0),
@@ -101,16 +103,10 @@ void PreProcessor<DataType>::InitParameters()
 }
 
 template <typename DataType>
-void PreProcessor<DataType>::SetSourceFrame(const cv::Mat& frame)
+void PreProcessor<DataType>::SetSourceFrame(cv::Mat& frame)
 {
-	if (frame.channels() == 3)
-	{
-		cvtColor(frame, this->sourceFrame, CV_RGB2GRAY);
-	}
-	else
-	{
-		sourceFrame = frame;
-	}
+	sourceFrame = frame;
+	AssertGray();
 }
 
 template <typename DataType>
@@ -245,6 +241,16 @@ void PreProcessor<DataType>::UpdateConfigure()
 }
 
 template <typename DataType>
+void PreProcessor<DataType>::AssertGray()
+{
+	if (sourceFrame.channels() != 1)
+	{
+		std::cout << "Error => The input image must be gray!" << std::endl;
+		sourceFrame = cv::Mat();
+	}
+}
+
+template <typename DataType>
 void PreProcessor<DataType>::Dilate(cv::Mat& resultFrame) const
 {
 	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(dilateKernelSize, dilateKernelSize));
@@ -267,7 +273,7 @@ void PreProcessor<DataType>::Smooth(cv::Mat& resultFrame)
 }
 
 template <typename DataType>
-void PreProcessor<DataType>::SetDilationKernelSize(const unsigned int& kernelSize)
+void PreProcessor<DataType>::SetDilationKernelSize(const int& kernelSize)
 {
 	this->dilateKernelSize = kernelSize;
 }

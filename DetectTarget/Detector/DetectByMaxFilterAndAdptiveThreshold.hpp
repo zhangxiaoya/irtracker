@@ -6,6 +6,7 @@
 #include "../Utils/Util.hpp"
 #include "../Utils/PerformanceUtil.hpp"
 #include "../Models/DifferenceElem.hpp"
+#include "../PreProcessor/PreProcesssorFactory.hpp"
 
 template <class DataType>
 class DetectByMaxFilterAndAdptiveThreshold
@@ -17,6 +18,7 @@ public:
 		  imageHeight(image_height),
 		  totalObject(0)
 	{
+		preprocessor = PreProcessorFactory::CreatePreProcessor<DataType>(image_width, image_height);
 		frameAfterMaxFilter = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
 		frameAfterDiscrezated = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
 		blockMap = Mat(imageHeight, imageWidth, CV_32SC1, cv::Scalar(-1));
@@ -69,6 +71,7 @@ private:
 	cv::Mat frameAfterMaxFilter;
 	cv::Mat frameAfterDiscrezated;
 	cv::Mat blockMap;
+	cv::Ptr<PreProcessor<DataType>> preprocessor;
 };
 
 template <typename DataType>
@@ -80,6 +83,8 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::Reset(cv::Mat& currentGrayF
 	totalObject = 0;
 	fourLimitsOfAllObjects.clear();
 	fourLimitsAfterMergeObjects.clear();
+
+	preprocessor->SetSourceFrame(frameNeedDetect);
 }
 
 template <typename DataType>
@@ -87,7 +92,8 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 {
 	Reset(currentGrayFrame);
 
-	StrengthenIntensityOfBlock();
+//	StrengthenIntensityOfBlock();
+	preprocessor->StrengthenIntensityOfBlock();
 
 	MaxFilter(DilateKernelSize);
 

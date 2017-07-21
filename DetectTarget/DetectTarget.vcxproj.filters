@@ -91,6 +91,9 @@
     <ClInclude Include="FrameSource\ImageListReader\ImageListReaderBase.hpp">
       <Filter>FrameSource\ImageListReader</Filter>
     </ClInclude>
+    <ClInclude Include="PreProcessor\PreProcesssorFactory.hpp">
+      <Filter>PreProcessor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Monitor">

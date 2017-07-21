@@ -145,6 +145,7 @@
     <ClInclude Include="Monitor\Monitor.hpp" />
     <ClInclude Include="Monitor\MonitorFactory.hpp" />
     <ClInclude Include="PreProcessor\PreProcessor.hpp" />
+    <ClInclude Include="PreProcessor\PreProcesssorFactory.hpp" />
     <ClInclude Include="Tracker\TargetTracker.hpp" />
     <ClInclude Include="Utils\ConfidenceMapUtil.hpp" />
     <ClInclude Include="Utils\GlobalInitialUtil.hpp" />
