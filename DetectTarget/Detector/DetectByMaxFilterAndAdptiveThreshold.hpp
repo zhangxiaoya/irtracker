@@ -95,7 +95,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 
 	GetBlocks();
 
-	Util::GetRectangleSize(blockMap, fourLimitsOfAllObjects);
+	Util<DataType>::GetRectangleSize(blockMap, fourLimitsOfAllObjects);
 
 	RemoveSmallAndBigObjects();
 
@@ -105,7 +105,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 
 	DoubleCheckAfterMerge();
 
-	auto rects = Util::GetCandidateTargets(fourLimitsAfterMergeObjects);
+	auto rects = Util<DataType>::GetCandidateTargets(fourLimitsAfterMergeObjects);
 
 	preprocessResultFrame = frameAfterDiscrezated;
 
@@ -193,9 +193,9 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveObjectsWithLowContras
 			rightBottomY = imageHeight;
 		}
 
-		Util::CalculateThreshHold<DataType>(frameAfterDiscrezated, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
+		Util<DataType>::CalculateThreshHold(frameAfterDiscrezated, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
-		Util::CalCulateCenterValue<DataType>(frameAfterDiscrezated, centerValue, cv::Rect(it->left, it->top, it->right - it->left + 1, it->bottom - it->top + 1));
+		Util<DataType>::CalCulateCenterValue(frameAfterDiscrezated, centerValue, cv::Rect(it->left, it->top, it->right - it->left + 1, it->bottom - it->top + 1));
 
 		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(threshold)) < 3)
 		{
@@ -290,8 +290,8 @@ std::vector<std::vector<DataType>> DetectByMaxFilterAndAdptiveThreshold<DataType
 		{
 			auto width = bc == (countX - 1) ? IMAGE_WIDTH - (countX - 1) * BLOCK_SIZE : BLOCK_SIZE;
 			maxmindiff[br][bc] =
-				Util::GetMaxValueOfBlock<DataType>(frameNeedDetect(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height))) -
-				Util::GetMinValueOfBlock<DataType>(frameNeedDetect(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height)));
+				Util<DataType>::GetMaxValueOfBlock(frameNeedDetect(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height))) -
+				Util<DataType>::GetMinValueOfBlock(frameNeedDetect(cv::Rect(bc * BLOCK_SIZE, br * BLOCK_SIZE, width, height)));
 		}
 	}
 	return maxmindiff;
@@ -313,7 +313,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::StrengthenIntensityOfBlock(
 		auto boundingBoxRightBottomX = centerX + BLOCK_SIZE < IMAGE_WIDTH ? centerX + BLOCK_SIZE : IMAGE_WIDTH - 1;
 		auto boundingBoxRightBottomY = centerY + BLOCK_SIZE < IMAGE_HEIGHT ? centerY + BLOCK_SIZE : IMAGE_HEIGHT - 1;
 
-		auto averageValue = Util::CalculateAverageValue<DataType>(frameNeedDetect, boundingBoxLeftTopX, boundingBoxLeftTopY, boundingBoxRightBottomX, boundingBoxRightBottomY);
+		auto averageValue = Util<DataType>::CalculateAverageValue(frameNeedDetect, boundingBoxLeftTopX, boundingBoxLeftTopY, boundingBoxRightBottomX, boundingBoxRightBottomY);
 
 		auto maxdiffBlockRightBottomX = (elem.blockX + 1) * BLOCK_SIZE > IMAGE_WIDTH ? IMAGE_WIDTH - 1 : (elem.blockX + 1) * BLOCK_SIZE;
 		auto maxdiffBlockRightBottomY = (elem.blockY + 1) * BLOCK_SIZE > IMAGE_HEIGHT ? IMAGE_HEIGHT - 1 : (elem.blockY + 1) * BLOCK_SIZE;
@@ -460,7 +460,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetBlocks()
 				continue;
 
 			auto val = frameRowPtr[c];
-			Util::FindNeighbor<DataType>(frameAfterDiscrezated, blockMap, r, c, currentIndex++, FieldType::Four, val);
+			Util<DataType>::FindNeighbor(frameAfterDiscrezated, blockMap, r, c, currentIndex++, FieldType::Four, val);
 		}
 	}
 	totalObject = currentIndex;
