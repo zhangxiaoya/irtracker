@@ -4,8 +4,8 @@
 #include <filesystem>
 #include "../Models/FourLimits.hpp"
 #include "../Utils/Util.hpp"
-#include "../DifferenceElem.hpp"
 #include "../Utils/PerformanceUtil.hpp"
+#include "../Models/DifferenceElem.hpp"
 
 template <class DataType>
 class DetectByMaxFilterAndAdptiveThreshold

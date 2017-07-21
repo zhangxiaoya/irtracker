@@ -43,9 +43,6 @@
     <ClInclude Include="Headers\GlobalConstantConfigure.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="DifferenceElem.hpp">
-      <Filter>Models</Filter>
-    </ClInclude>
     <ClInclude Include="Models\DrawResultType.hpp">
       <Filter>Models</Filter>
     </ClInclude>
@@ -87,6 +84,9 @@
     </ClInclude>
     <ClInclude Include="Monitor\MonitorFactory.hpp">
       <Filter>Monitor</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\DifferenceElem.hpp">
+      <Filter>Models</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
