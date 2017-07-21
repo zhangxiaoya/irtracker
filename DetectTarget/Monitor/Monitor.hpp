@@ -6,6 +6,7 @@
 #include "../Models/DrawResultType.hpp"
 #include "../FramePersistance/FramePersistance.hpp"
 
+template <typename DataType>
 class Monitor
 {
 public:
@@ -52,23 +53,26 @@ private:
 	cv::Ptr<FrameSource> frameSource;
 	cv::Ptr<FramePersistance> framePersistance;
 
-	DetectByMaxFilterAndAdptiveThreshold<uchar>* detector;
+	DetectByMaxFilterAndAdptiveThreshold<DataType>* detector;
 };
 
-inline Monitor::Monitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance): frameIndex(0)
+template <typename DataType>
+Monitor<DataType>::Monitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance): frameIndex(0)
 {
 	this->framePersistance = framePersistance;
 	this->frameSource = frameSource;
 
-	this->detector = new DetectByMaxFilterAndAdptiveThreshold<uchar>(IMAGE_WIDTH,IMAGE_HEIGHT);
+	this->detector = new DetectByMaxFilterAndAdptiveThreshold<DataType>(IMAGE_WIDTH,IMAGE_HEIGHT);
 }
 
-inline Monitor::~Monitor()
+template <typename DataType>
+Monitor<DataType>::~Monitor()
 {
 	delete detector;
 }
 
-inline void Monitor::ConvertToGray()
+template <typename DataType>
+void Monitor<DataType>::ConvertToGray()
 {
 	if (SpecialUtil::CheckFrameIsGray(curFrame, grayFrame))
 	{
@@ -80,7 +84,8 @@ inline void Monitor::ConvertToGray()
 	}
 }
 
-inline std::vector<cv::Rect> Monitor::Tracking(std::vector<cv::Rect> targetRects) const
+template <typename DataType>
+std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRects) const
 {
 	std::vector<cv::Rect> trackingResult = {};
 	for (auto rect : targetRects)
@@ -100,12 +105,14 @@ inline std::vector<cv::Rect> Monitor::Tracking(std::vector<cv::Rect> targetRects
 	return trackingResult;
 }
 
-inline void Monitor::GetPreprocessedResult(const Mat& mat)
+template <typename DataType>
+void Monitor<DataType>::GetPreprocessedResult(const Mat& mat)
 {
 	cvtColor(mat, preprocessResultFrame, CV_GRAY2RGB);
 }
 
-inline void Monitor::GetDetectedResult(std::vector<cv::Rect> targetRects)
+template <typename DataType>
+void Monitor<DataType>::GetDetectedResult(std::vector<cv::Rect> targetRects)
 {
 	colorFrame.copyTo(detectedResultFrame);
 
@@ -115,7 +122,8 @@ inline void Monitor::GetDetectedResult(std::vector<cv::Rect> targetRects)
 	}
 }
 
-inline void Monitor::GetTrackedResult(std::vector<cv::Rect> trackedTargetRects)
+template <typename DataType>
+void Monitor<DataType>::GetTrackedResult(std::vector<cv::Rect> trackedTargetRects)
 {
 	colorFrame.copyTo(trackedResultFrame);
 
@@ -125,7 +133,8 @@ inline void Monitor::GetTrackedResult(std::vector<cv::Rect> trackedTargetRects)
 	}
 }
 
-inline void Monitor::CombineResultFrames()
+template <typename DataType>
+void Monitor<DataType>::CombineResultFrames()
 {
 	Mat combinedResultFrame(colorFrame.rows * 2 + 1, colorFrame.cols * 2 + 1, CV_8UC3);
 
@@ -157,7 +166,9 @@ inline void Monitor::CombineResultFrames()
 	waitKey(10);
 }
 
-inline void Monitor::Process()
+
+template <typename DataType>
+void Monitor<DataType>::Process()
 {
 	while (!curFrame.empty() || frameIndex == 0)
 	{
@@ -186,7 +197,8 @@ inline void Monitor::Process()
 	}
 }
 
-inline bool Monitor::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& rect) const
+template <typename DataType>
+bool Monitor<DataType>::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& rect) const
 {
 	auto centerX = rect.x + rect.width / 2;
 	auto centerY = rect.y + rect.height / 2;
@@ -199,8 +211,8 @@ inline bool Monitor::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, co
 	auto boxRightBottomX = centerX + surroundingBoxWidth / 2 < IMAGE_WIDTH ? centerX + surroundingBoxWidth / 2 : IMAGE_WIDTH - 1;
 	auto boxRightBottomY = centerY + surroundingBoxHeight / 2 < IMAGE_HEIGHT ? centerY + surroundingBoxHeight / 2 : IMAGE_HEIGHT - 1;
 
-	auto avgValOfSurroundingBox = Util::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
-	auto avgValOfCurrentRect = Util::AverageValue(grayFrame, rect);
+	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
+	auto avgValOfCurrentRect = Util<DataType>::AverageValue(grayFrame, rect);
 
 	auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 17;
 	auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 20;
@@ -208,8 +220,8 @@ inline bool Monitor::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, co
 	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
 		return false;
 
-	uchar centerValue = 0;
-	Util::CalCulateCenterValue(grayFrame, centerValue, rect);
+	DataType centerValue = 0;
+	Util<DataType>::CalCulateCenterValue(grayFrame, centerValue, rect);
 
 	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold || centerValue > convexThreshold || centerValue < concaveThreshold)
 	{
@@ -218,7 +230,8 @@ inline bool Monitor::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, co
 	return false;
 }
 
-inline bool Monitor::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect) const
+template <typename DataType>
+bool Monitor<DataType>::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect) const
 {
 	auto centerX = rect.x + rect.width / 2;
 	auto centerY = rect.y + rect.height / 2;
@@ -228,8 +241,8 @@ inline bool Monitor::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, c
 	auto boxRightBottomX = centerX + 2 * rect.width / 2 < IMAGE_WIDTH ? centerX + 2 * rect.width / 2 : IMAGE_WIDTH - 1;
 	auto boxRightBottomY = centerY + 2 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 2 * rect.height / 2 : IMAGE_HEIGHT - 1;
 
-	auto avgValOfSurroundingBox = Util::AverageValue(fdImg, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
-	auto avgValOfCurrentRect = Util::AverageValue(fdImg, rect);
+	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(fdImg, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
+	auto avgValOfCurrentRect = Util<DataType>::AverageValue(fdImg, rect);
 
 	auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 8;
 	auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 10;
@@ -237,8 +250,8 @@ inline bool Monitor::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, c
 	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
 		return false;
 
-	uchar centerValue = 0;
-	Util::CalCulateCenterValue(fdImg, centerValue, rect);
+	DataType centerValue = 0;
+	Util<DataType>::CalCulateCenterValue(fdImg, centerValue, rect);
 
 	if (avgValOfCurrentRect > convexThreshold || avgValOfCurrentRect < concaveThreshold || centerValue > convexThreshold || centerValue < concaveThreshold)
 	{
@@ -247,7 +260,8 @@ inline bool Monitor::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, c
 	return false;
 }
 
-inline bool Monitor::CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rect) const
+template <typename DataType>
+bool Monitor<DataType>::CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rect) const
 {
 	auto curBlockX = rect.x / BLOCK_SIZE;
 	auto curBlockY = rect.y / BLOCK_SIZE;
@@ -255,11 +269,11 @@ inline bool Monitor::CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rect) 
 	if (curBlockX - 1 < 0 || curBlockX + 1 > countX || curBlockY - 1 < 0 || curBlockY + 1 > countY)
 		return false;
 
-	auto upAvg = Util::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY - 1);
-	auto downAvg = Util::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY + 1);
+	auto upAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY - 1);
+	auto downAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY + 1);
 
-	auto leftAvg = Util::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY - 1);
-	auto rightAvg = Util::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY + 1);
+	auto leftAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY - 1);
+	auto rightAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY + 1);
 
 	if (abs(static_cast<int>(upAvg) - static_cast<int>(downAvg)) > 8)
 		return false;
@@ -270,7 +284,8 @@ inline bool Monitor::CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rect) 
 	return true;
 }
 
-inline void Monitor::DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType) const
+template <typename DataType>
+void Monitor<DataType>::DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType) const
 {
 	auto left = rect.x - 2 < 0 ? 0 : rect.x - 2;
 	auto top = rect.y - 2 < 0 ? 0 : rect.y - 2;
@@ -318,7 +333,8 @@ inline void Monitor::DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawR
 	}
 }
 
-inline void Monitor::DrawHalfRectangle(cv::Mat& colorFrame, const int left, const int top, const int right, const int bottom, const cv::Scalar& lineColor)
+template <typename DataType>
+void Monitor<DataType>::DrawHalfRectangle(cv::Mat& colorFrame, const int left, const int top, const int right, const int bottom, const cv::Scalar& lineColor)
 {
 	line(colorFrame, cv::Point(left, top), cv::Point(left, top + 3), lineColor, 1, CV_AA);
 	line(colorFrame, cv::Point(left, top), cv::Point(left + 3, top), lineColor, 1, CV_AA);
