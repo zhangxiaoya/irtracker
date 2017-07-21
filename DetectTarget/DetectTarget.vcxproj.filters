@@ -4,26 +4,47 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Models\ConfidenceElem.hpp">
+    <ClInclude Include="FrameSource\CaptureFrameSource.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameSource\EmptyFrameSource.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Util.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\PerformanceUtil.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\ConfidenceMapUtil.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\FourLimits.hpp">
       <Filter>Models</Filter>
     </ClInclude>
     <ClInclude Include="Models\FieldType.hpp">
       <Filter>Models</Filter>
     </ClInclude>
-    <ClInclude Include="Models\FourLimits.hpp">
-      <Filter>Models</Filter>
+    <ClInclude Include="Monitor\Monitor.hpp">
+      <Filter>Monitor</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\ConfidenceMapUtil.hpp">
-      <Filter>Utils</Filter>
+    <ClInclude Include="Monitor\MonitorFactory.hpp">
+      <Filter>Monitor</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\GlobalInitialUtil.hpp">
-      <Filter>Utils</Filter>
+    <ClInclude Include="PreProcessor\PreProcessor.hpp">
+      <Filter>PreProcessor</Filter>
     </ClInclude>
     <ClInclude Include="Utils\SpecialUtil.hpp">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\Util.hpp">
-      <Filter>Utils</Filter>
+    <ClInclude Include="FrameSource\VideoFrameSource.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\ConfidenceElem.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Models\DifferenceElem.hpp">
+      <Filter>Models</Filter>
     </ClInclude>
     <ClInclude Include="Detector\DetectByBinaryBitMap.hpp">
       <Filter>Detector</Filter>
@@ -37,90 +58,70 @@
     <ClInclude Include="Detector\DetectByMultiscaleLocalDifference.hpp">
       <Filter>Detector</Filter>
     </ClInclude>
+    <ClInclude Include="Models\DrawResultType.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="FramePersistance\FramePersistance.hpp">
+      <Filter>FramePersistance</Filter>
+    </ClInclude>
+    <ClInclude Include="FramePersistance\FramePersistanceFactory.hpp">
+      <Filter>FramePersistance</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameSource\FrameSource.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameSource\FrameSourceFactory.hpp">
+      <Filter>FrameSource</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\GlobalInitialUtil.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
     <ClInclude Include="Tracker\TargetTracker.hpp">
       <Filter>Tracker</Filter>
     </ClInclude>
     <ClInclude Include="Headers\GlobalConstantConfigure.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Models\DrawResultType.hpp">
-      <Filter>Models</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\PerformanceUtil.hpp">
-      <Filter>Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameSource\FrameSource.hpp">
-      <Filter>FrameSource</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameSource\EmptyFrameSource.hpp">
-      <Filter>FrameSource</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameSource\FrameSourceFactory.hpp">
-      <Filter>FrameSource</Filter>
-    </ClInclude>
     <ClInclude Include="FrameSource\ImageListFrameSource.hpp">
       <Filter>FrameSource</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameSource\ImageListReader\ImageListReaderBase.hpp">
-      <Filter>FrameSource\ImageListReader</Filter>
     </ClInclude>
     <ClInclude Include="FrameSource\ImageListReader\ImageListReader.hpp">
       <Filter>FrameSource\ImageListReader</Filter>
     </ClInclude>
-    <ClInclude Include="FrameSource\VideoFrameSource.hpp">
-      <Filter>FrameSource</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameSource\CaptureFrameSource.hpp">
-      <Filter>FrameSource</Filter>
-    </ClInclude>
-    <ClInclude Include="FramePersistance\FramePersistance.hpp">
-      <Filter>FramePersistace</Filter>
-    </ClInclude>
-    <ClInclude Include="FramePersistance\FramePersistanceFactory.hpp">
-      <Filter>FramePersistace</Filter>
-    </ClInclude>
-    <ClInclude Include="Monitor\Monitor.hpp">
-      <Filter>Monitor</Filter>
-    </ClInclude>
-    <ClInclude Include="Monitor\MonitorFactory.hpp">
-      <Filter>Monitor</Filter>
-    </ClInclude>
-    <ClInclude Include="Models\DifferenceElem.hpp">
-      <Filter>Models</Filter>
-    <ClInclude Include="PreProcessor\PreProcessor.hpp">
-      <Filter>PreProcessor</Filter>
+    <ClInclude Include="FrameSource\ImageListReader\ImageListReaderBase.hpp">
+      <Filter>FrameSource\ImageListReader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Models">
-      <UniqueIdentifier>{37dec2b2-2ec3-416c-88d8-95a7f9754a37}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Utils">
-      <UniqueIdentifier>{56d480ae-9d40-4351-8f49-176934233426}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Detector">
-      <UniqueIdentifier>{a61b7386-7c44-4f4c-9e8f-df1a15942d5a}</UniqueIdentifier>
+    <Filter Include="Monitor">
+      <UniqueIdentifier>{030966b3-a0d4-4935-a9c0-f9d1f5df1a51}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tracker">
-      <UniqueIdentifier>{4d593a0c-3d0f-4998-83af-31b1e081e2d4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Headers">
-      <UniqueIdentifier>{284cd885-f466-4290-ba0b-28c508c41a49}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="FrameSource">
-      <UniqueIdentifier>{031905c7-15db-4e6d-95eb-c62ba7a2c83f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="FrameSource\ImageListReader">
-      <UniqueIdentifier>{4743ddfb-0824-4e12-9cef-ac8d0ff264a0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="FramePersistace">
-      <UniqueIdentifier>{7144ee5e-062d-42d2-ae35-5a67ddde221e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Monitor">
-      <UniqueIdentifier>{ea7ff88c-7254-4c12-bb00-3dea163a3ea0}</UniqueIdentifier>
+      <UniqueIdentifier>{1825e278-866e-45dc-b83a-fc598048aff0}</UniqueIdentifier>
     </Filter>
     <Filter Include="PreProcessor">
-      <UniqueIdentifier>{17dab3c0-c119-40c4-b864-3ae99313c0df}</UniqueIdentifier>
+      <UniqueIdentifier>{add153f4-c6d1-4d38-ae8b-c9f3340b2fa2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FrameSource">
+      <UniqueIdentifier>{13ed7c2e-05e2-43cf-973b-4fb0be369ccf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FramePersistance">
+      <UniqueIdentifier>{1f38e67b-3151-4ae0-9c2d-ae3f4ee61d18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{99b377b0-f4bd-40c6-bcaa-6e50111f1e86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{da624d20-b397-4e52-9ba4-4150d531964c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models">
+      <UniqueIdentifier>{9ae40aae-a478-4559-9958-a59a2b4e0dca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Detector">
+      <UniqueIdentifier>{d5653c2c-f653-49e7-b162-156701284498}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FrameSource\ImageListReader">
+      <UniqueIdentifier>{993a16ca-8a6e-4ca4-aea3-892f31e6aaee}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
