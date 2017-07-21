@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 
 	auto framePersistance = FramePersistanceFactory::createFramePersistance(GlobalWriteFileNameFormat);
 
-	auto monitor = MonitorFactory::CreateMonitor(frameSource, framePersistance);
+	auto monitor = MonitorFactory::CreateMonitor<uchar>(frameSource, framePersistance);
 
 	if (ImageListReadFlag == true)
 	{

@@ -2,6 +2,7 @@
 #include <vector>
 #include <core/core.hpp>
 #include "../Models/ConfidenceElem.hpp"
+#include "../Headers/GlobalConstantConfigure.h"
 
 class ConfidenceMapUtil
 {
