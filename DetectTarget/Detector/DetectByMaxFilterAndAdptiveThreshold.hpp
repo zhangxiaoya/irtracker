@@ -24,7 +24,7 @@ public:
 		blockMap = Mat(imageHeight, imageWidth, CV_32SC1, cv::Scalar(-1));
 	}
 
-	void Reset(cv::Mat& currentGrayFrame);
+	void Reload(cv::Mat& currentGrayFrame);
 
 	std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
 
@@ -75,7 +75,7 @@ private:
 };
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold<DataType>::Reset(cv::Mat& currentGrayFrame)
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::Reload(cv::Mat& currentGrayFrame)
 {
 	frameNeedDetect = currentGrayFrame;
 
@@ -90,7 +90,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::Reset(cv::Mat& currentGrayF
 template <typename DataType>
 std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
 {
-	Reset(currentGrayFrame);
+	Reload(currentGrayFrame);
 
 //	StrengthenIntensityOfBlock();
 	preprocessor->StrengthenIntensityOfBlock();
