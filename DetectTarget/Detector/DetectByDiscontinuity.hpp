@@ -6,26 +6,43 @@
 
 const auto CONTIUNITY_THRESHHOLD = 0.4;
 
+template <typename DataType>
 class DetectByDiscontinuity
 {
 public:
-
-	static void Detect(cv::Mat curFrame);
+	static void Detect(cv::Mat frame);
 
 private:
-
-	static bool CheckDiscontinuity(const cv::Mat& cur_frame, const cv::Point& leftTop);
+	static bool CheckDiscontinuity(const cv::Mat& frame, const cv::Point& leftTop);
 };
 
-inline bool DetectByDiscontinuity::CheckDiscontinuity(const cv::Mat& frame, const cv::Point& leftTop)
+template <typename DataType>
+void DetectByDiscontinuity<DataType>::Detect(cv::Mat frame)
+{
+	std::vector<cv::Rect> candidateRects;
+
+	for (auto r = 0; r < frame.rows - SEARCH_WINDOW_HEIGHT + 1; ++r)
+	{
+		for (auto c = 0; c < frame.cols - SEARCH_WINDOW_WIDTH + 1; ++c)
+		{
+			if (CheckDiscontinuity(frame, cv::Point(c, r)))
+				candidateRects.push_back(cv::Rect(c, r, SEARCH_WINDOW_WIDTH, SEARCH_WINDOW_HEIGHT));
+		}
+	}
+
+	Util<DataType>::ShowCandidateRects(frame, candidateRects);
+}
+
+template <typename DataType>
+bool DetectByDiscontinuity<DataType>::CheckDiscontinuity(const cv::Mat& frame, const cv::Point& leftTop)
 {
 	auto curRect = cv::Rect(leftTop.x, leftTop.y, SEARCH_WINDOW_WIDTH, SEARCH_WINDOW_HEIGHT);
 	cv::Mat curMat;
 	frame(curRect).copyTo(curMat);
 
-	auto regionMean = Util::MeanMat(curMat);
+	auto regionMean = Util<DataType>::MeanMat(curMat);
 
-	Util::BinaryMat(curMat);
+	Util<DataType>::BinaryMat(curMat);
 
 	auto rowTop = leftTop.y - 1;
 	auto rowBottom = leftTop.y + SEARCH_WINDOW_HEIGHT;
@@ -93,20 +110,4 @@ inline bool DetectByDiscontinuity::CheckDiscontinuity(const cv::Mat& frame, cons
 	return std::abs(roundMean - regionMean) > 2 && regionMean > THRESHOLD;
 
 	//	return static_cast<double>(continuityCount) / totalCount < CONTIUNITY_THRESHHOLD;
-}
-
-inline void DetectByDiscontinuity::Detect(cv::Mat curFrame)
-{
-	std::vector<cv::Rect> candidateRects;
-
-	for (auto r = 0; r < curFrame.rows - SEARCH_WINDOW_HEIGHT + 1; ++r)
-	{
-		for (auto c = 0; c < curFrame.cols - SEARCH_WINDOW_WIDTH + 1; ++c)
-		{
-			if (CheckDiscontinuity(curFrame, cv::Point(c, r)))
-				candidateRects.push_back(cv::Rect(c, r, SEARCH_WINDOW_WIDTH, SEARCH_WINDOW_HEIGHT));
-		}
-	}
-
-	Util::ShowCandidateRects(curFrame, candidateRects);
 }
