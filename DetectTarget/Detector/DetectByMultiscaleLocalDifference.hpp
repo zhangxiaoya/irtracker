@@ -4,19 +4,18 @@
 #include <iostream>
 #include "../Utils/Util.hpp"
 
+template <typename DatType>
 class DetectByMultiScaleLocalDifference
 {
 public:
-
 	static void Detect(cv::Mat curFrame);
 
 private:
-
 	static std::vector<unsigned char>::value_type&& GetAverageGrayValueOfKNeighbor(const cv::Mat& curFrame, int r, int c, int i);
-
 };
 
-inline void DetectByMultiScaleLocalDifference::Detect(cv::Mat curFrame)
+template <typename DatType>
+void DetectByMultiScaleLocalDifference<DatType>::Detect(cv::Mat curFrame)
 {
 	cv::Mat mldFilterFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1, cv::Scalar(0));
 
@@ -33,8 +32,8 @@ inline void DetectByMultiScaleLocalDifference::Detect(cv::Mat curFrame)
 			for (auto i = 1; i <= L; ++i)
 				averageOfKNeighbor.push_back(GetAverageGrayValueOfKNeighbor(curFrame, r, c, i));
 
-			auto maxVal = Util::MaxOfVector(averageOfKNeighbor.begin(), averageOfKNeighbor.end());
-			auto minVal = Util::MinOfVector(averageOfKNeighbor.begin(), averageOfKNeighbor.end());
+			auto maxVal = Util<DatType>::MaxOfVector(averageOfKNeighbor, 0, averageOfKNeighbor.size());
+			auto minVal = Util<DatType>::MinOfVector(averageOfKNeighbor, 0, averageOfKNeighbor.size());
 
 			auto squareDiff = (maxVal - minVal) * (maxVal - minVal);
 
@@ -52,14 +51,15 @@ inline void DetectByMultiScaleLocalDifference::Detect(cv::Mat curFrame)
 
 			contrastOfKNeighbor.push_back(0);
 
-			mldFilterFrame.at<uchar>(r, c) = Util::MaxOfVector(contrastOfKNeighbor.begin(), contrastOfKNeighbor.end());
+			mldFilterFrame.at<uchar>(r, c) = Util<DatType>::MaxOfVector(contrastOfKNeighbor, 0, contrastOfKNeighbor.size());
 		}
 	}
 
 	imshow("Map", mldFilterFrame);
 }
 
-inline std::vector<unsigned char>::value_type&& DetectByMultiScaleLocalDifference::GetAverageGrayValueOfKNeighbor(const cv::Mat& curFrame, int r, int c, int i)
+template <typename DatType>
+std::vector<unsigned char>::value_type&& DetectByMultiScaleLocalDifference<DatType>::GetAverageGrayValueOfKNeighbor(const cv::Mat& curFrame, int r, int c, int i)
 {
 	auto radius = i;
 	auto leftTopX = c - i;
