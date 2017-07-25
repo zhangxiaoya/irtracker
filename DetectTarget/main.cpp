@@ -14,6 +14,11 @@ void Cleaner()
 	system("pause");
 }
 
+void PrintLogs(string text)
+{
+	std::cout << text << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
 	InitGlobalConfigure();
@@ -26,13 +31,13 @@ int main(int argc, char* argv[])
 
 	if (ImageListReadFlag == true)
 	{
-		std::cout << "Open Image List Success!" << std::endl;
+		PrintLogs("Open Image List Success!");
 
 		monitor->Process();
 	}
 	else
 	{
-		std::cout << "Open Image List Failed" << std::endl;
+		PrintLogs("Open Image List Failed");
 	}
 
 	Cleaner();
