@@ -7,6 +7,7 @@
 #include "FramePersistance/FramePersistanceFactory.hpp"
 #include "Monitor/Monitor.hpp"
 #include "Monitor/MonitorFactory.hpp"
+#include "Models/LogLevel.hpp"
 
 void Cleaner()
 {
@@ -14,8 +15,32 @@ void Cleaner()
 	system("pause");
 }
 
-void PrintLogs(string text)
+void PrintLogs(string text, LogLevel logLevel)
 {
+	switch (logLevel)
+	{
+	case LogLevel::Error:
+		{
+			std::cout << "ERROR => ";
+			break;
+		}
+	case LogLevel::Info:
+		{
+			std::cout << "INFO => ";
+			break;
+		}
+	case LogLevel::Waring:
+		{
+			std::cout << "WARNING => ";
+			break;
+		}
+	default:
+		{
+			std::cout << "Not Defined => ";
+			break;
+		};
+	}
+
 	std::cout << text << std::endl;
 }
 
@@ -31,13 +56,13 @@ int main(int argc, char* argv[])
 
 	if (ImageListReadFlag == true)
 	{
-		PrintLogs("Open Image List Success!");
+		PrintLogs("Open Image List Success!", LogLevel::Info);
 
 		monitor->Process();
 	}
 	else
 	{
-		PrintLogs("Open Image List Failed");
+		PrintLogs("Open Image List Failed", LogLevel::Error);
 	}
 
 	Cleaner();

@@ -94,6 +94,9 @@
     <ClInclude Include="PreProcessor\PreProcesssorFactory.hpp">
       <Filter>PreProcessor</Filter>
     </ClInclude>
+    <ClInclude Include="Models\LogLevel.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Monitor">
