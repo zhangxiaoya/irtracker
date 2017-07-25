@@ -32,8 +32,8 @@ void DetectByMultiScaleLocalDifference<DatType>::Detect(cv::Mat curFrame)
 			for (auto i = 1; i <= L; ++i)
 				averageOfKNeighbor.push_back(GetAverageGrayValueOfKNeighbor(curFrame, r, c, i));
 
-			auto maxVal = Util<DatType>::MaxOfVector(averageOfKNeighbor.begin(), averageOfKNeighbor.end());
-			auto minVal = Util<DatType>::MinOfVector(averageOfKNeighbor.begin(), averageOfKNeighbor.end());
+			auto maxVal = Util<DatType>::MaxOfVector(averageOfKNeighbor, 0, averageOfKNeighbor.size());
+			auto minVal = Util<DatType>::MinOfVector(averageOfKNeighbor, 0, averageOfKNeighbor.size());
 
 			auto squareDiff = (maxVal - minVal) * (maxVal - minVal);
 
@@ -51,7 +51,7 @@ void DetectByMultiScaleLocalDifference<DatType>::Detect(cv::Mat curFrame)
 
 			contrastOfKNeighbor.push_back(0);
 
-			mldFilterFrame.at<uchar>(r, c) = Util<DatType>::MaxOfVector(contrastOfKNeighbor.begin(), contrastOfKNeighbor.end());
+			mldFilterFrame.at<uchar>(r, c) = Util<DatType>::MaxOfVector(contrastOfKNeighbor, 0, contrastOfKNeighbor.size());
 		}
 	}
 

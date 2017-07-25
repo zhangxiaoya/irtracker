@@ -14,7 +14,7 @@
 
 class TargetTracker;
 
-template<typename DataType>
+template <typename DataType>
 class Util
 {
 public:
@@ -31,15 +31,15 @@ public:
 
 	static void ShowAllObject(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, std::string title = "All Object");
 
-	static void ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, uchar valueThreshHold = 0);
+	static void ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, DataType valueThreshHold = 0);
 
 	static void ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<cv::Rect>& rects);
 
 	static void ShowImage(cv::Mat curFrame);
 
-	static uchar MaxOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end);
+	static DataType MaxOfVector(const std::vector<DataType>& data, const int& beginPos, const int& length);
 
-	static uchar MinOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end);
+	static DataType MinOfVector(const std::vector<DataType>& data, const int& beginPos, const int& length);
 
 	static bool CompareUchar(uchar left, uchar right);
 
@@ -47,15 +47,15 @@ public:
 
 	static bool CompareTracker(TargetTracker left, TargetTracker right);
 
-	static uchar AverageValue(const cv::Mat& curFrame, const cv::Rect& object);
+	static DataType AverageValue(const cv::Mat& curFrame, const cv::Rect& object);
 
 	static std::vector<cv::Rect> GetCandidateTargets(const std::vector<FourLimits>& afterMergeObjects);
 
 	static int Sum(const std::vector<int>& valueVec);
 
-	static std::vector<uchar> ToFeatureVector(const cv::Mat& mat);
+	static std::vector<DataType> ToFeatureVector(const cv::Mat& mat);
 
-	static int FeatureDiff(const std::vector<unsigned char>& featureOne, const std::vector<unsigned char>& featureTwo);
+	static int FeatureDiff(const std::vector<DataType>& featureOne, const std::vector<DataType>& featureTwo);
 
 	static DataType GetMinValueOfBlock(const cv::Mat& cuFrame);
 
@@ -63,7 +63,7 @@ public:
 
 	static DataType CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
-	static uchar CalculateAverageValueWithBlockIndex(const cv::Mat& img, int blockX, int blockY);
+	static DataType CalculateAverageValueWithBlockIndex(const cv::Mat& img, int blockX, int blockY);
 
 	static void CalculateThreshHold(const cv::Mat& frame, DataType& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
 
@@ -72,33 +72,32 @@ public:
 private:
 
 	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DataType value = 0);
-	
+
 	static void DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DataType value = 0);
 
 	static void DeepFirstSearch(const cv::Mat& grayFrame, cv::Mat& bitMap, int r, int c, int currentIndex) = delete;
-
 };
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::BinaryMat(cv::Mat& mat)
 {
 	for (auto r = 0; r < mat.rows; ++r)
 		for (auto c = 0; c < mat.cols; ++c)
-			mat.at<uchar>(r, c) = mat.at<uchar>(r, c) > THRESHOLD ? 1 : 0;
+			mat.at<DataType>(r, c) = mat.at<DataType>(r, c) > THRESHOLD ? 1 : 0;
 }
 
-template<typename DataType>
+template <typename DataType>
 double Util<DataType>::MeanMat(const cv::Mat& mat)
 {
 	double sum = 0;
 	for (auto r = 0; r < mat.rows; ++r)
 		for (auto c = 0; c < mat.cols; ++c)
-			sum += static_cast<int>(mat.at<uchar>(r, c));
+			sum += static_cast<int>(mat.at<DataType>(r, c));
 
 	return sum / (mat.rows * mat.cols);
 }
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::ShowCandidateRects(const cv::Mat& grayFrame, const std::vector<cv::Rect_<int>>& candidate_rects)
 {
 	cv::Mat colorFrame;
@@ -110,7 +109,7 @@ void Util<DataType>::ShowCandidateRects(const cv::Mat& grayFrame, const std::vec
 	imshow("Color Frame", colorFrame);
 }
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, FieldType fieldType, DataType value)
 {
 	if (fieldType == FieldType::Eight)
@@ -121,7 +120,7 @@ void Util<DataType>::FindNeighbor(const cv::Mat& binaryFrame, cv::Mat& bitMap, i
 		std::cout << "FieldType Error!" << std::endl;
 }
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLimits>& allObject)
 {
 	// top
@@ -173,7 +172,7 @@ void Util<DataType>::GetRectangleSize(const cv::Mat& bitMap, std::vector<FourLim
 	}
 }
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::ShowAllObject(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, std::string title)
 {
 	cv::Mat colorFrame;
@@ -195,8 +194,8 @@ void Util<DataType>::ShowAllObject(const cv::Mat& curFrame, const std::vector<Fo
 	imshow(title, colorFrame);
 }
 
-template<typename DataType>
-void Util<DataType>::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, uchar valueThreshHold)
+template <typename DataType>
+void Util<DataType>::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<FourLimits>& allObject, DataType valueThreshHold)
 {
 	cv::Mat colorFrame;
 	cvtColor(curFrame, colorFrame, CV_GRAY2BGR);
@@ -218,7 +217,7 @@ void Util<DataType>::ShowAllCandidateTargets(const cv::Mat& curFrame, const std:
 				(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
 				continue;
 
-			if (curFrame.at<uchar>(allObject[i].top + 1, allObject[i].left + 1) < valueThreshHold)
+			if (curFrame.at<DataType>(allObject[i].top + 1, allObject[i].left + 1) < valueThreshHold)
 				continue;
 		}
 		auto rect = cv::Rect(allObject[i].left, allObject[i].top, width, height);
@@ -229,7 +228,7 @@ void Util<DataType>::ShowAllCandidateTargets(const cv::Mat& curFrame, const std:
 	imshow("All Candidate Targets", colorFrame);
 }
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::ShowAllCandidateTargets(const cv::Mat& curFrame, const std::vector<cv::Rect>& rects)
 {
 	cv::Mat colorFrame;
@@ -243,63 +242,63 @@ void Util<DataType>::ShowAllCandidateTargets(const cv::Mat& curFrame, const std:
 	imshow("All Candidate Objects", colorFrame);
 }
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::ShowImage(cv::Mat curFrame)
 {
 	imshow("Current Frame", curFrame);
 	cv::waitKey(SHOW_DELAY);
 }
 
-template<typename DataType>
-uchar Util<DataType>::MaxOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end)
+template <typename DataType>
+DataType Util<DataType>::MaxOfVector(const std::vector<DataType>& data, const int& beginPos, const int& length)
 {
-	auto maxResult = *begin;
-	for (auto it = begin; it != end; ++it)
+	auto maxResult = data[beginPos];
+	for (auto i = beginPos; i < beginPos + length; ++i)
 	{
-		if (maxResult < *it)
-			maxResult = *it;
+		if (maxResult < data[i])
+			maxResult = data[i];
 	}
 	return maxResult;
 }
 
-template<typename DataType>
-uchar Util<DataType>::MinOfVector(const std::vector<uchar>::iterator& begin, const std::vector<uchar>::iterator& end)
+template <typename DataType>
+DataType Util<DataType>::MinOfVector(const std::vector<DataType>& data, const int& beginPos, const int& length)
 {
-	auto minResult = *begin;
-	for (auto it = begin; it != end; ++it)
+	auto minResult = data[beginPos];
+	for (auto i = beginPos; i < beginPos + length; ++i)
 	{
-		if (minResult > *it)
-			minResult = *it;
+		if (minResult > data[i])
+			minResult = data[i];
 	}
 	return minResult;
 }
 
-template<typename DataType>
+template <typename DataType>
 bool Util<DataType>::CompareUchar(uchar left, uchar right)
 {
 	return left > right;
 }
 
-template<typename DataType>
+template <typename DataType>
 bool Util<DataType>::CompareConfidenceValue(ConfidenceElem left, ConfidenceElem right)
 {
 	return left.confidenceVal > right.confidenceVal;
 }
 
-template<typename DataType>
+template <typename DataType>
 bool Util<DataType>::CompareTracker(TargetTracker left, TargetTracker right)
 {
 	return left.timeLeft > right.timeLeft;
 }
 
-template<typename DataType>
-uchar Util<DataType>::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect)
+template <typename DataType>
+DataType Util<DataType>::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect)
 {
 	auto sumAll = 0;
 	for (auto r = rect.y; r < rect.y + rect.height; ++r)
 	{
 		auto sumRow = 0;
-		auto ptr = curFrame.ptr<uchar>(r);
+		auto ptr = curFrame.ptr<DataType>(r);
 		for (auto c = rect.x; c < rect.x + rect.width; ++c)
 		{
 			sumRow += ptr[c];
@@ -310,7 +309,7 @@ uchar Util<DataType>::AverageValue(const cv::Mat& curFrame, const cv::Rect& rect
 	return sumAll / rect.height;
 }
 
-template<typename DataType>
+template <typename DataType>
 std::vector<cv::Rect> Util<DataType>::GetCandidateTargets(const std::vector<FourLimits>& afterMergeObjects)
 {
 	std::vector<cv::Rect> targetRect;
@@ -333,7 +332,7 @@ std::vector<cv::Rect> Util<DataType>::GetCandidateTargets(const std::vector<Four
 	return targetRect;
 }
 
-template<typename DataType>
+template <typename DataType>
 int Util<DataType>::Sum(const std::vector<int>& valueVec)
 {
 	auto result = 0;
@@ -343,24 +342,24 @@ int Util<DataType>::Sum(const std::vector<int>& valueVec)
 	return result;
 }
 
-template<typename DataType>
-std::vector<uchar> Util<DataType>::ToFeatureVector(const cv::Mat& mat)
+template <typename DataType>
+std::vector<DataType> Util<DataType>::ToFeatureVector(const cv::Mat& mat)
 {
-	std::vector<uchar> result(mat.cols * mat.rows, 0);
+	std::vector<DataType> result(mat.cols * mat.rows, 0);
 
 	auto index = 0;
 	for (auto r = 0; r < mat.rows; ++r)
 	{
 		for (auto c = 0; c < mat.cols; ++c)
 		{
-			result[index++] = mat.at<uchar>(r, c) / 50;
+			result[index++] = mat.at<DataType>(r, c) / 50;
 		}
 	}
 	return result;
 }
 
-template<typename DataType>
-int Util<DataType>::FeatureDiff(const std::vector<unsigned char>& featureOne, const std::vector<unsigned char>& featureTwo)
+template <typename DataType>
+int Util<DataType>::FeatureDiff(const std::vector<DataType>& featureOne, const std::vector<DataType>& featureTwo)
 {
 	auto sum = 0;
 	for (auto i = 0; i < featureOne.size(); ++i)
@@ -370,10 +369,10 @@ int Util<DataType>::FeatureDiff(const std::vector<unsigned char>& featureOne, co
 	return sum;
 }
 
-template<typename DataType>
+template <typename DataType>
 DataType Util<DataType>::GetMinValueOfBlock(const cv::Mat& mat)
 {
-	uchar minVal = (1 << (sizeof(DataType)) * 8) - 1;;
+	DataType minVal = (1 << (sizeof(DataType)) * 8) - 1;;
 	for (auto r = 0; r < mat.rows; ++r)
 	{
 		auto ptr = mat.ptr<DataType>(r);
@@ -386,7 +385,7 @@ DataType Util<DataType>::GetMinValueOfBlock(const cv::Mat& mat)
 	return minVal;
 }
 
-template<typename DataType>
+template <typename DataType>
 DataType Util<DataType>::GetMaxValueOfBlock(const cv::Mat& mat)
 {
 	DataType maxVal = 0;
@@ -402,7 +401,7 @@ DataType Util<DataType>::GetMaxValueOfBlock(const cv::Mat& mat)
 	return maxVal;
 }
 
-template<typename DataType>
+template <typename DataType>
 DataType Util<DataType>::CalculateAverageValue(const cv::Mat& frame, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
 	auto sumAll = 0;
@@ -420,8 +419,8 @@ DataType Util<DataType>::CalculateAverageValue(const cv::Mat& frame, int leftTop
 	return static_cast<DataType>(sumAll / (rightBottomY - leftTopY));
 }
 
-template<typename DataType>
-uchar Util<DataType>::CalculateAverageValueWithBlockIndex(const cv::Mat& img, int blockX, int blockY)
+template <typename DataType>
+DataType Util<DataType>::CalculateAverageValueWithBlockIndex(const cv::Mat& img, int blockX, int blockY)
 {
 	auto leftTopX = blockX * BLOCK_SIZE;
 	auto leftTopY = blockY * BLOCK_SIZE;
@@ -432,7 +431,7 @@ uchar Util<DataType>::CalculateAverageValueWithBlockIndex(const cv::Mat& img, in
 	for (auto r = leftTopY; r < rightBottomY; ++r)
 	{
 		auto sumRow = 0;
-		auto ptr = img.ptr<uchar>(r);
+		auto ptr = img.ptr<DataType>(r);
 		for (auto c = leftTopX; c < rightBottomX; ++c)
 		{
 			sumRow += ptr[c];
@@ -440,17 +439,17 @@ uchar Util<DataType>::CalculateAverageValueWithBlockIndex(const cv::Mat& img, in
 		sumAll += (sumRow / (rightBottomX - leftTopX));
 	}
 
-	return static_cast<uchar>(sumAll / (rightBottomY - leftTopY));
+	return static_cast<DataType>(sumAll / (rightBottomY - leftTopY));
 }
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::CalculateThreshHold(const cv::Mat& frame, DataType& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
 {
 	threshHold = CalculateAverageValue(frame, leftTopX, leftTopY, rightBottomX, rightBottomY);
 	//threshHold += threshHold / 4;
 }
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::CalCulateCenterValue(const cv::Mat& frame, DataType& centerValue, const cv::Rect& rect)
 {
 	auto centerX = rect.x + rect.width / 2;
@@ -464,7 +463,7 @@ void Util<DataType>::CalCulateCenterValue(const cv::Mat& frame, DataType& center
 	centerValue = static_cast<DataType>(sumAll / 4);
 }
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DataType value)
 {
 	std::stack<cv::Point> deepTrace;
@@ -531,7 +530,7 @@ void Util<DataType>::DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, c
 	}
 }
 
-template<typename DataType>
+template <typename DataType>
 void Util<DataType>::DFSWithoutRecursionFourField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DataType value)
 {
 	std::stack<cv::Point> deepTrace;
