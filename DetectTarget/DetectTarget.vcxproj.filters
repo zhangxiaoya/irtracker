@@ -94,6 +94,12 @@
     <ClInclude Include="PreProcessor\PreProcesssorFactory.hpp">
       <Filter>PreProcessor</Filter>
     </ClInclude>
+    <ClInclude Include="Models\LogLevel.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="LogPrinter\LogPrinter.hpp">
+      <Filter>LogPrinter</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Monitor">
@@ -125,6 +131,9 @@
     </Filter>
     <Filter Include="FrameSource\ImageListReader">
       <UniqueIdentifier>{993a16ca-8a6e-4ca4-aea3-892f31e6aaee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LogPrinter">
+      <UniqueIdentifier>{d470909c-ad5d-47bd-85b7-805c70670ed3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

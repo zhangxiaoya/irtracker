@@ -1,12 +1,12 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <iostream>
 
 #include "Utils/Util.hpp"
 #include "FrameSource/FrameSourceFactory.hpp"
 #include "FramePersistance/FramePersistanceFactory.hpp"
 #include "Monitor/Monitor.hpp"
 #include "Monitor/MonitorFactory.hpp"
+#include "Models/LogLevel.hpp"
 
 void Cleaner()
 {
@@ -26,13 +26,13 @@ int main(int argc, char* argv[])
 
 	if (ImageListReadFlag == true)
 	{
-		std::cout << "Open Image List Success!" << std::endl;
+		logPrinter.PrintLogs("Open Image List Success!", LogLevel::Info);
 
 		monitor->Process();
 	}
 	else
 	{
-		std::cout << "Open Image List Failed" << std::endl;
+		logPrinter.PrintLogs("Open Image List Failed", LogLevel::Error);
 	}
 
 	Cleaner();

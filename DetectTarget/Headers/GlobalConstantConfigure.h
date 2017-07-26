@@ -1,5 +1,6 @@
 #pragma once
 #include <opencv2/core/core.hpp>
+#include "../LogPrinter/LogPrinter.hpp"
 
 auto const COLOR_RED = cv::Scalar(0, 0, 255);
 auto const COLOR_BLUE = cv::Scalar(255, 0, 0);
@@ -42,3 +43,5 @@ bool CHECK_ORIGIN_FLAG = true;
 bool CHECK_DECRETIZATED_FLAG = true;
 
 const auto LowContrastThreshold = 3;
+
+LogPrinter logPrinter;

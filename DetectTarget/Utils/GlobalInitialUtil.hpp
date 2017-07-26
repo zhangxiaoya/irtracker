@@ -1,6 +1,5 @@
 #pragma once
 #include "../Headers/GlobalConstantConfigure.h"
-#include "../FrameSource/FrameSource.hpp"
 
 static std::string inFullStr;
 static std::string outFullStr;
@@ -37,7 +36,7 @@ inline cv::Mat GetTheFirstImage(int firImageIndex = 0)
 
 inline void UpdateImageSize(cv::Mat& img)
 {
-	std::cout << "Update Image Size" << std::endl;
+	logPrinter.PrintLogs("Update Image Size", LogLevel::Info);
 
 	IMAGE_WIDTH = img.cols;
 	IMAGE_HEIGHT = img.rows;
@@ -47,7 +46,7 @@ inline void UpdateImageSize(cv::Mat& img)
 
 inline void UpdateDataType(const cv::Mat& img)
 {
-	std::cout << "Update Image DataType" << std::endl;
+	logPrinter.PrintLogs("Update Image DataType", LogLevel::Info);
 
 	CV_DATA_TYPE = img.type();
 }
@@ -67,7 +66,7 @@ inline bool UpdateConstants()
 		return true;
 	}
 
-	std::cout << "Read Image Failed, please check whether the path exist!" << std::endl;
+	logPrinter.PrintLogs("Read Image Failed, please check whether the path exist!", LogLevel::Error);
 	return false;
 }
 

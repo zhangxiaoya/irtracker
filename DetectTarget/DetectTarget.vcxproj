@@ -137,11 +137,13 @@
     <ClInclude Include="FrameSource\ImageListReader\ImageListReaderBase.hpp" />
     <ClInclude Include="FrameSource\VideoFrameSource.hpp" />
     <ClInclude Include="Headers\GlobalConstantConfigure.h" />
+    <ClInclude Include="LogPrinter\LogPrinter.hpp" />
     <ClInclude Include="Models\ConfidenceElem.hpp" />
     <ClInclude Include="Models\DifferenceElem.hpp" />
     <ClInclude Include="Models\DrawResultType.hpp" />
     <ClInclude Include="Models\FieldType.hpp" />
     <ClInclude Include="Models\FourLimits.hpp" />
+    <ClInclude Include="Models\LogLevel.hpp" />
     <ClInclude Include="Monitor\Monitor.hpp" />
     <ClInclude Include="Monitor\MonitorFactory.hpp" />
     <ClInclude Include="PreProcessor\PreProcessor.hpp" />
