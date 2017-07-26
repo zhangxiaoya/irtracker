@@ -2,6 +2,7 @@
 #include <string>
 #include "../Models/LogLevel.hpp"
 #include <iostream>
+#include <ctime>
 
 class LogPrinter
 {

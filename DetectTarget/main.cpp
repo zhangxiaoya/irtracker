@@ -7,9 +7,6 @@
 #include "Monitor/Monitor.hpp"
 #include "Monitor/MonitorFactory.hpp"
 #include "Models/LogLevel.hpp"
-#include "LogPrinter/LogPrinter.hpp"
-
-LogPrinter logPrinter;
 
 void Cleaner()
 {
