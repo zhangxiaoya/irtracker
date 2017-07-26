@@ -1,8 +1,9 @@
 #pragma once
+#include <iomanip>
+
 #include "../Utils/Util.hpp"
 #include "../Utils/SpecialUtil.hpp"
 #include "../Detector/DetectByMaxFilterAndAdptiveThreshold.hpp"
-#include <iomanip>
 #include "../Models/DrawResultType.hpp"
 #include "../FramePersistance/FramePersistance.hpp"
 
@@ -166,7 +167,6 @@ void Monitor<DataType>::CombineResultFrames()
 	waitKey(10);
 }
 
-
 template <typename DataType>
 void Monitor<DataType>::Process()
 {
@@ -192,7 +192,10 @@ void Monitor<DataType>::Process()
 
 			CombineResultFrames();
 
-			std::cout << "Current Index : " << std::setw(4) << frameIndex++ << std::endl;
+			char logInfo[50];
+			sprintf_s(logInfo,50, "Current Index : %04d",frameIndex++);
+
+			logPrinter.PrintLogs(logInfo, LogLevel::Info);
 		}
 	}
 }
