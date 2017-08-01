@@ -9,7 +9,7 @@ static bool ImageListReadFlag = false;
 const char* GlobalImageListNameFormat;
 const char* GlobalWriteFileNameFormat;
 
-inline void ForTwoBins()
+inline void ForSecondOriginalBinFiles()
 {
 	std::string listNum = "2";
 
@@ -25,6 +25,23 @@ inline void ForTwoBins()
 
 	GlobalWriteFileNameFormat = outFullStr.c_str();
 }
+
+inline void ForWorstFrames(std::string distance, std::string flyStatus)
+{
+	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Forth\\test\\Frames\\ir_file_20170713_";
+	std::string medianPart = "m_";
+	std::string inBackend = "\\Frame_%08d.png";
+	inFullStr = inPrefix + distance + medianPart + flyStatus + inBackend;
+
+	GlobalImageListNameFormat = inFullStr.c_str();
+
+	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Forth\\test\\Results\\ir_file_20170713_";
+	std::string outBackend = "\\Frame_%08d.png";
+	outFullStr = outPrefix + distance + medianPart + flyStatus + outBackend;
+
+	GlobalWriteFileNameFormat = outFullStr.c_str();
+}
+
 
 inline cv::Mat GetTheFirstImage(int firImageIndex = 0)
 {
@@ -72,10 +89,12 @@ inline bool UpdateConstants()
 
 inline void InitGlobalConfigure()
 {
-//	ForTwoBins();
+	ForSecondOriginalBinFiles();
 
-	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
-	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms\\Frame_%08d.bmp";
+	ForWorstFrames("300", "jingzhi");
+
+//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
+//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms\\Frame_%08d.bmp";
 
 	// GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1km\\images\\Frame_%08d.png";
 	// GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km\\Frame_%08d.png";
