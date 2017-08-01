@@ -49,7 +49,7 @@ private:
 	cv::Mat trackedResultFrame;
 
 	int frameIndex;
-	
+
 	cv::Ptr<FrameSource> frameSource;
 	cv::Ptr<FramePersistance> framePersistance;
 

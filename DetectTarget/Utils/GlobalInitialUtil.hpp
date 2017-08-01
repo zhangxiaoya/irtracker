@@ -91,7 +91,7 @@ inline void InitGlobalConfigure()
 {
 	ForSecondOriginalBinFiles();
 
-	ForWorstFrames("300", "jingzhi");
+	ForWorstFrames("500", "jingzhi");
 
 //	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 //	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms\\Frame_%08d.bmp";
