@@ -32,7 +32,7 @@ private:
 	void RefreshBlockMap();
 
 	void MaxFilter(int kernelSize);
-	
+
 	void GetBlocks();
 
 	void Discretization();
@@ -41,9 +41,9 @@ private:
 
 	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
-	void RemoveSmallAndBigObjects();
+	void RemoveSmallAndBigObjects(std::vector<FourLimits>& objects);
 
-	void RemoveObjectsWithLowContrast();
+	void RemoveObjectsWithLowContrast(std::vector<FourLimits>& objects);
 
 	void DoubleCheckAfterMerge();
 
@@ -91,9 +91,9 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 
 	Util<DataType>::GetRectangleSize(blockMap, fourLimitsOfAllObjects);
 
-	RemoveSmallAndBigObjects();
+	RemoveSmallAndBigObjects(fourLimitsOfAllObjects);
 
-	RemoveObjectsWithLowContrast();
+	RemoveObjectsWithLowContrast(fourLimitsOfAllObjects);
 
 	MergeCrossedRectangles();
 
@@ -131,25 +131,28 @@ bool DetectByMaxFilterAndAdptiveThreshold<DataType>::CheckCross(const FourLimits
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveSmallAndBigObjects()
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveSmallAndBigObjects(std::vector<FourLimits>& objects)
 {
-	for (auto it = fourLimitsOfAllObjects.begin(); it != fourLimitsOfAllObjects.end();)
+	for (auto it = objects.begin(); it != objects.end();)
 	{
 		auto width = it->right - it->left + 1;
 		auto height = it->bottom - it->top + 1;
 
 		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
 			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
-			it = fourLimitsOfAllObjects.erase(it);
+			it = objects.erase(it);
 		else
+		{
 			++it;
+			auto dummy = 1;
+		}
 	}
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveObjectsWithLowContrast()
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveObjectsWithLowContrast(std::vector<FourLimits>& objects)
 {
-	for (auto it = fourLimitsOfAllObjects.begin(); it != fourLimitsOfAllObjects.end();)
+	for (auto it = objects.begin(); it != objects.end();)
 	{
 		DataType threshold = 0;
 		DataType centerValue = 0;
@@ -193,7 +196,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveObjectsWithLowContras
 
 		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(threshold)) < 3)
 		{
-			it = fourLimitsOfAllObjects.erase(it);
+			it = objects.erase(it);
 		}
 		else
 		{
@@ -205,8 +208,8 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveObjectsWithLowContras
 template <typename DataType>
 void DetectByMaxFilterAndAdptiveThreshold<DataType>::DoubleCheckAfterMerge()
 {
-	RemoveSmallAndBigObjects();
-	RemoveObjectsWithLowContrast();
+	RemoveSmallAndBigObjects(fourLimitsAfterMergeObjects);
+	RemoveObjectsWithLowContrast(fourLimitsAfterMergeObjects);
 }
 
 template <typename DataType>

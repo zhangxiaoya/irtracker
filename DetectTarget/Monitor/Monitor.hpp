@@ -274,14 +274,14 @@ bool Monitor<DataType>::CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rec
 	auto upAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY - 1);
 	auto downAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY + 1);
 
-	auto leftAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockY, curBlockX - 1);
-	auto rightAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockY, curBlockY + 1);
+//	auto leftAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockY, curBlockX - 1);
+//	auto rightAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockY, curBlockY + 1);
 
 	if (abs(static_cast<int>(upAvg) - static_cast<int>(downAvg)) > 8)
 		return false;
 
-	if (abs(static_cast<int>(leftAvg) - static_cast<int>(rightAvg)) > 8)
-		return false;
+//	if (abs(static_cast<int>(leftAvg) - static_cast<int>(rightAvg)) > 8)
+//		return false;
 
 	return true;
 }
