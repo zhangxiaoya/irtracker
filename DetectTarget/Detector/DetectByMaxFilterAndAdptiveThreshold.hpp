@@ -1,11 +1,11 @@
 #pragma once
 #include <core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <filesystem>
 #include "../Models/FourLimits.hpp"
 #include "../Utils/Util.hpp"
 #include "../Utils/PerformanceUtil.hpp"
 #include "../PreProcessor/PreProcesssorFactory.hpp"
+#include <valarray>
 
 template <class DataType>
 class DetectByMaxFilterAndAdptiveThreshold
@@ -34,6 +34,8 @@ private:
 	void MaxFilter(int kernelSize);
 
 	void GetBlocks();
+
+	void GenerateMask();
 
 	void Discretization();
 
@@ -86,6 +88,8 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 	MaxFilter(DilateKernelSize);
 
 	Discretization();
+
+	GenerateMask();
 
 	GetBlocks();
 
@@ -142,10 +146,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveSmallAndBigObjects(st
 			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
 			it = objects.erase(it);
 		else
-		{
 			++it;
-			auto dummy = 1;
-		}
 	}
 }
 
@@ -315,6 +316,19 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetBlocks()
 	}
 	totalObject = currentIndex;
 	fourLimitsOfAllObjects.resize(totalObject);
+}
+
+template <class DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::GenerateMask()
+{
+	auto classCount = std::pow(256, sizeof(DataType)) / BLOCK_SIZE + 1;
+
+	vector<Mat> subMaskList(classCount,Mat());
+
+	for (auto i = 0; i < classCount;++i)
+	{
+		subMaskList[i] = frameAfterDiscrezated == i * BLOCK_SIZE;
+	}
 }
 
 template <typename DataType>
