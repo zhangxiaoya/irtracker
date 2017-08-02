@@ -20,7 +20,7 @@ public:
 		frameAfterDiscrezated = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
 	}
 
-	std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
+	void Detect(cv::Mat& curFrame, std::vector<cv::Rect>& resultRects, cv::Mat& preprocessResultFrame);
 
 private:
 	void Reload(cv::Mat& currentGrayFrame);
@@ -68,7 +68,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::Reload(cv::Mat& currentGray
 }
 
 template <typename DataType>
-std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv::Mat& currentGrayFrame, cv::Mat& preprocessResultFrame)
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv::Mat& currentGrayFrame, std::vector<cv::Rect>& resultRects, cv::Mat& preprocessResultFrame)
 {
 	Reload(currentGrayFrame);
 
@@ -88,11 +88,9 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 
 	DoubleCheckAfterMerge();
 
-	auto rects = Util<DataType>::GetCandidateTargets(fourLimitsAfterMergeObjects);
+	resultRects = Util<DataType>::GetCandidateTargets(fourLimitsAfterMergeObjects);
 
 	preprocessResultFrame = frameAfterDiscrezated;
-
-	return rects;
 }
 
 template <typename DataType>

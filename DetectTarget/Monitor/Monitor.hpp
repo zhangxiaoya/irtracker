@@ -179,7 +179,9 @@ void Monitor<DataType>::Process()
 
 			cv::Mat preprocessedFrame;
 
-			auto detectedTargetRects = detector->Detect(grayFrame, preprocessedFrame);
+			vector<Rect> detectedTargetRects;
+
+			detector->Detect(grayFrame, detectedTargetRects, preprocessedFrame);
 
 			GetPreprocessedResult(preprocessedFrame);
 
