@@ -181,7 +181,9 @@ void Monitor<DataType>::Process()
 
 			vector<Rect> detectedTargetRects;
 
-			detector->Detect(grayFrame, detectedTargetRects, preprocessedFrame);
+			detector->Detect(grayFrame, detectedTargetRects);
+
+			detector->GetPreprocessedResult(preprocessedFrame);
 
 			GetPreprocessedResult(preprocessedFrame);
 
