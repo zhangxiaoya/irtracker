@@ -35,7 +35,7 @@ private:
 
 	void GetBlocks();
 
-	void GenerateMask(vector<FourLimits>& allObjects);
+	void GetAllObjects(vector<FourLimits>& allObjects);
 
 	void Discretization();
 
@@ -90,7 +90,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 	Discretization();
 
 	vector<FourLimits> newFourLimitsOfAllObjects;
-	CheckPerf(GenerateMask(newFourLimitsOfAllObjects), "SubMask");
+	CheckPerf(GetAllObjects(newFourLimitsOfAllObjects), "SubMask");
 
 //	CheckPerf(GetBlocks(), "BFS Mask");
 
@@ -324,7 +324,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetBlocks()
 }
 
 template <class DataType>
-void DetectByMaxFilterAndAdptiveThreshold<DataType>::GenerateMask(vector<FourLimits>& allObjects)
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetAllObjects(vector<FourLimits>& allObjects)
 {
 	auto classCount = static_cast<int>(std::pow(256, sizeof(DataType))) / DISCRATED_BIN + 1;
 
