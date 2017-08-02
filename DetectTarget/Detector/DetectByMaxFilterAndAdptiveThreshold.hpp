@@ -35,7 +35,7 @@ private:
 
 	void GetBlocks();
 
-	void GenerateMask();
+	void GenerateMask(vector<FourLimits>& allObjects);
 
 	void Discretization();
 
@@ -89,15 +89,20 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 
 	Discretization();
 
-	GenerateMask();
+	vector<FourLimits> newFourLimitsOfAllObjects;
+	CheckPerf(GenerateMask(newFourLimitsOfAllObjects), "SubMask");
 
-	GetBlocks();
+//	CheckPerf(GetBlocks(), "BFS Mask");
 
-	Util<DataType>::GetRectangleSize(blockMap, fourLimitsOfAllObjects);
+	totalObject = newFourLimitsOfAllObjects.size();
 
-	RemoveSmallAndBigObjects(fourLimitsOfAllObjects);
+//	Util<DataType>::GetRectangleSize(blockMap, newFourLimitsOfAllObjects);
 
-	RemoveObjectsWithLowContrast(fourLimitsOfAllObjects);
+	RemoveSmallAndBigObjects(newFourLimitsOfAllObjects);
+
+	RemoveObjectsWithLowContrast(newFourLimitsOfAllObjects);
+
+	fourLimitsOfAllObjects = newFourLimitsOfAllObjects;
 
 	MergeCrossedRectangles();
 
@@ -319,15 +324,38 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetBlocks()
 }
 
 template <class DataType>
-void DetectByMaxFilterAndAdptiveThreshold<DataType>::GenerateMask()
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::GenerateMask(vector<FourLimits>& allObjects)
 {
-	auto classCount = std::pow(256, sizeof(DataType)) / BLOCK_SIZE + 1;
+	auto classCount = static_cast<int>(std::pow(256, sizeof(DataType))) / DISCRATED_BIN + 1;
 
 	vector<Mat> subMaskList(classCount,Mat());
 
-	for (auto i = 0; i < classCount;++i)
+	for (auto i = 0; i < classCount; ++i)
 	{
-		subMaskList[i] = frameAfterDiscrezated == i * BLOCK_SIZE;
+		subMaskList[i] = frameAfterDiscrezated == static_cast<DataType>(i * DISCRATED_BIN);
+	}
+
+	allObjects.clear();
+	auto index = 0;
+
+	for (auto i = 0; i < classCount; ++i)
+	{
+		vector<vector<Point>> contours;
+		vector<Vec4i> hierarchy;
+
+		findContours(subMaskList[i], contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+
+		vector<vector<Point>> contours_poly(contours.size());
+		vector<Rect> boundRect(contours.size());
+
+		for (auto j = 0; j < contours.size(); j++)
+		{
+			approxPolyDP(Mat(contours[j]), contours_poly[j], 3, true);
+			boundRect[j] = boundingRect(Mat(contours_poly[j]));
+
+			allObjects.push_back(FourLimits(boundRect[j].tl().y, boundRect[j].br().y, boundRect[j].tl().x, boundRect[j].br().x, index));
+			++index;
+		}
 	}
 }
 
