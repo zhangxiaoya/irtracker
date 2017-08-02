@@ -78,7 +78,7 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 
 	Discretization();
 
-	CheckPerf(GetAllObjects(), "SubMask");
+	GetAllObjects();
 
 	RemoveSmallAndBigObjects(fourLimitsOfAllObjects);
 
