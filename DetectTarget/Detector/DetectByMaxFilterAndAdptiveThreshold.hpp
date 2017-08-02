@@ -20,7 +20,6 @@ public:
 		preprocessor = PreProcessorFactory::CreatePreProcessor<DataType>(image_width, image_height);
 		frameAfterMaxFilter = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
 		frameAfterDiscrezated = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
-		blockMap = Mat(imageHeight, imageWidth, CV_32SC1, cv::Scalar(-1));
 	}
 
 	void Reload(cv::Mat& currentGrayFrame);
@@ -28,12 +27,7 @@ public:
 	std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
 
 private:
-
-	void RefreshBlockMap();
-
 	void MaxFilter(int kernelSize);
-
-	void GetBlocks();
 
 	void GetAllObjects();
 
@@ -61,7 +55,6 @@ private:
 	cv::Mat frameNeedDetect;
 	cv::Mat frameAfterMaxFilter;
 	cv::Mat frameAfterDiscrezated;
-	cv::Mat blockMap;
 	cv::Ptr<PreProcessor<DataType>> preprocessor;
 };
 
@@ -70,7 +63,6 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::Reload(cv::Mat& currentGray
 {
 	frameNeedDetect = currentGrayFrame;
 
-	RefreshBlockMap();
 	totalObject = 0;
 	fourLimitsOfAllObjects.clear();
 	fourLimitsAfterMergeObjects.clear();
@@ -90,10 +82,6 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 	Discretization();
 
 	CheckPerf(GetAllObjects(), "SubMask");
-
-//	CheckPerf(GetBlocks(), "BFS Mask");
-
-//	Util<DataType>::GetRectangleSize(blockMap, newFourLimitsOfAllObjects);
 
 	RemoveSmallAndBigObjects(fourLimitsOfAllObjects);
 
@@ -278,44 +266,10 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::MergeCrossedRectangles()
 }
 
 template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold<DataType>::RefreshBlockMap()
-{
-	for (auto r = 0; r < imageHeight; ++r)
-	{
-		auto ptr = blockMap.ptr<int>(r);
-		for (auto c = 0; c < imageWidth; ++c)
-		{
-			ptr[c] = -1;
-		}
-	}
-}
-
-template <typename DataType>
 void DetectByMaxFilterAndAdptiveThreshold<DataType>::MaxFilter(int kernelSize)
 {
 	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
 	dilate(frameNeedDetect, frameAfterMaxFilter, kernel);
-}
-
-template <typename DataType>
-void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetBlocks()
-{
-	auto currentIndex = 0;
-	for (auto r = 0; r < imageHeight; ++r)
-	{
-		auto frameRowPtr = frameAfterDiscrezated.ptr<DataType>(r);
-		auto maskRowPtr = blockMap.ptr<int>(r);
-		for (auto c = 0; c < imageWidth; ++c)
-		{
-			if (maskRowPtr[c] != -1)
-				continue;
-
-			auto val = frameRowPtr[c];
-			Util<DataType>::FindNeighbor(frameAfterDiscrezated, blockMap, r, c, currentIndex++, FieldType::Four, val);
-		}
-	}
-	totalObject = currentIndex;
-	fourLimitsOfAllObjects.resize(totalObject);
 }
 
 template <class DataType>
