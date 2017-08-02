@@ -35,7 +35,7 @@ private:
 
 	void GetBlocks();
 
-	void GetAllObjects(vector<FourLimits>& allObjects);
+	void GetAllObjects();
 
 	void Discretization();
 
@@ -89,20 +89,15 @@ std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv:
 
 	Discretization();
 
-	vector<FourLimits> newFourLimitsOfAllObjects;
-	CheckPerf(GetAllObjects(newFourLimitsOfAllObjects), "SubMask");
+	CheckPerf(GetAllObjects(), "SubMask");
 
 //	CheckPerf(GetBlocks(), "BFS Mask");
 
-	totalObject = newFourLimitsOfAllObjects.size();
-
 //	Util<DataType>::GetRectangleSize(blockMap, newFourLimitsOfAllObjects);
 
-	RemoveSmallAndBigObjects(newFourLimitsOfAllObjects);
+	RemoveSmallAndBigObjects(fourLimitsOfAllObjects);
 
-	RemoveObjectsWithLowContrast(newFourLimitsOfAllObjects);
-
-	fourLimitsOfAllObjects = newFourLimitsOfAllObjects;
+	RemoveObjectsWithLowContrast(fourLimitsOfAllObjects);
 
 	MergeCrossedRectangles();
 
@@ -324,7 +319,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetBlocks()
 }
 
 template <class DataType>
-void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetAllObjects(vector<FourLimits>& allObjects)
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetAllObjects()
 {
 	auto classCount = static_cast<int>(std::pow(256, sizeof(DataType))) / DISCRATED_BIN + 1;
 
@@ -335,7 +330,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetAllObjects(vector<FourLi
 		subMaskList[i] = frameAfterDiscrezated == static_cast<DataType>(i * DISCRATED_BIN);
 	}
 
-	allObjects.clear();
+	fourLimitsOfAllObjects.clear();
 	auto index = 0;
 
 	for (auto i = 0; i < classCount; ++i)
@@ -353,10 +348,12 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetAllObjects(vector<FourLi
 			approxPolyDP(Mat(contours[j]), contours_poly[j], 3, true);
 			boundRect[j] = boundingRect(Mat(contours_poly[j]));
 
-			allObjects.push_back(FourLimits(boundRect[j].tl().y, boundRect[j].br().y, boundRect[j].tl().x, boundRect[j].br().x, index));
+			fourLimitsOfAllObjects.push_back(FourLimits(boundRect[j].tl().y, boundRect[j].br().y, boundRect[j].tl().x, boundRect[j].br().x, index));
 			++index;
 		}
 	}
+
+	totalObject = fourLimitsOfAllObjects.size();
 }
 
 template <typename DataType>
