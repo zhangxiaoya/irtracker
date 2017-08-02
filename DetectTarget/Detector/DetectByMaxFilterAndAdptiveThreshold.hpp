@@ -5,7 +5,6 @@
 #include "../Utils/Util.hpp"
 #include "../Utils/PerformanceUtil.hpp"
 #include "../PreProcessor/PreProcesssorFactory.hpp"
-#include <valarray>
 
 template <class DataType>
 class DetectByMaxFilterAndAdptiveThreshold
