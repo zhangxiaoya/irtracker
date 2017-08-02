@@ -1,5 +1,4 @@
 #pragma once
-#include <iomanip>
 
 #include "../Utils/Util.hpp"
 #include "../Utils/SpecialUtil.hpp"
@@ -50,7 +49,7 @@ private:
 	cv::Mat trackedResultFrame;
 
 	int frameIndex;
-	
+
 	cv::Ptr<FrameSource> frameSource;
 	cv::Ptr<FramePersistance> framePersistance;
 
@@ -180,7 +179,11 @@ void Monitor<DataType>::Process()
 
 			cv::Mat preprocessedFrame;
 
-			auto detectedTargetRects = detector->Detect(grayFrame, preprocessedFrame);
+			vector<Rect> detectedTargetRects;
+
+			CheckPerf(detector->Detect(grayFrame, detectedTargetRects), "Detector ");
+
+			detector->GetPreprocessedResult(preprocessedFrame);
 
 			GetPreprocessedResult(preprocessedFrame);
 
@@ -269,20 +272,20 @@ bool Monitor<DataType>::CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rec
 	auto curBlockX = rect.x / BLOCK_SIZE;
 	auto curBlockY = rect.y / BLOCK_SIZE;
 
-	if (curBlockX - 1 < 0 || curBlockX + 1 > countX || curBlockY - 1 < 0 || curBlockY + 1 > countY)
+	if (curBlockX - 1 < 0 || curBlockX + 1 >= countX || curBlockY - 1 < 0 || curBlockY + 1 >= countY)
 		return false;
 
 	auto upAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY - 1);
 	auto downAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY + 1);
 
-	auto leftAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY - 1);
-	auto rightAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockX, curBlockY + 1);
+//	auto leftAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockY, curBlockX - 1);
+//	auto rightAvg = Util<DataType>::CalculateAverageValueWithBlockIndex(fdImg, curBlockY, curBlockY + 1);
 
 	if (abs(static_cast<int>(upAvg) - static_cast<int>(downAvg)) > 8)
 		return false;
 
-	if (abs(static_cast<int>(leftAvg) - static_cast<int>(rightAvg)) > 8)
-		return false;
+//	if (abs(static_cast<int>(leftAvg) - static_cast<int>(rightAvg)) > 8)
+//		return false;
 
 	return true;
 }
