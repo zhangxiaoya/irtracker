@@ -11,7 +11,6 @@ template <class DataType>
 class DetectByMaxFilterAndAdptiveThreshold
 {
 public:
-
 	DetectByMaxFilterAndAdptiveThreshold(int image_width, int image_height)
 		: imageWidth(image_width),
 		  imageHeight(image_height),
@@ -22,11 +21,11 @@ public:
 		frameAfterDiscrezated = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
 	}
 
-	void Reload(cv::Mat& currentGrayFrame);
-
 	std::vector<cv::Rect> Detect(cv::Mat& curFrame, cv::Mat& preprocessResultFrame);
 
 private:
+	void Reload(cv::Mat& currentGrayFrame);
+
 	void MaxFilter(int kernelSize);
 
 	void GetAllObjects();
@@ -44,7 +43,6 @@ private:
 	void DoubleCheckAfterMerge();
 
 private:
-
 	int imageWidth;
 	int imageHeight;
 
