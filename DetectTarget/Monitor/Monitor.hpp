@@ -46,6 +46,7 @@ private:
 	cv::Mat grayFrame;
 	cv::Mat colorFrame;
 
+	cv::Mat colorPreprocessResultFrame;
 	cv::Mat preprocessResultFrame;
 	cv::Mat detectedResultFrame;
 	cv::Mat trackedResultFrame;
@@ -111,7 +112,7 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 template <typename DataType>
 void Monitor<DataType>::GetPreprocessedResult(const Mat& mat)
 {
-	cvtColor(mat, preprocessResultFrame, CV_GRAY2RGB);
+	cvtColor(mat, colorPreprocessResultFrame, CV_GRAY2RGB);
 }
 
 template <typename DataType>
@@ -159,7 +160,7 @@ void Monitor<DataType>::CombineResultFramesAndPersistance()
 	}
 
 	colorFrame.copyTo(combinedResultFrame(Rect(0, 0, colorFrame.cols, colorFrame.rows)));
-	preprocessResultFrame.copyTo(combinedResultFrame(Rect(col + 1, 0, colorFrame.cols, colorFrame.rows)));
+	colorPreprocessResultFrame.copyTo(combinedResultFrame(Rect(col + 1, 0, colorFrame.cols, colorFrame.rows)));
 	detectedResultFrame.copyTo(combinedResultFrame(Rect(0, row + 1, colorFrame.cols, colorFrame.rows)));
 	trackedResultFrame.copyTo(combinedResultFrame(Rect(col + 1, row + 1, colorFrame.cols, colorFrame.rows)));
 
@@ -183,15 +184,13 @@ void Monitor<DataType>::Process()
 		{
 			ConvertToGray();
 
-			cv::Mat preprocessedFrame;
-
 			vector<Rect> detectedTargetRects;
 
 			CheckPerf(detector->Detect(grayFrame, detectedTargetRects), "Detector ");
 
-			detector->GetPreprocessedResult(preprocessedFrame);
+			detector->GetPreprocessedResult(preprocessResultFrame);
 
-			GetPreprocessedResult(preprocessedFrame);
+			GetPreprocessedResult(preprocessResultFrame);
 
 			GetDetectedResult(detectedTargetRects);
 
