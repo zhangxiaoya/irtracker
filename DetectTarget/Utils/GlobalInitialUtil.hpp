@@ -13,13 +13,15 @@ inline void ForSecondOriginalBinFiles()
 {
 	std::string listNum = "2";
 
-	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\ir_file_20170531_1000m_";
+//	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\ir_file_20170531_1000m_";
+	std::string inPrefix = "D:\\Bag\\Code_VS15\\Data\\ir_file_20170531_1000m_";
 	std::string inBackend = "_8bit\\Frame_%04d.png";
 	inFullStr = inPrefix + listNum + inBackend;
 
 	GlobalImageListNameFormat = inFullStr.c_str();
 
-	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\newResults\\ir_file_20170531_1000m_";
+//	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\newResults\\ir_file_20170531_1000m_";
+	std::string outPrefix = "D:\\Bag\\Code_VS15\\Data\\result_";
 	std::string outBackend = "\\Frame_%04d.png";
 	outFullStr = outPrefix + listNum + outBackend;
 

@@ -153,6 +153,7 @@
     <ClInclude Include="Utils\GlobalInitialUtil.hpp" />
     <ClInclude Include="Utils\PerformanceUtil.hpp" />
     <ClInclude Include="Utils\SpecialUtil.hpp" />
+    <ClInclude Include="Utils\ToVideo.hpp" />
     <ClInclude Include="Utils\Util.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

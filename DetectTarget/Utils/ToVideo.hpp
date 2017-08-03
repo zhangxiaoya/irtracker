@@ -1,10 +1,10 @@
 #pragma once
 #include <string>
 #include <core/core.hpp>
-#include <imgproc/imgproc.hpp>
 #include <highgui/highgui.hpp>
 
 #include "GlobalInitialUtil.hpp"
+#include <iomanip>
 
 class ToVideo
 {
@@ -17,7 +17,9 @@ public:
 	{
 	}
 
-	void PutAllResultFramesToOneVideo();
+	void PutAllResultFramesToOneVideo() const;
+
+	void SetFrameSize(int imageWidth, int imageHeight);
 
 private:
 	int ftps;
@@ -27,7 +29,7 @@ private:
 	cv::Size frameSize;
 };
 
-inline void ToVideo::PutAllResultFramesToOneVideo()
+inline void ToVideo::PutAllResultFramesToOneVideo() const
 {
 	auto len = strlen(GlobalWriteFileNameFormat);
 	--len;
@@ -45,19 +47,18 @@ inline void ToVideo::PutAllResultFramesToOneVideo()
 	videoFileFormat += saveFileName;
 	videoFileFormat += ".avi";
 
-
-	delete[] videoFileFormatPrefix;
+	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
 
 	cv::VideoWriter video_writer;
-		video_writer.open(saveFileName, -1, ftps, frameSize);
+	video_writer.open(saveFileName, -1, ftps, frameSize);
 
 	if (video_writer.isOpened())
 	{
 		auto index = 1;
 		while (true)
 		{
-			sprintf_s(fileName, buffer_count, imageListFormat.c_str(), index++);
-			img = cv::imread(fileName);
+			sprintf_s(imageFullName, WRITE_FILE_NAME_BUFFER_SIZE, GlobalWriteFileNameFormat, index++);
+			auto img = cv::imread(imageFullName);
 
 			if (img.empty())
 				break;
@@ -73,4 +74,11 @@ inline void ToVideo::PutAllResultFramesToOneVideo()
 	{
 		std::cout << "Save Video File Failed" << std::endl;
 	}
+
+	delete[] videoFileFormatPrefix;
+}
+
+inline void ToVideo::SetFrameSize(int imageWidth, int imageHeight)
+{
+	frameSize = cv::Size(imageWidth, imageHeight);
 }
