@@ -303,7 +303,7 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetAllObjects()
 			approxPolyDP(Mat(contours[j]), contours_poly[j], 3, true);
 			boundRect[j] = boundingRect(Mat(contours_poly[j]));
 
-			fourLimitsOfAllObjects.push_back(FourLimits(boundRect[j].tl().y, boundRect[j].br().y, boundRect[j].tl().x, boundRect[j].br().x, index));
+			fourLimitsOfAllObjects.push_back(FourLimits(boundRect[j].tl().y, boundRect[j].br().y - 1, boundRect[j].tl().x, boundRect[j].br().x -1 , index));
 			++index;
 		}
 	}
