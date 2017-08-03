@@ -16,6 +16,8 @@ public:
 
 	void Process();
 
+	void SetResultPersistanceFlag(bool flag = false);
+
 protected:
 	bool CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& rect) const;
 
@@ -34,7 +36,7 @@ private:
 
 	void GetTrackedResult(std::vector<cv::Rect> trackedTargetRects);
 
-	void CombineResultFrames();
+	void CombineResultFramesAndPersistance();
 
 	void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangles) const;
 
@@ -49,6 +51,7 @@ private:
 	cv::Mat trackedResultFrame;
 
 	int frameIndex;
+	bool resultPersistanceFlag;
 
 	cv::Ptr<FrameSource> frameSource;
 	cv::Ptr<FramePersistance> framePersistance;
@@ -57,12 +60,12 @@ private:
 };
 
 template <typename DataType>
-Monitor<DataType>::Monitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance): frameIndex(0)
+Monitor<DataType>::Monitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance): frameIndex(0), resultPersistanceFlag(true)
 {
 	this->framePersistance = framePersistance;
 	this->frameSource = frameSource;
 
-	this->detector = new DetectByMaxFilterAndAdptiveThreshold<DataType>(IMAGE_WIDTH,IMAGE_HEIGHT);
+	this->detector = new DetectByMaxFilterAndAdptiveThreshold<DataType>(IMAGE_WIDTH, IMAGE_HEIGHT);
 }
 
 template <typename DataType>
@@ -134,7 +137,7 @@ void Monitor<DataType>::GetTrackedResult(std::vector<cv::Rect> trackedTargetRect
 }
 
 template <typename DataType>
-void Monitor<DataType>::CombineResultFrames()
+void Monitor<DataType>::CombineResultFramesAndPersistance()
 {
 	Mat combinedResultFrame(colorFrame.rows * 2 + 1, colorFrame.cols * 2 + 1, CV_8UC3);
 
@@ -160,7 +163,10 @@ void Monitor<DataType>::CombineResultFrames()
 	detectedResultFrame.copyTo(combinedResultFrame(Rect(0, row + 1, colorFrame.cols, colorFrame.rows)));
 	trackedResultFrame.copyTo(combinedResultFrame(Rect(col + 1, row + 1, colorFrame.cols, colorFrame.rows)));
 
-	framePersistance->Persistance(combinedResultFrame);
+	if(resultPersistanceFlag == true)
+	{
+		framePersistance->Persistance(combinedResultFrame);
+	}
 
 	imshow("Combined Result", combinedResultFrame);
 	waitKey(10);
@@ -193,7 +199,7 @@ void Monitor<DataType>::Process()
 
 			GetTrackedResult(trackedTargetRects);
 
-			CombineResultFrames();
+			CombineResultFramesAndPersistance();
 
 			char logInfo[50];
 			sprintf_s(logInfo,50, "Current Index : %04d",frameIndex++);
@@ -201,6 +207,12 @@ void Monitor<DataType>::Process()
 			logPrinter.PrintLogs(logInfo, LogLevel::Info);
 		}
 	}
+}
+
+template <typename DataType>
+void Monitor<DataType>::SetResultPersistanceFlag(bool flag)
+{
+	this->resultPersistanceFlag = flag;
 }
 
 template <typename DataType>
