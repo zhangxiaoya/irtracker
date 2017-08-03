@@ -34,8 +34,21 @@ private:
 
 	void AssertGray();
 
-public:
+	double GetAverageGrayValueOfKNeighbor(int row, int col, int radius);
 
+	void CalculateEntropy(double* entropy, int* frequency) const;
+
+	void CalculatePixelFrequency(int* frequency);
+
+	void GetMultiscalLocalDifferenceContrastMap(cv::Mat& multiscaleLocalContrastMap);
+
+	void GetPixelFrequency(double* entropy);
+
+	void GetUniquePixelValueOfKNeighbor(int row, int col, int radius, int* uniquePixelList);
+
+	void GetLocalEntrogy(cv::Mat& localEntrogyMap);
+
+public:
 	void Dilate(cv::Mat& resultFrame) const;
 
 	void TopHat(cv::Mat& resultFrame);
@@ -47,6 +60,8 @@ public:
 	void SetDilationKernelSize(const int& kernelSize);
 
 	void StrengthenIntensityOfBlock();
+
+	void MultiScaleDifference(cv::Mat& resultFrame);
 
 private:
 	int imageWidth;
@@ -63,6 +78,7 @@ private:
 	int CountX;
 	int BlockSize;
 	int LowContrastThreshold;
+	unsigned int BitCount;
 };
 
 template <typename DataType>
@@ -100,6 +116,7 @@ void PreProcessor<DataType>::InitParameters()
 {
 	CountX = ceil(static_cast<double>(imageWidth) / BlockSize);
 	CountY = ceil(static_cast<double>(imageHeight) / BlockSize);
+	BitCount = 1 << (8 * sizeof(DataType));
 }
 
 template <typename DataType>
@@ -251,6 +268,168 @@ void PreProcessor<DataType>::AssertGray()
 }
 
 template <typename DataType>
+double PreProcessor<DataType>::GetAverageGrayValueOfKNeighbor(int row, int col, int radius)
+{
+	auto leftTopX = col - radius >= 0 ? col - radius : 0;
+	auto leftTopY = row - radius >= 0 ? row - radius : 0;
+
+	auto rightBottomX = col + radius < imageWidth ? col + radius : imageWidth - 1;
+	auto rightBottomY = row + radius < imageHeight ? row + radius : imageHeight - 1;
+
+	auto sum = 0;
+	auto totalCount = 0;
+
+	for (auto r = leftTopY; r <= rightBottomY; ++r)
+	{
+		auto ptr = sourceFrame.ptr<DataType>(r);
+		for (auto c = leftTopX; c <= rightBottomX; ++c)
+		{
+			sum += static_cast<int>(ptr[c]);
+			++totalCount;
+		}
+	}
+
+	return static_cast<double>(sum / totalCount);
+}
+
+template <typename DataType>
+void PreProcessor<DataType>::CalculateEntropy(double* entropy, int* frequency) const
+{
+	for (auto i = 0; i < BitCount; ++i)
+	{
+		auto probability = static_cast<double>(frequency[i]) / (imageHeight * imageWidth);
+		entropy[i] = probability * log2(probability);
+	}
+}
+
+template <typename DataType>
+void PreProcessor<DataType>::CalculatePixelFrequency(int* frequency)
+{
+	for (auto r = 0; r < imageHeight; ++r)
+	{
+		auto ptr = sourceFrame.ptr<DataType>(r);
+		for (auto c = 0; c < imageWidth; ++c)
+		{
+			frequency[static_cast<int>(ptr[c])] ++;
+		}
+	}
+}
+
+template <typename DataType>
+void PreProcessor<DataType>::GetMultiscalLocalDifferenceContrastMap(cv::Mat& multiscaleLocalContrastMap)
+{
+	const auto L = 6;
+
+	double averageOfKNeighbor[L] = { 0.0 };
+	double contrastOfKNeighbor[L] = { 0.0 };
+
+	for (auto r = 0; r < imageHeight; ++r)
+	{
+		for (auto c = 0; c < imageWidth; ++c)
+		{
+			memset(averageOfKNeighbor, 0, sizeof(double)*L);
+			memset(contrastOfKNeighbor, 0, sizeof(double)*L);
+
+			for (auto k = 1; k <= L; ++k)
+			{
+				averageOfKNeighbor[k - 1] = GetAverageGrayValueOfKNeighbor(r, c, k);
+			}
+
+			auto maxVal = Util<DataType>::MaxOfConstLengthList(averageOfKNeighbor, L);
+			auto minVal = Util<DataType>::MinOfConstLengthList(averageOfKNeighbor, L);
+
+			auto squareDiff = (maxVal - minVal) * (maxVal - minVal);
+
+			if (squareDiff - 0.0 <= MinDiff || 0.0 - squareDiff <= MinDiff)
+			{
+				multiscaleLocalContrastMap.at<float>(r, c) = 1.0;
+				//				logPrinter.PrintLogs("NAN", LogLevel::Waring);
+				continue;
+			}
+
+			for (auto i = 0; i < L - 1; ++i)
+			{
+				contrastOfKNeighbor[i] = ((averageOfKNeighbor[i] - averageOfKNeighbor[L - 1]) * (averageOfKNeighbor[i] - averageOfKNeighbor[L - 1]) / squareDiff);
+			}
+
+			contrastOfKNeighbor[L - 1] = 0.0;
+
+			multiscaleLocalContrastMap.at<float>(r, c) = Util<DataType>::MaxOfConstLengthList(contrastOfKNeighbor, L);
+		}
+	}
+}
+
+template <typename DataType>
+void PreProcessor<DataType>::GetPixelFrequency(double* entropy)
+{
+	auto frequency = new int[BitCount];
+	memset(frequency, 0, sizeof(int) * BitCount);
+
+	CalculatePixelFrequency(frequency);
+
+	CalculateEntropy(entropy, frequency);
+
+	delete[] frequency;
+}
+
+template <typename DataType>
+void PreProcessor<DataType>::GetUniquePixelValueOfKNeighbor(int row, int col, int radius, int* uniquePixelList)
+{
+	memset(uniquePixelList, 0, sizeof(int) * 256);
+
+	auto leftTopX = col - radius >= 0 ? col - radius : 0;
+	auto leftTopY = row - radius >= 0 ? row - radius : 0;
+
+	auto rightBottomX = col + radius < imageWidth ? col + radius : imageWidth - 1;
+	auto rightBottomY = row + radius < imageHeight ? row + radius : imageHeight - 1;
+
+	for (auto r = leftTopY; r <= rightBottomY; ++r)
+	{
+		auto ptr = sourceFrame.ptr<DataType>(r);
+		for (auto c = leftTopX; c <= rightBottomX; ++c)
+		{
+			uniquePixelList[static_cast<int>(ptr[c])] ++;
+		}
+	}
+}
+
+template <typename DataType>
+void PreProcessor<DataType>::GetLocalEntrogy(cv::Mat& localEntrogyMap)
+{
+	auto entropy = new double[BitCount];
+	auto uniquePixelList = new int[BitCount];
+
+	memset(entropy, 0, sizeof(double)*BitCount);
+	memset(uniquePixelList, 0, sizeof(int) * BitCount);
+
+	GetPixelFrequency(entropy);
+
+	for (auto r = 0; r < imageHeight; ++r)
+	{
+		auto ptrDst = localEntrogyMap.ptr<float>(r);
+		auto ptrSrc = sourceFrame.ptr<DataType>(r);
+
+		for (auto c = 0; c < imageWidth; ++c)
+		{
+			GetUniquePixelValueOfKNeighbor(r, c, 2, uniquePixelList);
+
+			auto w = 0.0;
+			for (auto i = 0; i < 256; ++i)
+			{
+				if (uniquePixelList[i] != 0)
+				{
+					w += static_cast<double>((i - static_cast<int>(ptrSrc[c])) * (i - static_cast<int>(ptrSrc[c]))) * entropy[i];
+				}
+			}
+			ptrDst[c] = -1 * w;
+		}
+	}
+
+	delete[] entropy;
+	delete[] uniquePixelList;
+}
+
+template <typename DataType>
 void PreProcessor<DataType>::Dilate(cv::Mat& resultFrame) const
 {
 	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(dilateKernelSize, dilateKernelSize));
@@ -311,4 +490,18 @@ void PreProcessor<DataType>::StrengthenIntensityOfBlock()
 			}
 		}
 	}
+}
+
+template <typename DataType>
+void PreProcessor<DataType>::MultiScaleDifference(cv::Mat& resultFrame)
+{
+	cv::Mat multiscaleLocalContrastMap(cv::Size(imageWidth, imageHeight), CV_32FC1, cv::Scalar(0));
+
+	GetMultiscalLocalDifferenceContrastMap(multiscaleLocalContrastMap);
+
+	cv::Mat localEntrogyMap(cv::Size(imageWidth, imageHeight), CV_32FC1, cv::Scalar(0));
+
+	GetLocalEntrogy(localEntrogyMap);
+
+	resultFrame = localEntrogyMap.mul(multiscaleLocalContrastMap);
 }
