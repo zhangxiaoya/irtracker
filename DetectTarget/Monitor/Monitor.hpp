@@ -5,6 +5,7 @@
 #include "../Detector/DetectByMaxFilterAndAdptiveThreshold.hpp"
 #include "../Models/DrawResultType.hpp"
 #include "../FramePersistance/FramePersistance.hpp"
+#include "../Utils/ToVideo.hpp"
 
 template <typename DataType>
 class Monitor
@@ -58,6 +59,7 @@ private:
 	cv::Ptr<FramePersistance> framePersistance;
 
 	DetectByMaxFilterAndAdptiveThreshold<DataType>* detector;
+	ToVideo* toVideo;
 };
 
 template <typename DataType>
@@ -67,12 +69,15 @@ Monitor<DataType>::Monitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersis
 	this->frameSource = frameSource;
 
 	this->detector = new DetectByMaxFilterAndAdptiveThreshold<DataType>(IMAGE_WIDTH, IMAGE_HEIGHT);
+	this->toVideo = new ToVideo(GlobalWriteVideoFileFolder);
+	toVideo->SetFrameSize(IMAGE_WIDTH * 2 + 1, IMAGE_HEIGHT * 2 + 1);
 }
 
 template <typename DataType>
 Monitor<DataType>::~Monitor()
 {
 	delete detector;
+	delete toVideo;
 }
 
 template <typename DataType>
@@ -206,6 +211,8 @@ void Monitor<DataType>::Process()
 			logPrinter.PrintLogs(logInfo, LogLevel::Info);
 		}
 	}
+
+	toVideo->PutAllResultFramesToOneVideo();
 }
 
 template <typename DataType>

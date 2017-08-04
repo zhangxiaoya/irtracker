@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 #include <core/core.hpp>
 #include <highgui/highgui.hpp>
 
@@ -9,11 +8,11 @@
 class ToVideo
 {
 public:
-	explicit ToVideo(int ftps = 5, const std::string& name_template = "Frame_%08", const std::string& save_file_name = "video", const std::string& save_file_format = "png")
+	explicit ToVideo(const std::string save_file_folder, int ftps = 5, const std::string& name_template = "Frame_%08", const std::string& save_file_name = "video")
 		: ftps(ftps),
 		  nameTemplate(name_template),
 		  saveFileName(save_file_name),
-		  saveFileFormat(save_file_format)
+		  saveFileFolder(save_file_folder)
 	{
 	}
 
@@ -25,32 +24,23 @@ private:
 	int ftps;
 	std::string nameTemplate;
 	std::string saveFileName;
-	std::string saveFileFormat;
+	std::string saveFileFolder;
 	cv::Size frameSize;
 };
 
+inline void ToVideo::SetFrameSize(int imageWidth, int imageHeight)
+{
+	frameSize = cv::Size(imageWidth, imageHeight);
+}
+
 inline void ToVideo::PutAllResultFramesToOneVideo() const
 {
-	auto len = strlen(GlobalWriteFileNameFormat);
-	--len;
-	for (; len >= 0; --len)
-	{
-		if(GlobalWriteFileNameFormat[len] =='\\')
-			break;
-	}
-
-	auto videoFileFormatPrefix = new char[len-1];
-	memcpy(videoFileFormatPrefix, GlobalWriteFileNameFormat, len);
-
-	std::string videoFileFormat(videoFileFormatPrefix);
-	videoFileFormat += "\\\\";
-	videoFileFormat += saveFileName;
-	videoFileFormat += ".avi";
+	auto saveFileFullName = saveFileFolder + "\\" + saveFileName + ".avi";
 
 	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
 
 	cv::VideoWriter video_writer;
-	video_writer.open(saveFileName, -1, ftps, frameSize);
+	video_writer.open(saveFileFullName, -1, ftps, frameSize);
 
 	if (video_writer.isOpened())
 	{
@@ -74,11 +64,4 @@ inline void ToVideo::PutAllResultFramesToOneVideo() const
 	{
 		std::cout << "Save Video File Failed" << std::endl;
 	}
-
-	delete[] videoFileFormatPrefix;
-}
-
-inline void ToVideo::SetFrameSize(int imageWidth, int imageHeight)
-{
-	frameSize = cv::Size(imageWidth, imageHeight);
 }
