@@ -12,7 +12,6 @@ public:
 
 	cv::Scalar Color() const
 	{
-		
 		if (timeLeft >= warningStageTime)
 			return COLOR_RED;
 		return COLOR_YELLOW;

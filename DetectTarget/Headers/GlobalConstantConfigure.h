@@ -44,4 +44,6 @@ bool CHECK_DECRETIZATED_FLAG = true;
 
 const auto LowContrastThreshold = 3;
 
+const double MinDiff = 0.00000001;
+
 LogPrinter logPrinter;

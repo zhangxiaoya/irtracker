@@ -69,6 +69,10 @@ public:
 
 	static void CalCulateCenterValue(const cv::Mat& frame, DataType& centerValue, const cv::Rect& rect);
 
+	static double MaxOfConstLengthList(const double* data, const int& len);
+
+	static double MinOfConstLengthList(const double* data, const int& len);
+
 private:
 
 	static void DFSWithoutRecursionEightField(const cv::Mat& binaryFrame, cv::Mat& bitMap, int r, int c, int currentIndex, DataType value = 0);
@@ -461,6 +465,30 @@ void Util<DataType>::CalCulateCenterValue(const cv::Mat& frame, DataType& center
 	sumAll += static_cast<int>(frame.at<DataType>(centerY - 1, centerX));
 	sumAll += static_cast<int>(frame.at<DataType>(centerY - 1, centerX - 1));
 	centerValue = static_cast<DataType>(sumAll / 4);
+}
+
+template <typename DataType>
+double Util<DataType>::MaxOfConstLengthList(const double* data, const int& len)
+{
+	auto MaxValue = data[0];
+	for (auto i = 0; i < len; ++i)
+	{
+		if (data[i] - MaxValue > MinDiff)
+			MaxValue = data[i];
+	}
+	return MaxValue;
+}
+
+template <typename DataType>
+double Util<DataType>::MinOfConstLengthList(const double* data, const int& len)
+{
+	auto MinValue = data[0];
+	for (auto i = 0; i < len; ++i)
+	{
+		if (MinValue - data[i] > MinDiff)
+			MinValue = data[i];
+	}
+	return MinValue;
 }
 
 template <typename DataType>

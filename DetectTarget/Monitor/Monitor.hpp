@@ -5,6 +5,7 @@
 #include "../Detector/DetectByMaxFilterAndAdptiveThreshold.hpp"
 #include "../Models/DrawResultType.hpp"
 #include "../FramePersistance/FramePersistance.hpp"
+#include "../Utils/ToVideo.hpp"
 
 template <typename DataType>
 class Monitor
@@ -15,6 +16,8 @@ public:
 	~Monitor();
 
 	void Process();
+
+	void SetResultPersistanceFlag(bool flag = false);
 
 protected:
 	bool CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& rect) const;
@@ -34,7 +37,7 @@ private:
 
 	void GetTrackedResult(std::vector<cv::Rect> trackedTargetRects);
 
-	void CombineResultFrames();
+	void CombineResultFramesAndPersistance();
 
 	void DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType = DrawResultType::Rectangles) const;
 
@@ -44,31 +47,37 @@ private:
 	cv::Mat grayFrame;
 	cv::Mat colorFrame;
 
+	cv::Mat colorPreprocessResultFrame;
 	cv::Mat preprocessResultFrame;
 	cv::Mat detectedResultFrame;
 	cv::Mat trackedResultFrame;
 
 	int frameIndex;
+	bool resultPersistanceFlag;
 
 	cv::Ptr<FrameSource> frameSource;
 	cv::Ptr<FramePersistance> framePersistance;
 
 	DetectByMaxFilterAndAdptiveThreshold<DataType>* detector;
+	ToVideo* toVideo;
 };
 
 template <typename DataType>
-Monitor<DataType>::Monitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance): frameIndex(0)
+Monitor<DataType>::Monitor(cv::Ptr<FrameSource> frameSource, cv::Ptr<FramePersistance> framePersistance): frameIndex(0), resultPersistanceFlag(true)
 {
 	this->framePersistance = framePersistance;
 	this->frameSource = frameSource;
 
-	this->detector = new DetectByMaxFilterAndAdptiveThreshold<DataType>(IMAGE_WIDTH,IMAGE_HEIGHT);
+	this->detector = new DetectByMaxFilterAndAdptiveThreshold<DataType>(IMAGE_WIDTH, IMAGE_HEIGHT);
+	this->toVideo = new ToVideo(GlobalWriteVideoFileFolder);
+	toVideo->SetFrameSize(IMAGE_WIDTH * 2 + 1, IMAGE_HEIGHT * 2 + 1);
 }
 
 template <typename DataType>
 Monitor<DataType>::~Monitor()
 {
 	delete detector;
+	delete toVideo;
 }
 
 template <typename DataType>
@@ -108,7 +117,7 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 template <typename DataType>
 void Monitor<DataType>::GetPreprocessedResult(const Mat& mat)
 {
-	cvtColor(mat, preprocessResultFrame, CV_GRAY2RGB);
+	cvtColor(mat, colorPreprocessResultFrame, CV_GRAY2RGB);
 }
 
 template <typename DataType>
@@ -134,7 +143,7 @@ void Monitor<DataType>::GetTrackedResult(std::vector<cv::Rect> trackedTargetRect
 }
 
 template <typename DataType>
-void Monitor<DataType>::CombineResultFrames()
+void Monitor<DataType>::CombineResultFramesAndPersistance()
 {
 	Mat combinedResultFrame(colorFrame.rows * 2 + 1, colorFrame.cols * 2 + 1, CV_8UC3);
 
@@ -156,11 +165,14 @@ void Monitor<DataType>::CombineResultFrames()
 	}
 
 	colorFrame.copyTo(combinedResultFrame(Rect(0, 0, colorFrame.cols, colorFrame.rows)));
-	preprocessResultFrame.copyTo(combinedResultFrame(Rect(col + 1, 0, colorFrame.cols, colorFrame.rows)));
+	colorPreprocessResultFrame.copyTo(combinedResultFrame(Rect(col + 1, 0, colorFrame.cols, colorFrame.rows)));
 	detectedResultFrame.copyTo(combinedResultFrame(Rect(0, row + 1, colorFrame.cols, colorFrame.rows)));
 	trackedResultFrame.copyTo(combinedResultFrame(Rect(col + 1, row + 1, colorFrame.cols, colorFrame.rows)));
 
-	framePersistance->Persistance(combinedResultFrame);
+	if(resultPersistanceFlag == true)
+	{
+		framePersistance->Persistance(combinedResultFrame);
+	}
 
 	imshow("Combined Result", combinedResultFrame);
 	waitKey(10);
@@ -177,15 +189,13 @@ void Monitor<DataType>::Process()
 		{
 			ConvertToGray();
 
-			cv::Mat preprocessedFrame;
-
 			vector<Rect> detectedTargetRects;
 
 			CheckPerf(detector->Detect(grayFrame, detectedTargetRects), "Detector ");
 
-			detector->GetPreprocessedResult(preprocessedFrame);
+			detector->GetPreprocessedResult(preprocessResultFrame);
 
-			GetPreprocessedResult(preprocessedFrame);
+			GetPreprocessedResult(preprocessResultFrame);
 
 			GetDetectedResult(detectedTargetRects);
 
@@ -193,7 +203,7 @@ void Monitor<DataType>::Process()
 
 			GetTrackedResult(trackedTargetRects);
 
-			CombineResultFrames();
+			CombineResultFramesAndPersistance();
 
 			char logInfo[50];
 			sprintf_s(logInfo,50, "Current Index : %04d",frameIndex++);
@@ -201,6 +211,14 @@ void Monitor<DataType>::Process()
 			logPrinter.PrintLogs(logInfo, LogLevel::Info);
 		}
 	}
+
+	toVideo->PutAllResultFramesToOneVideo();
+}
+
+template <typename DataType>
+void Monitor<DataType>::SetResultPersistanceFlag(bool flag)
+{
+	this->resultPersistanceFlag = flag;
 }
 
 template <typename DataType>
