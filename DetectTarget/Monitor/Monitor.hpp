@@ -238,8 +238,12 @@ bool Monitor<DataType>::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame,
 	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
 	auto avgValOfCurrentRect = Util<DataType>::AverageValue(grayFrame, rect);
 
-	auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 17;
-	auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 20;
+	auto convexPartition = 8;
+	auto concavePartition = 1;
+	auto convexThresholdProportion = static_cast<double>(1 + convexPartition) / convexPartition;
+	auto concaveThresholdPropotion = static_cast<double>(1 - concavePartition) / concavePartition;
+	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
+	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdPropotion;
 
 	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
 		return false;
@@ -268,8 +272,13 @@ bool Monitor<DataType>::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg
 	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(fdImg, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
 	auto avgValOfCurrentRect = Util<DataType>::AverageValue(fdImg, rect);
 
-	auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 8;
-	auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 10;
+	auto convexPartition = 6;
+	auto concavePartition = 1;
+
+	auto convexThresholdProportion = static_cast<double>(1 + convexPartition) / convexPartition;
+	auto concaveThresholdProportion = static_cast<double>(1 - concavePartition) / concavePartition;
+	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
+	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdProportion;
 
 	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
 		return false;
