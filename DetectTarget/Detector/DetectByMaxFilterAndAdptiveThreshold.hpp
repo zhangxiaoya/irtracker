@@ -270,6 +270,7 @@ template <typename DataType>
 void DetectByMaxFilterAndAdptiveThreshold<DataType>::MaxFilter(int kernelSize)
 {
 	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
+//	morphologyEx(frameNeedDetect, frameAfterMaxFilter, CV_MOP_OPEN, kernel);
 	dilate(frameNeedDetect, frameAfterMaxFilter, kernel);
 }
 
