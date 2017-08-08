@@ -211,8 +211,8 @@ void Monitor<DataType>::Process()
 			logPrinter.PrintLogs(logInfo, LogLevel::Info);
 		}
 	}
-
-	toVideo->PutAllResultFramesToOneVideo();
+	if(resultPersistanceFlag)
+		toVideo->PutAllResultFramesToOneVideo();
 }
 
 template <typename DataType>
