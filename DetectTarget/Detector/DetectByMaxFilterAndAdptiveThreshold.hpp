@@ -229,32 +229,12 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::MergeCrossedRectangles()
 				if (fourLimitsOfAllObjects[i].bottom < fourLimitsOfAllObjects[j].bottom)
 					fourLimitsOfAllObjects[i].bottom = fourLimitsOfAllObjects[j].bottom;
 			}
-		}
-	}
-	// for left top may be missed, so need double check
-	for (auto i = 0; i < fourLimitsOfAllObjects.size(); ++i)
-	{
-		if (fourLimitsOfAllObjects[i].identify == -1)
-			continue;
-		for (auto j = 0; j < fourLimitsOfAllObjects.size(); ++j)
-		{
-			if (i == j || fourLimitsOfAllObjects[j].identify == -1)
-				continue;
-			if (CheckCross(fourLimitsOfAllObjects[i], fourLimitsOfAllObjects[j]))
+
+			if((fourLimitsOfAllObjects[i].bottom - fourLimitsOfAllObjects[i].top) > TARGET_HEIGHT_MAX_LIMIT ||
+			   (fourLimitsOfAllObjects[i].right - fourLimitsOfAllObjects[i].left) > TARGET_WIDTH_MAX_LIMIT)
 			{
-				fourLimitsOfAllObjects[j].identify = -1;
-
-				if (fourLimitsOfAllObjects[i].top > fourLimitsOfAllObjects[j].top)
-					fourLimitsOfAllObjects[i].top = fourLimitsOfAllObjects[j].top;
-
-				if (fourLimitsOfAllObjects[i].left > fourLimitsOfAllObjects[j].left)
-					fourLimitsOfAllObjects[i].left = fourLimitsOfAllObjects[j].left;
-
-				if (fourLimitsOfAllObjects[i].right < fourLimitsOfAllObjects[j].right)
-					fourLimitsOfAllObjects[i].right = fourLimitsOfAllObjects[j].right;
-
-				if (fourLimitsOfAllObjects[i].bottom < fourLimitsOfAllObjects[j].bottom)
-					fourLimitsOfAllObjects[i].bottom = fourLimitsOfAllObjects[j].bottom;
+				fourLimitsOfAllObjects[i].identify = -1;
+				break;
 			}
 		}
 	}
