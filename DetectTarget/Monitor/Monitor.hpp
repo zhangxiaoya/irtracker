@@ -26,7 +26,7 @@ protected:
 
 	bool CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rect) const;
 
-	bool CheckSurroundingBoundaryDiscontinuityAndDescendGradient(const cv::Mat& grayFrame, const cv::Mat& fdImg, const cv::Rect& rect) const;
+	bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(const cv::Mat& preprocessedFrame, const cv::Rect& rect) const;
 
 private:
 	void ConvertToGray();
@@ -108,7 +108,7 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 				(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
 //				|| (CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
 			)
-			&& CheckSurroundingBoundaryDiscontinuityAndDescendGradient(grayFrame,preprocessResultFrame,rect)
+			&& CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(preprocessResultFrame,rect)
 //			&& CheckFourBlock(preprocessResultFrame, rect)
 		)
 		{
@@ -379,15 +379,15 @@ void Monitor<DataType>::GetSurroundingBoundaryPixels(const cv::Mat& grayFrame, c
 }
 
 template <typename DataType>
-bool Monitor<DataType>::CheckSurroundingBoundaryDiscontinuityAndDescendGradient(const cv::Mat& grayFrame, const cv::Mat& fdImg, const cv::Rect& rect) const
+bool Monitor<DataType>::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(const cv::Mat& preprocessedFrame, const cv::Rect& rect) const
 {
 	vector<DataType> surroundingPixelList;
-	GetSurroundingBoundaryPixels(grayFrame, rect, surroundingPixelList);
+	GetSurroundingBoundaryPixels(preprocessedFrame, rect, surroundingPixelList);
 
-	auto pixelValuOverCenterCount = 0;
+	auto pixelValueOverCenterValueCount = 0;
 	DataType centerValue = 0;
-	DataType avgValue = Util<DataType>::AverageValue(fdImg, rect);
-	Util<DataType>::CalCulateCenterValue(grayFrame, centerValue, rect);
+	DataType averageValue = Util<DataType>::AverageValue(preprocessedFrame, rect);
+	Util<DataType>::CalCulateCenterValue(preprocessedFrame, centerValue, rect);
 
 	auto sum = 0;
 	for (auto i = 0; i < surroundingPixelList.size(); ++i)
@@ -395,12 +395,12 @@ bool Monitor<DataType>::CheckSurroundingBoundaryDiscontinuityAndDescendGradient(
 		sum += static_cast<int>(surroundingPixelList[i]);
 		if (surroundingPixelList[i] > centerValue)
 		{
-			pixelValuOverCenterCount++;
+			pixelValueOverCenterValueCount++;
 		}
 	}
 	DataType avgSurroundingPixels = static_cast<DataType>(sum / surroundingPixelList.size());
 
-	if(pixelValuOverCenterCount < 2 && avgSurroundingPixels < (avgValue * 11/12 ))
+	if(pixelValueOverCenterValueCount < 2 && avgSurroundingPixels < (averageValue * 11/12 ))
 		return true;
 
 	return false;
