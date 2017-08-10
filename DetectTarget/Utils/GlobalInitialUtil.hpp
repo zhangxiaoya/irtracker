@@ -106,15 +106,15 @@ inline void For6kmData(TargetMoveDirection direction)
 {
 	if(direction == In)
 	{
-		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fivth\\6km\\Frames\\in\\target_in_6km_%02d.png";
-		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fivth\\6km\\Frames\\results\\in\\target_in_6km_%02d.png";
-		GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fivth\\6km\\Frames\\results\\in";
+		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\in\\target_in_6km_%02d.png";
+		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\in\\target_in_6km_1%02d.png";
+		GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\in";
 	}
 	else if(direction == Out)
 	{
-		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fivth\\6km\\Frames\\out\\target_out_6km_%02d.png";
-		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fivth\\6km\\Frames\\results\\out\\target_out_6km_%02d.png";
-		GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fivth\\6km\\Frames\\results\\out";
+		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\out\\target_out_6km_%02d.png";
+		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\out\\target_out_6km_1%02d.png";
+		GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\out";
 	}
 	else
 	{
