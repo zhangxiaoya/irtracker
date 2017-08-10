@@ -310,7 +310,7 @@ DataType Util<DataType>::AverageValue(const cv::Mat& curFrame, const cv::Rect& r
 		sumAll += (sumRow / rect.width);
 	}
 
-	return sumAll / rect.height;
+	return static_cast<DataType>(sumAll / rect.height);
 }
 
 template <typename DataType>

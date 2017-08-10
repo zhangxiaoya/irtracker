@@ -96,11 +96,37 @@ inline bool UpdateConstants()
 	return false;
 }
 
+enum TargetMoveDirection
+{
+	In,
+	Out
+};
+
+inline void For6kmData(TargetMoveDirection direction)
+{
+	if(direction == In)
+	{
+		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\in\\target_in_6km_%02d.png";
+		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\in\\target_in_6km_1%02d.png";
+		GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\in";
+	}
+	else if(direction == Out)
+	{
+		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\out\\target_out_6km_%02d.png";
+		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\out\\target_out_6km_1%02d.png";
+		GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\out";
+	}
+	else
+	{
+		logPrinter.PrintLogs("Target Move Direction Operator Not Matched!", LogLevel::Error);
+	}
+}
+
 inline void InitGlobalConfigure()
 {
 	ForSecondOriginalBinFiles();
 
-	ForWorstFrames("500", "yundong");
+//	ForWorstFrames("500", "jingzhi");
 
 //	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 //	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms\\Frame_%08d.bmp";
@@ -125,6 +151,8 @@ inline void InitGlobalConfigure()
 //	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500-700_middle\\images\\Frame_%08d.png";
 //	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle\\Frame_%08d.png";
 //	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle";
+
+	For6kmData(In);
 
 	if(UpdateConstants())
 	{

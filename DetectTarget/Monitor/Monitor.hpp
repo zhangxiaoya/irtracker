@@ -26,6 +26,12 @@ protected:
 
 	bool CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rect) const;
 
+	bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(const cv::Mat& preprocessedFrame, const cv::Rect& rect) const;
+
+	bool CheckCoverageOfPreprocessedFrame(const Mat& preprocessResultFrame, const cv::Rect& rect) const;
+
+	bool CheckInsideBoundaryDescendGradient(const Mat& grayFrame, const cv::Rect rect) const;
+
 private:
 	void ConvertToGray();
 
@@ -36,6 +42,8 @@ private:
 	void GetDetectedResult(std::vector<cv::Rect> targetRects);
 
 	void GetTrackedResult(std::vector<cv::Rect> trackedTargetRects);
+
+	void GetSurroundingBoundaryPixels(const cv::Mat& grayFrame, const cv::Rect& rect, vector<DataType>& surroundingPixelList) const;
 
 	void CombineResultFramesAndPersistance();
 
@@ -101,11 +109,13 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 	{
 		if (
 			(
-				(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect)) ||
-				(CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
-			)
-			&&
-			CheckFourBlock(preprocessResultFrame, rect)
+			(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
+				//				|| (CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
+				)
+			&& CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(preprocessResultFrame, rect)
+//			&& CheckCoverageOfPreprocessedFrame(preprocessResultFrame, rect)
+			&& CheckInsideBoundaryDescendGradient(grayFrame,rect)
+//			&& CheckFourBlock(preprocessResultFrame, rect)
 		)
 		{
 			trackingResult.push_back(rect);
@@ -211,8 +221,8 @@ void Monitor<DataType>::Process()
 			logPrinter.PrintLogs(logInfo, LogLevel::Info);
 		}
 	}
-
-	toVideo->PutAllResultFramesToOneVideo();
+	if(resultPersistanceFlag)
+		toVideo->PutAllResultFramesToOneVideo();
 }
 
 template <typename DataType>
@@ -238,8 +248,12 @@ bool Monitor<DataType>::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame,
 	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
 	auto avgValOfCurrentRect = Util<DataType>::AverageValue(grayFrame, rect);
 
-	auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 17;
-	auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 20;
+	auto convexPartition = 8;
+	auto concavePartition = 1;
+	auto convexThresholdProportion = static_cast<double>(1 + convexPartition) / convexPartition;
+	auto concaveThresholdPropotion = static_cast<double>(1 - concavePartition) / concavePartition;
+	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
+	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdPropotion;
 
 	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
 		return false;
@@ -268,8 +282,13 @@ bool Monitor<DataType>::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg
 	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(fdImg, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
 	auto avgValOfCurrentRect = Util<DataType>::AverageValue(fdImg, rect);
 
-	auto convexThreshold = avgValOfSurroundingBox + avgValOfSurroundingBox / 8;
-	auto concaveThreshold = avgValOfSurroundingBox - avgValOfSurroundingBox / 10;
+	auto convexPartition = 6;
+	auto concavePartition = 1;
+
+	auto convexThresholdProportion = static_cast<double>(1 + convexPartition) / convexPartition;
+	auto concaveThresholdProportion = static_cast<double>(1 - concavePartition) / concavePartition;
+	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
+	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdProportion;
 
 	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
 		return false;
@@ -306,6 +325,177 @@ bool Monitor<DataType>::CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rec
 //		return false;
 
 	return true;
+}
+
+template <typename DataType>
+void Monitor<DataType>::GetSurroundingBoundaryPixels(const cv::Mat& grayFrame, const cv::Rect& rect, vector<DataType>& surroundingPixelList) const
+{
+	auto topRow = rect.tl().y - 1;
+	if(topRow >= 0)
+	{
+		for(auto c = rect.tl().x; c <= rect.br().x;++c)
+		{
+			surroundingPixelList.push_back(grayFrame.at<DataType>(topRow, c));
+		}
+	}
+
+	auto bottomRow = rect.br().y + 1;
+	if(bottomRow < grayFrame.rows)
+	{
+		for (auto c = rect.tl().x; c <= rect.br().x; ++c)
+		{
+			surroundingPixelList.push_back(grayFrame.at<DataType>(bottomRow, c));
+		}
+	}
+
+	auto leftCol = rect.tl().x - 1;
+	if(leftCol >= 0)
+	{
+		for (auto r = rect.tl().y; r <= rect.br().y; ++r)
+		{
+			surroundingPixelList.push_back(grayFrame.at<DataType>(r, leftCol));
+		}
+	}
+
+	auto rightCol = rect.br().x + 1;
+	if(rightCol < grayFrame.cols)
+	{
+		for(auto r = rect.tl().y; r <= rect.br().y;++r)
+		{
+			surroundingPixelList.push_back(grayFrame.at<DataType>(r, rightCol));
+		}
+	}
+
+	if (leftCol >=0 && topRow >= 0)
+	{
+		surroundingPixelList.push_back(grayFrame.at<DataType>(topRow, leftCol));
+	}
+	if(leftCol >= 0 && bottomRow < grayFrame.rows)
+	{
+		surroundingPixelList.push_back(grayFrame.at<DataType>(bottomRow, leftCol));
+	}
+	if(rightCol < grayFrame.cols && topRow >= 0)
+	{
+		surroundingPixelList.push_back(grayFrame.at<DataType>(topRow, rightCol));
+	}
+	if(rightCol < grayFrame.cols && bottomRow < grayFrame.rows)
+	{
+		surroundingPixelList.push_back(grayFrame.at<DataType>(bottomRow, rightCol));
+	}
+}
+
+template <typename DataType>
+bool Monitor<DataType>::CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(const cv::Mat& preprocessedFrame, const cv::Rect& rect) const
+{
+	vector<DataType> surroundingPixelList;
+	GetSurroundingBoundaryPixels(preprocessedFrame, rect, surroundingPixelList);
+
+	auto pixelValueOverCenterValueCount = 0;
+	DataType centerValue = 0;
+	DataType averageValue = Util<DataType>::AverageValue(preprocessedFrame, rect);
+	Util<DataType>::CalCulateCenterValue(preprocessedFrame, centerValue, rect);
+
+	auto sum = 0;
+	for (auto i = 0; i < surroundingPixelList.size(); ++i)
+	{
+		sum += static_cast<int>(surroundingPixelList[i]);
+		if (surroundingPixelList[i] > centerValue)
+		{
+			pixelValueOverCenterValueCount++;
+		}
+	}
+	DataType avgSurroundingPixels = static_cast<DataType>(sum / surroundingPixelList.size());
+
+	if(pixelValueOverCenterValueCount < 2 && avgSurroundingPixels < (averageValue * 11/12 ))
+		return true;
+
+	return false;
+}
+
+template <typename DataType>
+bool Monitor<DataType>::CheckCoverageOfPreprocessedFrame(const Mat& preprocessResultFrame, const cv::Rect& rect) const
+{
+	auto firstRow = preprocessResultFrame.ptr<DataType>(rect.tl().y);
+	auto lastRow = preprocessResultFrame.ptr<DataType>(rect.br().y);
+
+	DataType maxValue = static_cast<DataType>(0);
+	if (maxValue < firstRow[rect.tl().x])
+		maxValue = firstRow[rect.tl().x];
+	if(maxValue < firstRow[rect.br().x])
+		maxValue = firstRow[rect.br().x];
+
+	if (maxValue < lastRow[rect.tl().x])
+		maxValue = lastRow[rect.tl().x];
+	if (maxValue < lastRow[rect.br().x])
+		maxValue = lastRow[rect.br().x];
+
+	auto count = 0;
+	for(auto r = rect.tl().y; r <= rect.br().y; ++r)
+	{
+		auto perRow = preprocessResultFrame.ptr<DataType>(r);
+		for(auto c = rect.tl().x; c <= rect.br().x; ++c)
+		{
+			if (perRow[c] == maxValue)
+				count++;
+		}
+	}
+
+	if(static_cast<double>(count) / (rect.width * rect.height) > 0.15)
+		return true;
+
+	return false;
+}
+
+template <typename DataType>
+bool Monitor<DataType>::CheckInsideBoundaryDescendGradient(const Mat& grayFrame, const cv::Rect rect) const
+{
+
+	auto sum = 0;
+
+	auto topRow = grayFrame.ptr<DataType>(rect.tl().y);
+	auto bottomRow = grayFrame.ptr<DataType>(rect.br().y);
+
+	for (auto c = rect.tl().x; c <= rect.br().x; ++c)
+		sum += static_cast<int>(topRow[c]);
+	auto avgTop = static_cast<DataType>(sum / (rect.width + 1));
+
+	sum = 0;
+	for (auto c = rect.tl().x; c <= rect.br().x; ++c)
+		sum += static_cast<int>(bottomRow[c]);
+	auto avgBottom = static_cast<DataType>(sum / (rect.width + 1));
+
+	sum = 0;
+	for (auto r = rect.tl().y; r <= rect.br().y; ++r)
+		sum += static_cast<int>(grayFrame.at<DataType>(r, rect.tl().x));
+	auto avgLeft = static_cast<int>(sum / (rect.height + 1));
+
+	sum = 0;
+	for (auto r = rect.tl().y; r <= rect.br().y; ++r)
+		sum += static_cast<int>(grayFrame.at<DataType>(r, rect.br().x));
+	auto avgRight = static_cast<int>(sum / (rect.height + 1));
+
+	DataType centerValue = 0;
+	Util<DataType>::CalCulateCenterValue(grayFrame, centerValue, rect);
+	DataType averageValue = Util<DataType>::AverageValue(grayFrame, rect);
+
+	auto count = 0;
+//	if (avgLeft < centerValue) count++;
+//	if (avgBottom < centerValue) count++;
+//	if (avgRight < centerValue) count++;
+//	if (avgTop < centerValue) count++;
+
+	if (avgLeft < averageValue) count++;
+	if (avgBottom < averageValue) count++;
+	if (avgRight < averageValue) count++;
+	if (avgTop < averageValue) count++;
+
+	Mat temp;
+	cvtColor(grayFrame, temp, CV_GRAY2RGB);
+	rectangle(temp, Point(rect.tl().x - 1, rect.tl().y - 1), Point(rect.br().x + 1, rect.br().y + 1), Scalar(255, 255, 0));
+
+	if (count > 3)
+		return true;
+	return false;
 }
 
 template <typename DataType>
