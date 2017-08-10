@@ -26,6 +26,8 @@ protected:
 
 	bool CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rect) const;
 
+	bool CheckSurroundingBoundaryDiscontinuityAndDescendGradient(const cv::Mat& grayFrame, const cv::Mat& fdImg, const cv::Rect& rect) const;
+
 private:
 	void ConvertToGray();
 
@@ -36,6 +38,8 @@ private:
 	void GetDetectedResult(std::vector<cv::Rect> targetRects);
 
 	void GetTrackedResult(std::vector<cv::Rect> trackedTargetRects);
+
+	void GetSurroundingBoundaryPixels(const cv::Mat& grayFrame, const cv::Rect& rect, vector<DataType>& surroundingPixelList) const;
 
 	void CombineResultFramesAndPersistance();
 
@@ -101,11 +105,11 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 	{
 		if (
 			(
-				(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect)) ||
-				(CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
+				(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
+//				|| (CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
 			)
-			&&
-			CheckFourBlock(preprocessResultFrame, rect)
+			&& CheckSurroundingBoundaryDiscontinuityAndDescendGradient(grayFrame,preprocessResultFrame,rect)
+//			&& CheckFourBlock(preprocessResultFrame, rect)
 		)
 		{
 			trackingResult.push_back(rect);
@@ -315,6 +319,91 @@ bool Monitor<DataType>::CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rec
 //		return false;
 
 	return true;
+}
+
+template <typename DataType>
+void Monitor<DataType>::GetSurroundingBoundaryPixels(const cv::Mat& grayFrame, const cv::Rect& rect, vector<DataType>& surroundingPixelList) const
+{
+	auto topRow = rect.tl().y - 1;
+	if(topRow >= 0)
+	{
+		for(auto c = rect.tl().x; c <= rect.br().x;++c)
+		{
+			surroundingPixelList.push_back(grayFrame.at<DataType>(topRow, c));
+		}
+	}
+
+	auto bottomRow = rect.br().y + 1;
+	if(bottomRow < grayFrame.rows)
+	{
+		for (auto c = rect.tl().x; c <= rect.br().x; ++c)
+		{
+			surroundingPixelList.push_back(grayFrame.at<DataType>(bottomRow, c));
+		}
+	}
+
+	auto leftCol = rect.tl().x - 1;
+	if(leftCol >= 0)
+	{
+		for (auto r = rect.tl().y; r <= rect.br().y; ++r)
+		{
+			surroundingPixelList.push_back(grayFrame.at<DataType>(r, leftCol));
+		}
+	}
+
+	auto rightCol = rect.br().x + 1;
+	if(rightCol < grayFrame.cols)
+	{
+		for(auto r = rect.tl().y; r <= rect.br().y;++r)
+		{
+			surroundingPixelList.push_back(grayFrame.at<DataType>(r, rightCol));
+		}
+	}
+
+	if (leftCol >=0 && topRow >= 0)
+	{
+		surroundingPixelList.push_back(grayFrame.at<DataType>(topRow, leftCol));
+	}
+	if(leftCol >= 0 && bottomRow < grayFrame.rows)
+	{
+		surroundingPixelList.push_back(grayFrame.at<DataType>(bottomRow, leftCol));
+	}
+	if(rightCol < grayFrame.cols && topRow >= 0)
+	{
+		surroundingPixelList.push_back(grayFrame.at<DataType>(topRow, rightCol));
+	}
+	if(rightCol < grayFrame.cols && bottomRow < grayFrame.rows)
+	{
+		surroundingPixelList.push_back(grayFrame.at<DataType>(bottomRow, rightCol));
+	}
+}
+
+template <typename DataType>
+bool Monitor<DataType>::CheckSurroundingBoundaryDiscontinuityAndDescendGradient(const cv::Mat& grayFrame, const cv::Mat& fdImg, const cv::Rect& rect) const
+{
+	vector<DataType> surroundingPixelList;
+	GetSurroundingBoundaryPixels(grayFrame, rect, surroundingPixelList);
+
+	auto pixelValuOverCenterCount = 0;
+	DataType centerValue = 0;
+	DataType avgValue = Util<DataType>::AverageValue(fdImg, rect);
+	Util<DataType>::CalCulateCenterValue(grayFrame, centerValue, rect);
+
+	auto sum = 0;
+	for (auto i = 0; i < surroundingPixelList.size(); ++i)
+	{
+		sum += static_cast<int>(surroundingPixelList[i]);
+		if (surroundingPixelList[i] > centerValue)
+		{
+			pixelValuOverCenterCount++;
+		}
+	}
+	DataType avgSurroundingPixels = static_cast<DataType>(sum / surroundingPixelList.size());
+
+	if(pixelValuOverCenterCount < 2 && avgSurroundingPixels < (avgValue * 11/12 ))
+		return true;
+
+	return false;
 }
 
 template <typename DataType>
