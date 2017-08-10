@@ -28,6 +28,10 @@ protected:
 
 	bool CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(const cv::Mat& preprocessedFrame, const cv::Rect& rect) const;
 
+	bool CheckCoverageOfPreprocessedFrame(const Mat& preprocessResultFrame, const cv::Rect& rect) const;
+
+	bool CheckInsideBoundaryDescendGradient(const Mat& grayFrame, const cv::Rect rect) const;
+
 private:
 	void ConvertToGray();
 
@@ -105,10 +109,12 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 	{
 		if (
 			(
-				(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
-//				|| (CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
-			)
-			&& CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(preprocessResultFrame,rect)
+			(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
+				//				|| (CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
+				)
+			&& CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(preprocessResultFrame, rect)
+//			&& CheckCoverageOfPreprocessedFrame(preprocessResultFrame, rect)
+			&& CheckInsideBoundaryDescendGradient(grayFrame,rect)
 //			&& CheckFourBlock(preprocessResultFrame, rect)
 		)
 		{
@@ -403,6 +409,92 @@ bool Monitor<DataType>::CheckSurroundingBoundaryDiscontinuityAndDescendGradientO
 	if(pixelValueOverCenterValueCount < 2 && avgSurroundingPixels < (averageValue * 11/12 ))
 		return true;
 
+	return false;
+}
+
+template <typename DataType>
+bool Monitor<DataType>::CheckCoverageOfPreprocessedFrame(const Mat& preprocessResultFrame, const cv::Rect& rect) const
+{
+	auto firstRow = preprocessResultFrame.ptr<DataType>(rect.tl().y);
+	auto lastRow = preprocessResultFrame.ptr<DataType>(rect.br().y);
+
+	DataType maxValue = static_cast<DataType>(0);
+	if (maxValue < firstRow[rect.tl().x])
+		maxValue = firstRow[rect.tl().x];
+	if(maxValue < firstRow[rect.br().x])
+		maxValue = firstRow[rect.br().x];
+
+	if (maxValue < lastRow[rect.tl().x])
+		maxValue = lastRow[rect.tl().x];
+	if (maxValue < lastRow[rect.br().x])
+		maxValue = lastRow[rect.br().x];
+
+	auto count = 0;
+	for(auto r = rect.tl().y; r <= rect.br().y; ++r)
+	{
+		auto perRow = preprocessResultFrame.ptr<DataType>(r);
+		for(auto c = rect.tl().x; c <= rect.br().x; ++c)
+		{
+			if (perRow[c] == maxValue)
+				count++;
+		}
+	}
+
+	if(static_cast<double>(count) / (rect.width * rect.height) > 0.15)
+		return true;
+
+	return false;
+}
+
+template <typename DataType>
+bool Monitor<DataType>::CheckInsideBoundaryDescendGradient(const Mat& grayFrame, const cv::Rect rect) const
+{
+
+	auto sum = 0;
+
+	auto topRow = grayFrame.ptr<DataType>(rect.tl().y);
+	auto bottomRow = grayFrame.ptr<DataType>(rect.br().y);
+
+	for (auto c = rect.tl().x; c <= rect.br().x; ++c)
+		sum += static_cast<int>(topRow[c]);
+	auto avgTop = static_cast<DataType>(sum / (rect.width + 1));
+
+	sum = 0;
+	for (auto c = rect.tl().x; c <= rect.br().x; ++c)
+		sum += static_cast<int>(bottomRow[c]);
+	auto avgBottom = static_cast<DataType>(sum / (rect.width + 1));
+
+	sum = 0;
+	for (auto r = rect.tl().y; r <= rect.br().y; ++r)
+		sum += static_cast<int>(grayFrame.at<DataType>(r, rect.tl().x));
+	auto avgLeft = static_cast<int>(sum / (rect.height + 1));
+
+	sum = 0;
+	for (auto r = rect.tl().y; r <= rect.br().y; ++r)
+		sum += static_cast<int>(grayFrame.at<DataType>(r, rect.br().x));
+	auto avgRight = static_cast<int>(sum / (rect.height + 1));
+
+	DataType centerValue = 0;
+	Util<DataType>::CalCulateCenterValue(grayFrame, centerValue, rect);
+	DataType averageValue = Util<DataType>::AverageValue(grayFrame, rect);
+
+	auto count = 0;
+//	if (avgLeft < centerValue) count++;
+//	if (avgBottom < centerValue) count++;
+//	if (avgRight < centerValue) count++;
+//	if (avgTop < centerValue) count++;
+
+	if (avgLeft < averageValue) count++;
+	if (avgBottom < averageValue) count++;
+	if (avgRight < averageValue) count++;
+	if (avgTop < averageValue) count++;
+
+	Mat temp;
+	cvtColor(grayFrame, temp, CV_GRAY2RGB);
+	rectangle(temp, Point(rect.tl().x - 1, rect.tl().y - 1), Point(rect.br().x + 1, rect.br().y + 1), Scalar(255, 255, 0));
+
+	if (count > 3)
+		return true;
 	return false;
 }
 
