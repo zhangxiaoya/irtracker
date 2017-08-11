@@ -107,16 +107,32 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 	std::vector<cv::Rect> trackingResult = {};
 	for (auto rect : targetRects)
 	{
-		if (
-			(
-			(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
-				//				|| (CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
-				)
-			&& CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(preprocessResultFrame, rect)
-//			&& CheckCoverageOfPreprocessedFrame(preprocessResultFrame, rect)
-			&& CheckInsideBoundaryDescendGradient(grayFrame,rect)
-//			&& CheckFourBlock(preprocessResultFrame, rect)
-		)
+		auto currentResult = (CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
+			|| (CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect));
+
+		if (CHECK_SURROUNDING_BOUNDARY_FLAG)
+		{
+			currentResult &= CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(preprocessResultFrame, rect);
+			if (currentResult == false) continue;
+		}
+		if (CHECK_COVERAGE_FLAG)
+		{
+			currentResult &= CheckCoverageOfPreprocessedFrame(preprocessResultFrame, rect);
+			if (currentResult == false) continue;
+		}
+		if (CHECK_INSIDE_BOUNDARY_FLAG)
+		{
+			currentResult &= CheckInsideBoundaryDescendGradient(grayFrame, rect);
+			if (currentResult == false) continue;
+		}
+
+		if (CHECK_FOUR_BLOCK_FLAG)
+		{
+			currentResult &= CheckFourBlock(preprocessResultFrame, rect);
+			if (currentResult == false) continue;
+		}
+
+		if (currentResult)
 		{
 			trackingResult.push_back(rect);
 		}
@@ -358,7 +374,8 @@ void Monitor<DataType>::GetSurroundingBoundaryPixels(const cv::Mat& grayFrame, c
 	}
 
 	auto rightCol = rect.br().x + 1;
-	if(rightCol < grayFrame.cols)
+
+	if (rightCol < grayFrame.cols)
 	{
 		for(auto r = rect.tl().y; r <= rect.br().y;++r)
 		{

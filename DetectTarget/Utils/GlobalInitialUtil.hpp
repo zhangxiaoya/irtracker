@@ -104,6 +104,13 @@ enum TargetMoveDirection
 
 inline void For6kmData(TargetMoveDirection direction)
 {
+	CHECK_ORIGIN_FLAG = true;
+	CHECK_DECRETIZATED_FLAG = false;
+	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+	CHECK_INSIDE_BOUNDARY_FLAG = true;
+	CHECK_FOUR_BLOCK_FLAG = false;
+	CHECK_COVERAGE_FLAG = false;
+
 	if(direction == In)
 	{
 		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\in\\target_in_6km_%02d.png";
