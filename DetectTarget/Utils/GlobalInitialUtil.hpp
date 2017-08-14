@@ -11,19 +11,25 @@ const char* GlobalImageListNameFormat;
 const char* GlobalWriteFileNameFormat;
 const char* GlobalWriteVideoFileFolder;
 
-inline void ForSecondOriginalBinFiles()
+inline void ForSecondOriginalBinFiles(std::string listNum)
 {
-	std::string listNum = "2";
+	CHECK_ORIGIN_FLAG = true;
+	CHECK_DECRETIZATED_FLAG = false;
+	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+	CHECK_INSIDE_BOUNDARY_FLAG = true;
+	CHECK_FOUR_BLOCK_FLAG = false;
+	CHECK_COVERAGE_FLAG = true;
+
+	ConvexPartitionOfOriginalImage = 5;
+	ConcavePartitionOfOriginalImage = 1;
 
 	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\ir_file_20170531_1000m_";
-//	std::string inPrefix = "D:\\Bag\\Code_VS15\\Data\\ir_file_20170531_1000m_";
 	std::string inBackend = "_8bit\\Frame_%04d.png";
 	inFullStr = inPrefix + listNum + inBackend;
 
 	GlobalImageListNameFormat = inFullStr.c_str();
 
 	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\newResults\\ir_file_20170531_1000m_";
-//	std::string outPrefix = "D:\\Bag\\Code_VS15\\Data\\result_";
 	std::string outBackend = "\\Frame_%04d.png";
 	outFullStr = outPrefix + listNum + outBackend;
 
@@ -168,13 +174,13 @@ inline void ForThirdLongWave()
 
 inline void InitGlobalConfigure()
 {
-	ForSecondOriginalBinFiles();
+	ForSecondOriginalBinFiles("2");
 
 //	ForWorstFrames("500", "jingzhi");
 
-	ForThirdLongWave();
+//	ForThirdLongWave();
 
-	For6kmData(Out);
+//	For6kmData(Out);
 
 	if(UpdateConstants())
 	{
