@@ -54,6 +54,8 @@ static auto ConcavePartitionOfDiscretizedImage = 0;
 
 const auto LowContrastThreshold = 3;
 
+const auto MinDiffOfConvextAndConcaveThreshold = 3;
+
 const double MinDiff = 0.00000001;
 
 LogPrinter logPrinter;

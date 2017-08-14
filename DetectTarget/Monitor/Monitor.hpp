@@ -269,7 +269,7 @@ bool Monitor<DataType>::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame,
 	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
 	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdPropotion;
 
-	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
+	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < MinDiffOfConvextAndConcaveThreshold)
 		return false;
 
 	DataType centerValue = 0;
@@ -301,7 +301,7 @@ bool Monitor<DataType>::CheckDiscretizedImageSuroundedBox(const cv::Mat& fdImg, 
 	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
 	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdProportion;
 
-	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
+	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < MinDiffOfConvextAndConcaveThreshold)
 		return false;
 
 	DataType centerValue = 0;
