@@ -74,7 +74,8 @@ void DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv::Mat& currentGray
 {
 	Reload(currentGrayFrame);
 
-//	preprocessor->StrengthenIntensityOfBlock();
+	if(IsNeedStrengthenIntensity)
+		preprocessor->StrengthenIntensityOfBlock();
 
 	MaxFilter(DilateKernelSize);
 

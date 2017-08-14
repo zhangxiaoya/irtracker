@@ -123,6 +123,8 @@ inline void For6kmData(TargetMoveDirection direction)
 	ConvexPartitionOfDiscretizedImage = 5;
 	ConcavePartitionOfDiscretizedImage = 1;
 
+	IsNeedStrengthenIntensity = true;
+
 	if(direction == In)
 	{
 		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\in\\target_in_6km_%02d.png";
@@ -176,6 +178,7 @@ inline void ForThirdLongWave()
 	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle\\Frame_%08d.png";
 	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle";
 
+	IsNeedStrengthenIntensity = false;
 	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500-700_middle\\images\\Frame_%08d.png";
 	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle\\Frame_%08d.png";
 	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle";
