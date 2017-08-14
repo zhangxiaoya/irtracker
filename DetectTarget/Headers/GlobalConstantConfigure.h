@@ -46,6 +46,9 @@ static bool CHECK_INSIDE_BOUNDARY_FLAG = true;
 static bool CHECK_FOUR_BLOCK_FLAG = true;
 static bool CHECK_COVERAGE_FLAG = true;
 
+static auto ConvexPartitionOfOriginalImage = 0;
+static auto ConcavePartitionOfOriginalImage = 0;
+
 const auto LowContrastThreshold = 3;
 
 const double MinDiff = 0.00000001;

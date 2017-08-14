@@ -264,10 +264,8 @@ bool Monitor<DataType>::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame,
 	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
 	auto avgValOfCurrentRect = Util<DataType>::AverageValue(grayFrame, rect);
 
-	auto convexPartition = 8;
-	auto concavePartition = 1;
-	auto convexThresholdProportion = static_cast<double>(1 + convexPartition) / convexPartition;
-	auto concaveThresholdPropotion = static_cast<double>(1 - concavePartition) / concavePartition;
+	auto convexThresholdProportion = static_cast<double>(1 + ConvexPartitionOfOriginalImage) / ConvexPartitionOfOriginalImage;
+	auto concaveThresholdPropotion = static_cast<double>(1 - ConcavePartitionOfOriginalImage) / ConcavePartitionOfOriginalImage;
 	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
 	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdPropotion;
 

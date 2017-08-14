@@ -111,6 +111,9 @@ inline void For6kmData(TargetMoveDirection direction)
 	CHECK_FOUR_BLOCK_FLAG = false;
 	CHECK_COVERAGE_FLAG = false;
 
+	ConvexPartitionOfOriginalImage = 10;
+	ConcavePartitionOfOriginalImage = 1;
+
 	if(direction == In)
 	{
 		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\in\\target_in_6km_%02d.png";
