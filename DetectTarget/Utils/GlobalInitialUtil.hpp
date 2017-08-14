@@ -143,47 +143,99 @@ inline void For6kmData(TargetMoveDirection direction)
 	}
 }
 
-inline void ForThirdLongWave()
+enum LongWaveEnum
 {
-	CHECK_SURROUNDING_BOUNDARY_FLAG = false;
-	CHECK_INSIDE_BOUNDARY_FLAG = false;
-	CHECK_FOUR_BLOCK_FLAG = false;
-	CHECK_COVERAGE_FLAG = false;
+	fragment_1_0_600m_150ms,
+	fragment_1km,
+	fragment_2_500_1500_150ms,
+	fragment_3_1500m_100ms,
+	fragment_1500_middle,
+	fragment_1500_700_middle
+};
 
-	CHECK_ORIGIN_FLAG = true;
-	ConvexPartitionOfOriginalImage = 6;
-	ConcavePartitionOfOriginalImage = 1;
+inline void ForThirdLongWave(LongWaveEnum fragmentKind)
+{
+	switch (fragmentKind)
+	{
+	case fragment_1_0_600m_150ms:
+		{
+			CHECK_SURROUNDING_BOUNDARY_FLAG = false;
+			CHECK_INSIDE_BOUNDARY_FLAG = false;
+			CHECK_FOUR_BLOCK_FLAG = false;
+			CHECK_COVERAGE_FLAG = false;
 
-	CHECK_DECRETIZATED_FLAG = true;
-	ConvexPartitionOfDiscretizedImage = 6;
-	ConcavePartitionOfDiscretizedImage = 1;
+			CHECK_ORIGIN_FLAG = true;
+			ConvexPartitionOfOriginalImage = 6;
+			ConcavePartitionOfOriginalImage = 1;
 
-	IsNeedStrengthenIntensity = true;
-	DISCRATED_BIN = 20;
-	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
-	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms\\Frame_%08d.bmp";
-	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms";
+			CHECK_DECRETIZATED_FLAG = true;
+			ConvexPartitionOfDiscretizedImage = 6;
+			ConcavePartitionOfDiscretizedImage = 1;
 
-	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1km\\images\\Frame_%08d.png";
-	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km\\Frame_%08d.png";
-	//	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km";
+			IsNeedStrengthenIntensity = true;
+			DISCRATED_BIN = 20;
+			GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
+			GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms\\Frame_%08d.bmp";
+			GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms";
+			break;
+		}
+	case fragment_1km:
+		{
+			GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1km\\images\\Frame_%08d.png";
+			GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km\\Frame_%08d.png";
+			GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km";
+			break;
+		}
+	case fragment_2_500_1500_150ms:
+		{
+			CHECK_SURROUNDING_BOUNDARY_FLAG = false;
+			CHECK_INSIDE_BOUNDARY_FLAG = false;
+			CHECK_FOUR_BLOCK_FLAG = true;
+			CHECK_COVERAGE_FLAG = false;
 
-	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\2_500-1500_150ms\\Frame_%08d.bmp";
-	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\2_500-1500_150ms\\Frame_%08d.png";
-	//	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\2_500-1500_150ms";
+			CHECK_ORIGIN_FLAG = true;
+			ConvexPartitionOfOriginalImage = 7;
+			ConcavePartitionOfOriginalImage = 1;
 
-	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\3_1500m_100ms\\images\\Frame_%08d.png";
-	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\3_1500m_100ms\\Frame_%08d.png";
-	//	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\3_1500m_100ms";
+			CHECK_DECRETIZATED_FLAG = true;
+			ConvexPartitionOfDiscretizedImage = 10;
+			ConcavePartitionOfDiscretizedImage = 1;
 
-	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500_middle\\images\\Frame_%08d.png";
-	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle\\Frame_%08d.png";
-	//	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle";
-
-	//	IsNeedStrengthenIntensity = false;
-	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500-700_middle\\images\\Frame_%08d.png";
-	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle\\Frame_%08d.png";
-	//	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle";
+			IsNeedStrengthenIntensity = true;
+			GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\2_500-1500_150ms\\Frame_%08d.bmp";
+			GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\2_500-1500_150ms\\Frame_%08d.png";
+			GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\2_500-1500_150ms";
+			break;
+		}
+	case fragment_3_1500m_100ms:
+		{
+			GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\3_1500m_100ms\\images\\Frame_%08d.png";
+			GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\3_1500m_100ms\\Frame_%08d.png";
+			GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\3_1500m_100ms";
+			break;
+		}
+	case fragment_1500_middle:
+		{
+			GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500_middle\\images\\Frame_%08d.png";
+			GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle\\Frame_%08d.png";
+			GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle";
+			break;
+		}
+	case fragment_1500_700_middle:
+		{
+			IsNeedStrengthenIntensity = false;
+			GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500-700_middle\\images\\Frame_%08d.png";
+			GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle\\Frame_%08d.png";
+			GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle";
+			break;
+		}
+	default:
+		{
+			auto logMsg = "Not Found Fragment";
+			logPrinter.PrintLogs(logMsg, LogLevel::Error);
+			break;
+		}
+	}
 }
 
 inline void InitGlobalConfigure()
@@ -192,7 +244,7 @@ inline void InitGlobalConfigure()
 
 	//	ForWorstFrames("500", "jingzhi");
 
-	ForThirdLongWave();
+	ForThirdLongWave(fragment_2_500_1500_150ms);
 
 	//	For6kmData(In);
 
