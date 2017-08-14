@@ -110,15 +110,18 @@ enum TargetMoveDirection
 
 inline void For6kmData(TargetMoveDirection direction)
 {
-	CHECK_ORIGIN_FLAG = true;
-	CHECK_DECRETIZATED_FLAG = false;
 	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
 	CHECK_INSIDE_BOUNDARY_FLAG = true;
 	CHECK_FOUR_BLOCK_FLAG = false;
 	CHECK_COVERAGE_FLAG = false;
 
+	CHECK_ORIGIN_FLAG = true;
 	ConvexPartitionOfOriginalImage = 10;
 	ConcavePartitionOfOriginalImage = 1;
+
+	CHECK_DECRETIZATED_FLAG = false;
+	ConvexPartitionOfDiscretizedImage = 5;
+	ConcavePartitionOfDiscretizedImage = 1;
 
 	if(direction == In)
 	{
@@ -140,15 +143,18 @@ inline void For6kmData(TargetMoveDirection direction)
 
 inline void ForThirdLongWave()
 {
-	CHECK_ORIGIN_FLAG = true;
-	CHECK_DECRETIZATED_FLAG = false;
 	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
 	CHECK_INSIDE_BOUNDARY_FLAG = true;
 	CHECK_FOUR_BLOCK_FLAG = false;
 	CHECK_COVERAGE_FLAG = false;
 
+	CHECK_ORIGIN_FLAG = true;
 	ConvexPartitionOfOriginalImage = 5;
 	ConcavePartitionOfOriginalImage = 1;
+
+	CHECK_DECRETIZATED_FLAG = true;
+	ConvexPartitionOfDiscretizedImage = 5;
+	ConcavePartitionOfDiscretizedImage = 1;
 
 	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms\\Frame_%08d.bmp";
@@ -177,11 +183,11 @@ inline void ForThirdLongWave()
 
 inline void InitGlobalConfigure()
 {
-	ForSecondOriginalBinFiles("2");
+//	ForSecondOriginalBinFiles("2");
 
 //	ForWorstFrames("500", "jingzhi");
 
-//	ForThirdLongWave();
+	ForThirdLongWave();
 
 //	For6kmData(Out);
 

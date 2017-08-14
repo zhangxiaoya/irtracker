@@ -22,7 +22,7 @@ public:
 protected:
 	bool CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& rect) const;
 
-	bool CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect) const;
+	bool CheckDiscretizedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect) const;
 
 	bool CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rect) const;
 
@@ -108,7 +108,7 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 	for (auto rect : targetRects)
 	{
 		auto currentResult = (CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
-			|| (CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect));
+			|| (CHECK_DECRETIZATED_FLAG && CheckDiscretizedImageSuroundedBox(preprocessResultFrame, rect));
 
 		if (CHECK_SURROUNDING_BOUNDARY_FLAG)
 		{
@@ -283,7 +283,7 @@ bool Monitor<DataType>::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame,
 }
 
 template <typename DataType>
-bool Monitor<DataType>::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect) const
+bool Monitor<DataType>::CheckDiscretizedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect) const
 {
 	auto centerX = rect.x + rect.width / 2;
 	auto centerY = rect.y + rect.height / 2;
@@ -296,11 +296,8 @@ bool Monitor<DataType>::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg
 	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(fdImg, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
 	auto avgValOfCurrentRect = Util<DataType>::AverageValue(fdImg, rect);
 
-	auto convexPartition = 6;
-	auto concavePartition = 1;
-
-	auto convexThresholdProportion = static_cast<double>(1 + convexPartition) / convexPartition;
-	auto concaveThresholdProportion = static_cast<double>(1 - concavePartition) / concavePartition;
+	auto convexThresholdProportion = static_cast<double>(1 + ConvexPartitionOfDiscretizedImage) / ConvexPartitionOfDiscretizedImage;
+	auto concaveThresholdProportion = static_cast<double>(1 - ConcavePartitionOfDiscretizedImage) / ConcavePartitionOfDiscretizedImage;
 	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
 	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdProportion;
 
