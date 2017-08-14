@@ -461,7 +461,6 @@ bool Monitor<DataType>::CheckCoverageOfPreprocessedFrame(const Mat& preprocessRe
 template <typename DataType>
 bool Monitor<DataType>::CheckInsideBoundaryDescendGradient(const Mat& grayFrame, const cv::Rect rect) const
 {
-
 	auto sum = 0;
 
 	auto topRow = grayFrame.ptr<DataType>(rect.tl().y);
@@ -491,19 +490,10 @@ bool Monitor<DataType>::CheckInsideBoundaryDescendGradient(const Mat& grayFrame,
 	DataType averageValue = Util<DataType>::AverageValue(grayFrame, rect);
 
 	auto count = 0;
-//	if (avgLeft < centerValue) count++;
-//	if (avgBottom < centerValue) count++;
-//	if (avgRight < centerValue) count++;
-//	if (avgTop < centerValue) count++;
-
 	if (avgLeft < averageValue) count++;
 	if (avgBottom < averageValue) count++;
 	if (avgRight < averageValue) count++;
 	if (avgTop < averageValue) count++;
-
-	Mat temp;
-	cvtColor(grayFrame, temp, CV_GRAY2RGB);
-	rectangle(temp, Point(rect.tl().x - 1, rect.tl().y - 1), Point(rect.br().x + 1, rect.br().y + 1), Scalar(255, 255, 0));
 
 	if (count > 3)
 		return true;
