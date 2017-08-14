@@ -147,6 +147,9 @@ inline void ForThirdLongWave()
 	CHECK_FOUR_BLOCK_FLAG = false;
 	CHECK_COVERAGE_FLAG = false;
 
+	ConvexPartitionOfOriginalImage = 5;
+	ConcavePartitionOfOriginalImage = 1;
+
 	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms\\Frame_%08d.bmp";
 	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms";
