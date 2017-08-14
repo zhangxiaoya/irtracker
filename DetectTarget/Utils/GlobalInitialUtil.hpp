@@ -123,15 +123,15 @@ inline void For6kmData(TargetMoveDirection direction)
 	ConvexPartitionOfDiscretizedImage = 5;
 	ConcavePartitionOfDiscretizedImage = 1;
 
-	IsNeedStrengthenIntensity = true;
+	IsNeedStrengthenIntensity = false;
 
-	if(direction == In)
+	if (direction == In)
 	{
 		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\in\\target_in_6km_%02d.png";
 		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\in\\target_in_6km_1%02d.png";
 		GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\in";
 	}
-	else if(direction == Out)
+	else if (direction == Out)
 	{
 		GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\out\\target_out_6km_%02d.png";
 		GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Fifth\\6km\\Frames\\results\\out\\target_out_6km_1%02d.png";
@@ -145,56 +145,58 @@ inline void For6kmData(TargetMoveDirection direction)
 
 inline void ForThirdLongWave()
 {
-	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
-	CHECK_INSIDE_BOUNDARY_FLAG = true;
+	CHECK_SURROUNDING_BOUNDARY_FLAG = false;
+	CHECK_INSIDE_BOUNDARY_FLAG = false;
 	CHECK_FOUR_BLOCK_FLAG = false;
 	CHECK_COVERAGE_FLAG = false;
 
 	CHECK_ORIGIN_FLAG = true;
-	ConvexPartitionOfOriginalImage = 5;
+	ConvexPartitionOfOriginalImage = 6;
 	ConcavePartitionOfOriginalImage = 1;
 
 	CHECK_DECRETIZATED_FLAG = true;
-	ConvexPartitionOfDiscretizedImage = 5;
+	ConvexPartitionOfDiscretizedImage = 6;
 	ConcavePartitionOfDiscretizedImage = 1;
 
+	IsNeedStrengthenIntensity = true;
+	DISCRATED_BIN = 20;
 	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms\\Frame_%08d.bmp";
 	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms";
 
-	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1km\\images\\Frame_%08d.png";
-	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km\\Frame_%08d.png";
-	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km";
+	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1km\\images\\Frame_%08d.png";
+	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km\\Frame_%08d.png";
+	//	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km";
 
-	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\2_500-1500_150ms\\Frame_%08d.bmp";
-	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\2_500-1500_150ms\\Frame_%08d.png";
-	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\2_500-1500_150ms";
+	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\2_500-1500_150ms\\Frame_%08d.bmp";
+	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\2_500-1500_150ms\\Frame_%08d.png";
+	//	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\2_500-1500_150ms";
 
-	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\3_1500m_100ms\\images\\Frame_%08d.png";
-	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\3_1500m_100ms\\Frame_%08d.png";
-	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\3_1500m_100ms";
+	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\3_1500m_100ms\\images\\Frame_%08d.png";
+	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\3_1500m_100ms\\Frame_%08d.png";
+	//	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\3_1500m_100ms";
 
-	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500_middle\\images\\Frame_%08d.png";
-	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle\\Frame_%08d.png";
-	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle";
+	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500_middle\\images\\Frame_%08d.png";
+	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle\\Frame_%08d.png";
+	//	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle";
 
-	IsNeedStrengthenIntensity = false;
-	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500-700_middle\\images\\Frame_%08d.png";
-	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle\\Frame_%08d.png";
-	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle";
+	//	IsNeedStrengthenIntensity = false;
+	//	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500-700_middle\\images\\Frame_%08d.png";
+	//	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle\\Frame_%08d.png";
+	//	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle";
 }
 
 inline void InitGlobalConfigure()
 {
-//	ForSecondOriginalBinFiles("2");
+	//	ForSecondOriginalBinFiles("2");
 
-//	ForWorstFrames("500", "jingzhi");
+	//	ForWorstFrames("500", "jingzhi");
 
 	ForThirdLongWave();
 
-//	For6kmData(Out);
+	//	For6kmData(In);
 
-	if(UpdateConstants())
+	if (UpdateConstants())
 	{
 		ImageListReadFlag = true;
 	}
