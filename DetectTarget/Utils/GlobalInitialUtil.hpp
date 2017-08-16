@@ -180,15 +180,15 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind)
 			CHECK_COVERAGE_FLAG = false;
 
 			CHECK_ORIGIN_FLAG = true;
-			ConvexPartitionOfOriginalImage = 6;
+			ConvexPartitionOfOriginalImage = 15;
 			ConcavePartitionOfOriginalImage = 1;
 
 			CHECK_DECRETIZATED_FLAG = true;
-			ConvexPartitionOfDiscretizedImage = 6;
+			ConvexPartitionOfDiscretizedImage = 5;
 			ConcavePartitionOfDiscretizedImage = 1;
 
 			IsNeedStrengthenIntensity = true;
-			DISCRATED_BIN = 20;
+			DISCRATED_BIN = 10;
 			GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1_0-600m_150ms\\Frame_%08d.bmp";
 			GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms\\Frame_%08d.bmp";
 			GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1_0-600m_150ms";
@@ -310,11 +310,11 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind)
 
 inline void InitGlobalConfigure()
 {
-	//	ForSecondOriginalBinFiles("2");
+//	ForSecondOriginalBinFiles("1");
 
-	ForWorstFrames("500", "jingzhi");
+//	ForWorstFrames("500", "yundong");
 
-//	ForThirdLongWave(fragment_1500_700_middle);
+	ForThirdLongWave(fragment_1_0_600m_150ms);
 
 //	For6kmData(In);
 

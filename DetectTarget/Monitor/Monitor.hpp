@@ -201,7 +201,7 @@ void Monitor<DataType>::CombineResultFramesAndPersistance()
 	}
 
 	imshow("Combined Result", combinedResultFrame);
-	waitKey(1);
+	waitKey(SHOW_DELAY);
 }
 
 template <typename DataType>
