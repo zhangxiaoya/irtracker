@@ -22,7 +22,7 @@ public:
 protected:
 	bool CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& rect) const;
 
-	bool CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect) const;
+	bool CheckDiscretizedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect) const;
 
 	bool CheckFourBlock(const cv::Mat& fdImg, const cv::Rect& rect) const;
 
@@ -107,16 +107,32 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 	std::vector<cv::Rect> trackingResult = {};
 	for (auto rect : targetRects)
 	{
-		if (
-			(
-			(CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
-				//				|| (CHECK_DECRETIZATED_FLAG && CheckDecreatizatedImageSuroundedBox(preprocessResultFrame, rect))
-				)
-			&& CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(preprocessResultFrame, rect)
-//			&& CheckCoverageOfPreprocessedFrame(preprocessResultFrame, rect)
-			&& CheckInsideBoundaryDescendGradient(grayFrame,rect)
-//			&& CheckFourBlock(preprocessResultFrame, rect)
-		)
+		auto currentResult = (CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
+			|| (CHECK_DECRETIZATED_FLAG && CheckDiscretizedImageSuroundedBox(preprocessResultFrame, rect));
+
+		if (CHECK_SURROUNDING_BOUNDARY_FLAG)
+		{
+			currentResult &= CheckSurroundingBoundaryDiscontinuityAndDescendGradientOfPrerpocessedFrame(preprocessResultFrame, rect);
+			if (currentResult == false) continue;
+		}
+		if (CHECK_COVERAGE_FLAG)
+		{
+			currentResult &= CheckCoverageOfPreprocessedFrame(preprocessResultFrame, rect);
+			if (currentResult == false) continue;
+		}
+		if (CHECK_INSIDE_BOUNDARY_FLAG)
+		{
+			currentResult &= CheckInsideBoundaryDescendGradient(grayFrame, rect);
+			if (currentResult == false) continue;
+		}
+
+		if (CHECK_FOUR_BLOCK_FLAG)
+		{
+			currentResult &= CheckFourBlock(preprocessResultFrame, rect);
+			if (currentResult == false) continue;
+		}
+
+		if (currentResult)
 		{
 			trackingResult.push_back(rect);
 		}
@@ -185,7 +201,7 @@ void Monitor<DataType>::CombineResultFramesAndPersistance()
 	}
 
 	imshow("Combined Result", combinedResultFrame);
-	waitKey(10);
+	waitKey(1);
 }
 
 template <typename DataType>
@@ -201,7 +217,7 @@ void Monitor<DataType>::Process()
 
 			vector<Rect> detectedTargetRects;
 
-			CheckPerf(detector->Detect(grayFrame, detectedTargetRects), "Detector ");
+			detector->Detect(grayFrame, detectedTargetRects);
 
 			detector->GetPreprocessedResult(preprocessResultFrame);
 
@@ -248,14 +264,12 @@ bool Monitor<DataType>::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame,
 	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
 	auto avgValOfCurrentRect = Util<DataType>::AverageValue(grayFrame, rect);
 
-	auto convexPartition = 8;
-	auto concavePartition = 1;
-	auto convexThresholdProportion = static_cast<double>(1 + convexPartition) / convexPartition;
-	auto concaveThresholdPropotion = static_cast<double>(1 - concavePartition) / concavePartition;
+	auto convexThresholdProportion = static_cast<double>(1 + ConvexPartitionOfOriginalImage) / ConvexPartitionOfOriginalImage;
+	auto concaveThresholdPropotion = static_cast<double>(1 - ConcavePartitionOfOriginalImage) / ConcavePartitionOfOriginalImage;
 	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
 	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdPropotion;
 
-	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
+	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < MinDiffOfConvextAndConcaveThreshold)
 		return false;
 
 	DataType centerValue = 0;
@@ -269,7 +283,7 @@ bool Monitor<DataType>::CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame,
 }
 
 template <typename DataType>
-bool Monitor<DataType>::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect) const
+bool Monitor<DataType>::CheckDiscretizedImageSuroundedBox(const cv::Mat& fdImg, const struct CvRect& rect) const
 {
 	auto centerX = rect.x + rect.width / 2;
 	auto centerY = rect.y + rect.height / 2;
@@ -282,15 +296,12 @@ bool Monitor<DataType>::CheckDecreatizatedImageSuroundedBox(const cv::Mat& fdImg
 	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(fdImg, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
 	auto avgValOfCurrentRect = Util<DataType>::AverageValue(fdImg, rect);
 
-	auto convexPartition = 6;
-	auto concavePartition = 1;
-
-	auto convexThresholdProportion = static_cast<double>(1 + convexPartition) / convexPartition;
-	auto concaveThresholdProportion = static_cast<double>(1 - concavePartition) / concavePartition;
+	auto convexThresholdProportion = static_cast<double>(1 + ConvexPartitionOfDiscretizedImage) / ConvexPartitionOfDiscretizedImage;
+	auto concaveThresholdProportion = static_cast<double>(1 - ConcavePartitionOfDiscretizedImage) / ConcavePartitionOfDiscretizedImage;
 	auto convexThreshold = avgValOfSurroundingBox * convexThresholdProportion;
 	auto concaveThreshold = avgValOfSurroundingBox * concaveThresholdProportion;
 
-	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < 3)
+	if (std::abs(static_cast<int>(convexThreshold) - static_cast<int>(concaveThreshold)) < MinDiffOfConvextAndConcaveThreshold)
 		return false;
 
 	DataType centerValue = 0;
@@ -358,7 +369,8 @@ void Monitor<DataType>::GetSurroundingBoundaryPixels(const cv::Mat& grayFrame, c
 	}
 
 	auto rightCol = rect.br().x + 1;
-	if(rightCol < grayFrame.cols)
+
+	if (rightCol < grayFrame.cols)
 	{
 		for(auto r = rect.tl().y; r <= rect.br().y;++r)
 		{
@@ -449,7 +461,6 @@ bool Monitor<DataType>::CheckCoverageOfPreprocessedFrame(const Mat& preprocessRe
 template <typename DataType>
 bool Monitor<DataType>::CheckInsideBoundaryDescendGradient(const Mat& grayFrame, const cv::Rect rect) const
 {
-
 	auto sum = 0;
 
 	auto topRow = grayFrame.ptr<DataType>(rect.tl().y);
@@ -479,19 +490,10 @@ bool Monitor<DataType>::CheckInsideBoundaryDescendGradient(const Mat& grayFrame,
 	DataType averageValue = Util<DataType>::AverageValue(grayFrame, rect);
 
 	auto count = 0;
-//	if (avgLeft < centerValue) count++;
-//	if (avgBottom < centerValue) count++;
-//	if (avgRight < centerValue) count++;
-//	if (avgTop < centerValue) count++;
-
 	if (avgLeft < averageValue) count++;
 	if (avgBottom < averageValue) count++;
 	if (avgRight < averageValue) count++;
 	if (avgTop < averageValue) count++;
-
-	Mat temp;
-	cvtColor(grayFrame, temp, CV_GRAY2RGB);
-	rectangle(temp, Point(rect.tl().x - 1, rect.tl().y - 1), Point(rect.br().x + 1, rect.br().y + 1), Scalar(255, 255, 0));
 
 	if (count > 3)
 		return true;

@@ -39,10 +39,24 @@ static auto CV_DATA_TYPE = CV_8UC1;
 
 const auto DilateKernelSize = 3;
 
-bool CHECK_ORIGIN_FLAG = true;
-bool CHECK_DECRETIZATED_FLAG = true;
+static bool CHECK_ORIGIN_FLAG = true;
+static bool CHECK_DECRETIZATED_FLAG = true;
+static bool CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+static bool CHECK_INSIDE_BOUNDARY_FLAG = true;
+static bool CHECK_FOUR_BLOCK_FLAG = true;
+static bool CHECK_COVERAGE_FLAG = true;
+
+static auto ConvexPartitionOfOriginalImage = 0;
+static auto ConcavePartitionOfOriginalImage = 0;
+
+static auto ConvexPartitionOfDiscretizedImage = 0;
+static auto ConcavePartitionOfDiscretizedImage = 0;
+
+static auto IsNeedStrengthenIntensity = false;
 
 const auto LowContrastThreshold = 3;
+
+const auto MinDiffOfConvextAndConcaveThreshold = 3;
 
 const double MinDiff = 0.00000001;
 
