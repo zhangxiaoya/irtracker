@@ -22,8 +22,8 @@ const auto THINGKING_STAGE = 6;
 
 const auto TARGET_WIDTH_MIN_LIMIT = 2;
 const auto TARGET_HEIGHT_MIN_LIMIT = 2;
-const auto TARGET_WIDTH_MAX_LIMIT = 30;
-const auto TARGET_HEIGHT_MAX_LIMIT = 30;
+const auto TARGET_WIDTH_MAX_LIMIT = 16;
+const auto TARGET_HEIGHT_MAX_LIMIT = 16;
 
 static int IMAGE_WIDTH = 320;
 static int IMAGE_HEIGHT = 256;

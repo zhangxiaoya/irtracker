@@ -41,15 +41,30 @@ inline void ForSecondOriginalBinFiles(std::string listNum)
 
 inline void ForWorstFrames(std::string distance, std::string flyStatus)
 {
+	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+	CHECK_INSIDE_BOUNDARY_FLAG = true;
+	CHECK_FOUR_BLOCK_FLAG = false;
+	CHECK_COVERAGE_FLAG = false;
+
+	CHECK_ORIGIN_FLAG = true;
+	ConvexPartitionOfOriginalImage = 10;
+	ConcavePartitionOfOriginalImage = 1;
+
+	CHECK_DECRETIZATED_FLAG = true;
+	ConvexPartitionOfDiscretizedImage = 10;
+	ConcavePartitionOfDiscretizedImage = 1;
+
+	IsNeedStrengthenIntensity = false;
+
 	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Forth\\test\\Frames\\ir_file_20170713_";
 	std::string medianPart = "m_";
-	std::string inBackend = "\\Frame_%08d.png";
+	std::string inBackend = "\\Frame_1%08d.png";
 	inFullStr = inPrefix + distance + medianPart + flyStatus + inBackend;
 
 	GlobalImageListNameFormat = inFullStr.c_str();
 
 	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Forth\\test\\Results\\ir_file_20170713_";
-	std::string outBackend = "\\Frame_%08d.png";
+	std::string outBackend = "\\Frame_1%08d.png";
 	outFullStr = outPrefix + distance + medianPart + flyStatus + outBackend;
 
 	GlobalWriteFileNameFormat = outFullStr.c_str();
@@ -181,6 +196,20 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind)
 		}
 	case fragment_1km:
 		{
+			CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+			CHECK_INSIDE_BOUNDARY_FLAG = true;
+			CHECK_FOUR_BLOCK_FLAG = false;
+			CHECK_COVERAGE_FLAG = true;
+
+			CHECK_ORIGIN_FLAG = true;
+			ConvexPartitionOfOriginalImage = 10;
+			ConcavePartitionOfOriginalImage = 1;
+
+			CHECK_DECRETIZATED_FLAG = true;
+			ConvexPartitionOfDiscretizedImage = 5;
+			ConcavePartitionOfDiscretizedImage = 1;
+
+			IsNeedStrengthenIntensity = false;
 			GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1km\\images\\Frame_%08d.png";
 			GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km\\Frame_%08d.png";
 			GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1km";
@@ -230,6 +259,20 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind)
 		}
 	case fragment_1500_middle:
 		{
+			CHECK_SURROUNDING_BOUNDARY_FLAG = false;
+			CHECK_INSIDE_BOUNDARY_FLAG = false;
+			CHECK_FOUR_BLOCK_FLAG = false;
+			CHECK_COVERAGE_FLAG = true;
+
+			CHECK_ORIGIN_FLAG = true;
+			ConvexPartitionOfOriginalImage = 10;
+			ConcavePartitionOfOriginalImage = 1;
+
+			CHECK_DECRETIZATED_FLAG = true;
+			ConvexPartitionOfDiscretizedImage = 5;
+			ConcavePartitionOfDiscretizedImage = 1;
+
+			IsNeedStrengthenIntensity = false;
 			GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500_middle\\images\\Frame_%08d.png";
 			GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle\\Frame_%08d.png";
 			GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500_middle";
@@ -237,6 +280,19 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind)
 		}
 	case fragment_1500_700_middle:
 		{
+			CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+			CHECK_INSIDE_BOUNDARY_FLAG = true;
+			CHECK_FOUR_BLOCK_FLAG = false;
+			CHECK_COVERAGE_FLAG = true;
+
+			CHECK_ORIGIN_FLAG = true;
+			ConvexPartitionOfOriginalImage = 10;
+			ConcavePartitionOfOriginalImage = 1;
+
+			CHECK_DECRETIZATED_FLAG = true;
+			ConvexPartitionOfDiscretizedImage = 5;
+			ConcavePartitionOfDiscretizedImage = 1;
+
 			IsNeedStrengthenIntensity = false;
 			GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\1500-700_middle\\images\\Frame_%08d.png";
 			GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Third\\Raw\\result\\1500-700_middle\\Frame_%08d.png";
@@ -256,11 +312,11 @@ inline void InitGlobalConfigure()
 {
 	//	ForSecondOriginalBinFiles("2");
 
-	//	ForWorstFrames("500", "jingzhi");
+	ForWorstFrames("500", "jingzhi");
 
-	ForThirdLongWave(fragment_3_1500m_100ms);
+//	ForThirdLongWave(fragment_1500_700_middle);
 
-	//	For6kmData(In);
+//	For6kmData(In);
 
 	if (UpdateConstants())
 	{

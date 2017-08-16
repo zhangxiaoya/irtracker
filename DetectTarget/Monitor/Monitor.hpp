@@ -201,7 +201,7 @@ void Monitor<DataType>::CombineResultFramesAndPersistance()
 	}
 
 	imshow("Combined Result", combinedResultFrame);
-	waitKey(10);
+	waitKey(1);
 }
 
 template <typename DataType>
@@ -217,7 +217,7 @@ void Monitor<DataType>::Process()
 
 			vector<Rect> detectedTargetRects;
 
-			CheckPerf(detector->Detect(grayFrame, detectedTargetRects), "Detector ");
+			detector->Detect(grayFrame, detectedTargetRects);
 
 			detector->GetPreprocessedResult(preprocessResultFrame);
 
