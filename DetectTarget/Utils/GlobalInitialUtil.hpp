@@ -39,6 +39,11 @@ inline void UpdateDataType(const cv::Mat& img)
 inline bool UpdateConstants()
 {
 	auto colorImg = GetTheFirstImage();
+	if(colorImg.empty() == true)
+	{
+		logPrinter.PrintLogs("Get the first image frame failed, cannot update parameters!", LogLevel::Error);
+		return false;
+	}
 	cv::Mat grayImg;
 	cvtColor(colorImg, grayImg, CV_RGB2GRAY);
 
