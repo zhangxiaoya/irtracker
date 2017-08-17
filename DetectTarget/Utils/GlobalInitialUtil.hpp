@@ -57,17 +57,17 @@ inline bool UpdateConstants()
 
 inline void ForSecondOriginalBinFiles(std::string listNum)
 {
-	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
-	CHECK_INSIDE_BOUNDARY_FLAG = true;
+	CHECK_SURROUNDING_BOUNDARY_FLAG = false;
+	CHECK_INSIDE_BOUNDARY_FLAG = false;
 	CHECK_FOUR_BLOCK_FLAG = false;
 	CHECK_COVERAGE_FLAG = false;
 
 	CHECK_ORIGIN_FLAG = true;
-	ConvexPartitionOfOriginalImage = 10;
+	ConvexPartitionOfOriginalImage = 4;
 	ConcavePartitionOfOriginalImage = 1;
 
 	CHECK_DECRETIZATED_FLAG = true;
-	ConvexPartitionOfDiscretizedImage = 10;
+	ConvexPartitionOfDiscretizedImage = 4;
 	ConcavePartitionOfDiscretizedImage = 1;
 	IsNeedStrengthenIntensity = false;
 
@@ -323,7 +323,7 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind)
 
 inline void InitGlobalConfigure()
 {
-	ForSecondOriginalBinFiles("1");
+	ForSecondOriginalBinFiles("2");
 
 //	ForWorstFrames("500", "yundong");
 
