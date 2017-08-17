@@ -60,8 +60,36 @@ inline bool UpdateConstants()
 	return false;
 }
 
-inline void ForSecondOriginalBinFiles(std::string listNum)
+enum SecondTestCaseListNum
 {
+	First,
+	Second
+};
+
+inline void ForSecondOriginalBinFiles(SecondTestCaseListNum listNum)
+{
+	std::string listNumStr;
+
+	switch (listNum)
+	{
+	case First:
+		{
+			listNumStr = "1";
+			break;
+		}
+	case Second:
+		{
+			listNumStr = "2";
+			break;
+		}
+	default:
+		{
+			logPrinter.PrintLogs("Image List Index Out Of Range, Please Check It!", LogLevel::Error);
+			return;
+			break;
+		}
+	}
+
 	CHECK_SURROUNDING_BOUNDARY_FLAG = false;
 	CHECK_INSIDE_BOUNDARY_FLAG = false;
 	CHECK_FOUR_BLOCK_FLAG = false;
@@ -80,7 +108,7 @@ inline void ForSecondOriginalBinFiles(std::string listNum)
 //	std::string inBackend = "_8bit\\Frame_%04d.png";
 	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\Frames\\ir_file_20170531_1000m_";
 	std::string inBackend = "\\Frame_%08d.png";
-	inFullStr = inPrefix + listNum + inBackend;
+	inFullStr = inPrefix + listNumStr + inBackend;
 
 	GlobalImageListNameFormat = inFullStr.c_str();
 
@@ -88,11 +116,11 @@ inline void ForSecondOriginalBinFiles(std::string listNum)
 //	std::string outBackend = "\\Frame_%04d.png";
 	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\FramesResults\\ir_file_20170531_1000m_";
 	std::string outBackend = "\\Frame_%08d.png";
-	outFullStr = outPrefix + listNum + outBackend;
+	outFullStr = outPrefix + listNumStr + outBackend;
 
 	GlobalWriteFileNameFormat = outFullStr.c_str();
 
-	outFolderStr = outPrefix + listNum;
+	outFolderStr = outPrefix + listNumStr;
 	GlobalWriteVideoFileFolder = outFolderStr.c_str();
 }
 
@@ -328,7 +356,7 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind)
 
 inline void InitGlobalConfigure()
 {
-	ForSecondOriginalBinFiles("2");
+	ForSecondOriginalBinFiles(First);
 
 //	ForWorstFrames("500", "yundong");
 
