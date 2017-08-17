@@ -11,68 +11,6 @@ const char* GlobalImageListNameFormat;
 const char* GlobalWriteFileNameFormat;
 const char* GlobalWriteVideoFileFolder;
 
-inline void ForSecondOriginalBinFiles(std::string listNum)
-{
-	CHECK_ORIGIN_FLAG = true;
-	CHECK_DECRETIZATED_FLAG = false;
-	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
-	CHECK_INSIDE_BOUNDARY_FLAG = true;
-	CHECK_FOUR_BLOCK_FLAG = false;
-	CHECK_COVERAGE_FLAG = true;
-
-	ConvexPartitionOfOriginalImage = 5;
-	ConcavePartitionOfOriginalImage = 1;
-
-	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\ir_file_20170531_1000m_";
-	std::string inBackend = "_8bit\\Frame_%04d.png";
-	inFullStr = inPrefix + listNum + inBackend;
-
-	GlobalImageListNameFormat = inFullStr.c_str();
-
-	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\newResults\\ir_file_20170531_1000m_";
-	std::string outBackend = "\\Frame_%04d.png";
-	outFullStr = outPrefix + listNum + outBackend;
-
-	GlobalWriteFileNameFormat = outFullStr.c_str();
-
-	outFolderStr = outPrefix + listNum;
-	GlobalWriteVideoFileFolder = outFolderStr.c_str();
-}
-
-inline void ForWorstFrames(std::string distance, std::string flyStatus)
-{
-	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
-	CHECK_INSIDE_BOUNDARY_FLAG = true;
-	CHECK_FOUR_BLOCK_FLAG = false;
-	CHECK_COVERAGE_FLAG = false;
-
-	CHECK_ORIGIN_FLAG = true;
-	ConvexPartitionOfOriginalImage = 10;
-	ConcavePartitionOfOriginalImage = 1;
-
-	CHECK_DECRETIZATED_FLAG = true;
-	ConvexPartitionOfDiscretizedImage = 10;
-	ConcavePartitionOfDiscretizedImage = 1;
-
-	IsNeedStrengthenIntensity = false;
-
-	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Forth\\test\\Frames\\ir_file_20170713_";
-	std::string medianPart = "m_";
-	std::string inBackend = "\\Frame_1%08d.png";
-	inFullStr = inPrefix + distance + medianPart + flyStatus + inBackend;
-
-	GlobalImageListNameFormat = inFullStr.c_str();
-
-	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Forth\\test\\Results\\ir_file_20170713_";
-	std::string outBackend = "\\Frame_1%08d.png";
-	outFullStr = outPrefix + distance + medianPart + flyStatus + outBackend;
-
-	GlobalWriteFileNameFormat = outFullStr.c_str();
-
-	outFolderStr = outPrefix + distance + medianPart + flyStatus;
-	GlobalWriteVideoFileFolder = outFolderStr.c_str();
-}
-
 inline cv::Mat GetTheFirstImage(int firImageIndex = 0)
 {
 	char imageFullName[WRITE_FILE_NAME_BUFFER_SIZE];
@@ -115,6 +53,76 @@ inline bool UpdateConstants()
 
 	logPrinter.PrintLogs("Read Image Failed, please check whether the path exist!", LogLevel::Error);
 	return false;
+}
+
+inline void ForSecondOriginalBinFiles(std::string listNum)
+{
+	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+	CHECK_INSIDE_BOUNDARY_FLAG = true;
+	CHECK_FOUR_BLOCK_FLAG = false;
+	CHECK_COVERAGE_FLAG = false;
+
+	CHECK_ORIGIN_FLAG = true;
+	ConvexPartitionOfOriginalImage = 10;
+	ConcavePartitionOfOriginalImage = 1;
+
+	CHECK_DECRETIZATED_FLAG = true;
+	ConvexPartitionOfDiscretizedImage = 10;
+	ConcavePartitionOfDiscretizedImage = 1;
+	IsNeedStrengthenIntensity = false;
+
+//	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\ir_file_20170531_1000m_";
+//	std::string inBackend = "_8bit\\Frame_%04d.png";
+	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\Frames\\ir_file_20170531_1000m_";
+	std::string inBackend = "\\Frame_%08d.png";
+	inFullStr = inPrefix + listNum + inBackend;
+
+	GlobalImageListNameFormat = inFullStr.c_str();
+
+//	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\newResults\\ir_file_20170531_1000m_";
+//	std::string outBackend = "\\Frame_%04d.png";
+	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\FramesResults\\ir_file_20170531_1000m_";
+	std::string outBackend = "\\Frame_%08d.png";
+	outFullStr = outPrefix + listNum + outBackend;
+
+	GlobalWriteFileNameFormat = outFullStr.c_str();
+
+	outFolderStr = outPrefix + listNum;
+	GlobalWriteVideoFileFolder = outFolderStr.c_str();
+}
+
+inline void ForWorstFrames(std::string distance, std::string flyStatus)
+{
+	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+	CHECK_INSIDE_BOUNDARY_FLAG = true;
+	CHECK_FOUR_BLOCK_FLAG = false;
+	CHECK_COVERAGE_FLAG = false;
+
+	CHECK_ORIGIN_FLAG = true;
+	ConvexPartitionOfOriginalImage = 10;
+	ConcavePartitionOfOriginalImage = 1;
+
+	CHECK_DECRETIZATED_FLAG = true;
+	ConvexPartitionOfDiscretizedImage = 10;
+	ConcavePartitionOfDiscretizedImage = 1;
+
+	IsNeedStrengthenIntensity = false;
+
+	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Forth\\test\\Frames\\ir_file_20170713_";
+	std::string medianPart = "m_";
+	std::string inBackend = "\\Frame_%08d.png";
+	inFullStr = inPrefix + distance + medianPart + flyStatus + inBackend;
+
+	GlobalImageListNameFormat = inFullStr.c_str();
+
+	std::string outPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Forth\\test\\Results\\ir_file_20170713_";
+	std::string outBackend = "\\Frame_%08d.png";
+	outFullStr = outPrefix + distance + medianPart + flyStatus + outBackend;
+
+	GlobalWriteFileNameFormat = outFullStr.c_str();
+
+	outFolderStr = outPrefix + distance + medianPart + flyStatus;
+	GlobalWriteVideoFileFolder = outFolderStr.c_str();
 }
 
 enum TargetMoveDirection
@@ -315,11 +323,11 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind)
 
 inline void InitGlobalConfigure()
 {
-//	ForSecondOriginalBinFiles("1");
+	ForSecondOriginalBinFiles("1");
 
 //	ForWorstFrames("500", "yundong");
 
-	ForThirdLongWave(fragment_2_500_1500_150ms);
+//	ForThirdLongWave(fragment_2_500_1500_150ms);
 
 //	For6kmData(In);
 
