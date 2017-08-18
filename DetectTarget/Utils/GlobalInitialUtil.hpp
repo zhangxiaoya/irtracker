@@ -104,6 +104,8 @@ inline void ForSecondOriginalBinFiles(SecondTestCaseListNum listNum)
 	ConcavePartitionOfDiscretizedImage = 1;
 	IsNeedStrengthenIntensity = false;
 
+	CHECK_STANDARD_DEVIATION_FLAG = true;
+
 //	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\ir_file_20170531_1000m_";
 //	std::string inBackend = "_8bit\\Frame_%04d.png";
 	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\Frames\\ir_file_20170531_1000m_";
@@ -140,6 +142,8 @@ inline void ForWorstFrames(std::string distance, std::string flyStatus)
 	ConcavePartitionOfDiscretizedImage = 1;
 
 	IsNeedStrengthenIntensity = false;
+	CHECK_STANDARD_DEVIATION_FLAG = true;
+
 
 	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Forth\\test\\Frames\\ir_file_20170713_";
 	std::string medianPart = "m_";
@@ -356,13 +360,13 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind)
 
 inline void InitGlobalConfigure()
 {
-	ForSecondOriginalBinFiles(First);
+	ForSecondOriginalBinFiles(Second);
 
 //	ForWorstFrames("500", "yundong");
 
 //	ForThirdLongWave(fragment_2_500_1500_150ms);
 
-//	For6kmData(In);
+//	For6kmData(Out);
 
 	if (UpdateConstants())
 	{

@@ -45,6 +45,7 @@ static bool CHECK_SURROUNDING_BOUNDARY_FLAG = true;
 static bool CHECK_INSIDE_BOUNDARY_FLAG = true;
 static bool CHECK_FOUR_BLOCK_FLAG = true;
 static bool CHECK_COVERAGE_FLAG = true;
+static bool CHECK_STANDARD_DEVIATION_FLAG = false;
 
 static auto ConvexPartitionOfOriginalImage = 0;
 static auto ConcavePartitionOfOriginalImage = 0;
