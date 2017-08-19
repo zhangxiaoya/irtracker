@@ -32,6 +32,8 @@ protected:
 
 	bool CheckInsideBoundaryDescendGradient(const Mat& grayFrame, const cv::Rect rect) const;
 
+	bool CheckStandardDeviation(const Mat& grayFrame, const cv::Rect& rect) const;
+
 private:
 	void ConvertToGray();
 
@@ -109,6 +111,8 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 	{
 		auto currentResult = (CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
 			|| (CHECK_DECRETIZATED_FLAG && CheckDiscretizedImageSuroundedBox(preprocessResultFrame, rect));
+		if(currentResult == false)
+			continue;
 
 		if (CHECK_SURROUNDING_BOUNDARY_FLAG)
 		{
@@ -129,6 +133,12 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 		if (CHECK_FOUR_BLOCK_FLAG)
 		{
 			currentResult &= CheckFourBlock(preprocessResultFrame, rect);
+			if (currentResult == false) continue;
+		}
+
+		if(CHECK_STANDARD_DEVIATION_FLAG)
+		{
+			currentResult &= CheckStandardDeviation(grayFrame, rect);
 			if (currentResult == false) continue;
 		}
 
@@ -201,7 +211,7 @@ void Monitor<DataType>::CombineResultFramesAndPersistance()
 	}
 
 	imshow("Combined Result", combinedResultFrame);
-	waitKey(1);
+	waitKey(SHOW_DELAY);
 }
 
 template <typename DataType>
@@ -497,6 +507,37 @@ bool Monitor<DataType>::CheckInsideBoundaryDescendGradient(const Mat& grayFrame,
 
 	if (count > 3)
 		return true;
+	return false;
+}
+
+template <typename DataType>
+bool Monitor<DataType>::CheckStandardDeviation(const Mat& grayFrame, const cv::Rect& rect) const
+{
+	auto averageValue = Util<DataType>::AverageValue(grayFrame, rect);
+	uint64_t sum = 0;
+	for (auto r = rect.tl().y; r <= rect.br().y; ++r)
+	{
+		auto ptr = grayFrame.ptr<DataType>(r);
+		for (auto c = rect.tl().x; c <= rect.br().x; ++c)
+		{
+			sum += (ptr[c] - averageValue) * (ptr[c] - averageValue);
+		}
+	}
+	auto standardDeviation = sqrt(sum / (rect.width * rect.height));
+
+	auto k = 2;
+	auto adaptiveThreshold = standardDeviation * k + averageValue;
+
+//	Mat temp;
+//	cvtColor(grayFrame, temp, CV_GRAY2RGB);
+//	rectangle(temp, rect, Scalar(0, 255, 255));
+
+	if(adaptiveThreshold >= 180)
+	{
+		std::cout << adaptiveThreshold << std::endl;
+		return true;
+	}
+
 	return false;
 }
 
