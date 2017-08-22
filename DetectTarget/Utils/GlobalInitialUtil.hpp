@@ -66,8 +66,9 @@ enum SecondTestCaseListNum
 	Second
 };
 
-inline void ForSecondOriginalBinFiles(SecondTestCaseListNum listNum)
+inline void ForSecondOriginalBinFiles(SecondTestCaseListNum listNum, bool isShowLastResultOnly = false)
 {
+	SHOW_LAST_RESULT_ONLY = isShowLastResultOnly;
 	std::string listNumStr;
 
 	switch (listNum)
@@ -126,8 +127,9 @@ inline void ForSecondOriginalBinFiles(SecondTestCaseListNum listNum)
 	GlobalWriteVideoFileFolder = outFolderStr.c_str();
 }
 
-inline void ForWorstFrames(std::string distance, std::string flyStatus)
+inline void ForWorstFrames(std::string distance, std::string flyStatus, bool isShowLastResultOnly = false)
 {
+	SHOW_LAST_RESULT_ONLY = isShowLastResultOnly;
 	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
 	CHECK_INSIDE_BOUNDARY_FLAG = true;
 	CHECK_FOUR_BLOCK_FLAG = false;
@@ -143,7 +145,6 @@ inline void ForWorstFrames(std::string distance, std::string flyStatus)
 
 	IsNeedStrengthenIntensity = false;
 	CHECK_STANDARD_DEVIATION_FLAG = true;
-
 
 	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Forth\\test\\Frames\\ir_file_20170713_";
 	std::string medianPart = "m_";
@@ -168,8 +169,10 @@ enum TargetMoveDirection
 	Out
 };
 
-inline void For6kmData(TargetMoveDirection direction)
+inline void For6kmData(TargetMoveDirection direction, bool isShowLastResultOnly = false)
 {
+	SHOW_LAST_RESULT_ONLY = isShowLastResultOnly;
+	CHECK_STANDARD_DEVIATION_FLAG = false;
 	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
 	CHECK_INSIDE_BOUNDARY_FLAG = true;
 	CHECK_FOUR_BLOCK_FLAG = false;
@@ -213,8 +216,10 @@ enum LongWaveEnum
 	fragment_1500_700_middle
 };
 
-inline void ForThirdLongWave(LongWaveEnum fragmentKind)
+inline void ForThirdLongWave(LongWaveEnum fragmentKind, bool isShowLastResultOnly = false)
 {
+	SHOW_LAST_RESULT_ONLY = isShowLastResultOnly;
+	CHECK_STANDARD_DEVIATION_FLAG = false;
 	switch (fragmentKind)
 	{
 	case fragment_1_0_600m_150ms:
@@ -360,13 +365,13 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind)
 
 inline void InitGlobalConfigure()
 {
-	ForSecondOriginalBinFiles(Second);
+//	ForSecondOriginalBinFiles(Second, true);
 
 	ForWorstFrames("500", "yundong");
 
-	ForThirdLongWave(fragment_2_500_1500_150ms);
+	ForThirdLongWave(fragment_2_500_1500_150ms, true);
 
-	For6kmData(Out);
+	For6kmData(Out, true);
 
 	if (UpdateConstants())
 	{

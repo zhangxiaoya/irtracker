@@ -17,6 +17,7 @@ const auto SEARCH_WINDOW_WIDTH = 8;
 const auto SEARCH_WINDOW_HEIGHT = 8;
 const auto THRESHOLD = 25;
 const auto SHOW_DELAY = 1000;
+static auto SHOW_LAST_RESULT_ONLY = false;
 
 const auto THINGKING_STAGE = 6;
 

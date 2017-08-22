@@ -210,7 +210,11 @@ void Monitor<DataType>::CombineResultFramesAndPersistance()
 		framePersistance->Persistance(combinedResultFrame);
 	}
 
-	imshow("Combined Result", combinedResultFrame);
+	if (SHOW_LAST_RESULT_ONLY)
+		imshow("Last Result Only", trackedResultFrame);
+	else
+		imshow("Combined Result", combinedResultFrame);
+
 	waitKey(SHOW_DELAY);
 }
 
