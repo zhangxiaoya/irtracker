@@ -362,11 +362,11 @@ inline void InitGlobalConfigure()
 {
 	ForSecondOriginalBinFiles(Second);
 
-//	ForWorstFrames("500", "yundong");
+	ForWorstFrames("500", "yundong");
 
-//	ForThirdLongWave(fragment_2_500_1500_150ms);
+	ForThirdLongWave(fragment_2_500_1500_150ms);
 
-//	For6kmData(Out);
+	For6kmData(Out);
 
 	if (UpdateConstants())
 	{

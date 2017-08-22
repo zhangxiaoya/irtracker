@@ -528,15 +528,8 @@ bool Monitor<DataType>::CheckStandardDeviation(const Mat& grayFrame, const cv::R
 	auto k = 2;
 	auto adaptiveThreshold = standardDeviation * k + averageValue;
 
-//	Mat temp;
-//	cvtColor(grayFrame, temp, CV_GRAY2RGB);
-//	rectangle(temp, rect, Scalar(0, 255, 255));
-
-	if(adaptiveThreshold >= 180)
-	{
-		std::cout << adaptiveThreshold << std::endl;
+	if(adaptiveThreshold >= 150)
 		return true;
-	}
 
 	return false;
 }
