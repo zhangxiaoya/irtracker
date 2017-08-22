@@ -56,6 +56,8 @@ static auto ConcavePartitionOfDiscretizedImage = 0;
 
 static auto IsNeedStrengthenIntensity = false;
 
+static auto PersistentLastResult = false;
+
 const auto LowContrastThreshold = 3;
 
 const auto MinDiffOfConvextAndConcaveThreshold = 3;

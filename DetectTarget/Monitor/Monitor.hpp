@@ -17,7 +17,7 @@ public:
 
 	void Process();
 
-	void SetResultPersistanceFlag(bool flag = false);
+	void SetResultPersistanceFlag(bool flag = false, bool isPersistentLastResultOnly = false);
 
 protected:
 	bool CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& rect) const;
@@ -207,7 +207,14 @@ void Monitor<DataType>::CombineResultFramesAndPersistance()
 
 	if(resultPersistanceFlag == true)
 	{
-		framePersistance->Persistance(combinedResultFrame);
+		if(PersistentLastResult)
+		{
+			framePersistance->Persistance(trackedResultFrame);
+		}
+		else
+		{
+			framePersistance->Persistance(combinedResultFrame);
+		}
 	}
 
 	if (SHOW_LAST_RESULT_ONLY)
@@ -256,9 +263,12 @@ void Monitor<DataType>::Process()
 }
 
 template <typename DataType>
-void Monitor<DataType>::SetResultPersistanceFlag(bool flag)
+void Monitor<DataType>::SetResultPersistanceFlag(bool flag, bool isPersistentLastResultOnly)
 {
 	this->resultPersistanceFlag = flag;
+	PersistentLastResult = isPersistentLastResultOnly;
+	if(isPersistentLastResultOnly)
+		toVideo->SetFrameSize(IMAGE_WIDTH, IMAGE_HEIGHT);
 }
 
 template <typename DataType>
