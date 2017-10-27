@@ -63,10 +63,11 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\props\WithOpenCV2.4.13Debugx64.props" />
+    <Import Project="..\PropsForOpenCV\WithOpenCV2.4.13Debugx64VS2015.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\PropsForOpenCV\WithOpenCV2.4.13Releasex64VS2015.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
@@ -126,14 +127,34 @@
     <ClInclude Include="Detector\DetectByDiscontinuity.hpp" />
     <ClInclude Include="Detector\DetectByMaxFilterAndAdptiveThreshold.hpp" />
     <ClInclude Include="Detector\DetectByMultiscaleLocalDifference.hpp" />
+    <ClInclude Include="FramePersistance\FramePersistance.hpp" />
+    <ClInclude Include="FramePersistance\FramePersistanceFactory.hpp" />
+    <ClInclude Include="FrameSource\CaptureFrameSource.hpp" />
+    <ClInclude Include="FrameSource\EmptyFrameSource.hpp" />
+    <ClInclude Include="FrameSource\FrameSource.hpp" />
+    <ClInclude Include="FrameSource\FrameSourceFactory.hpp" />
+    <ClInclude Include="FrameSource\ImageListFrameSource.hpp" />
+    <ClInclude Include="FrameSource\ImageListReader\ImageListReader.hpp" />
+    <ClInclude Include="FrameSource\ImageListReader\ImageListReaderBase.hpp" />
+    <ClInclude Include="FrameSource\VideoFrameSource.hpp" />
     <ClInclude Include="Headers\GlobalConstantConfigure.h" />
+    <ClInclude Include="LogPrinter\LogPrinter.hpp" />
     <ClInclude Include="Models\ConfidenceElem.hpp" />
+    <ClInclude Include="Models\DifferenceElem.hpp" />
+    <ClInclude Include="Models\DrawResultType.hpp" />
     <ClInclude Include="Models\FieldType.hpp" />
     <ClInclude Include="Models\FourLimits.hpp" />
+    <ClInclude Include="Models\LogLevel.hpp" />
+    <ClInclude Include="Monitor\Monitor.hpp" />
+    <ClInclude Include="Monitor\MonitorFactory.hpp" />
+    <ClInclude Include="PreProcessor\PreProcessor.hpp" />
+    <ClInclude Include="PreProcessor\PreProcesssorFactory.hpp" />
     <ClInclude Include="Tracker\TargetTracker.hpp" />
     <ClInclude Include="Utils\ConfidenceMapUtil.hpp" />
     <ClInclude Include="Utils\GlobalInitialUtil.hpp" />
+    <ClInclude Include="Utils\PerformanceUtil.hpp" />
     <ClInclude Include="Utils\SpecialUtil.hpp" />
+    <ClInclude Include="Utils\ToVideo.hpp" />
     <ClInclude Include="Utils\Util.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,5 +1,6 @@
 #pragma once
 #include <opencv2/core/core.hpp>
+#include "../LogPrinter/LogPrinter.hpp"
 
 auto const COLOR_RED = cv::Scalar(0, 0, 255);
 auto const COLOR_BLUE = cv::Scalar(255, 0, 0);
@@ -15,7 +16,8 @@ const auto QUEUE_SIZE = 5;
 const auto SEARCH_WINDOW_WIDTH = 8;
 const auto SEARCH_WINDOW_HEIGHT = 8;
 const auto THRESHOLD = 25;
-const auto SHOW_DELAY = 1;
+const auto SHOW_DELAY = 1000;
+static auto SHOW_LAST_RESULT_ONLY = false;
 
 const auto THINGKING_STAGE = 6;
 
@@ -32,4 +34,34 @@ static auto countY = ceil(static_cast<double>(IMAGE_HEIGHT) / BLOCK_SIZE);
 
 const auto WRITE_FILE_NAME_BUFFER_SIZE = 200;
 
-const auto DISCRATED_BIN = 25;
+static auto DISCRATED_BIN = 15;
+
+static auto CV_DATA_TYPE = CV_8UC1;
+
+const auto DilateKernelSize = 3;
+
+static bool CHECK_ORIGIN_FLAG = true;
+static bool CHECK_DECRETIZATED_FLAG = true;
+static bool CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+static bool CHECK_INSIDE_BOUNDARY_FLAG = true;
+static bool CHECK_FOUR_BLOCK_FLAG = true;
+static bool CHECK_COVERAGE_FLAG = true;
+static bool CHECK_STANDARD_DEVIATION_FLAG = false;
+
+static auto ConvexPartitionOfOriginalImage = 0;
+static auto ConcavePartitionOfOriginalImage = 0;
+
+static auto ConvexPartitionOfDiscretizedImage = 0;
+static auto ConcavePartitionOfDiscretizedImage = 0;
+
+static auto IsNeedStrengthenIntensity = false;
+
+static auto PersistentLastResult = false;
+
+const auto LowContrastThreshold = 3;
+
+const auto MinDiffOfConvextAndConcaveThreshold = 3;
+
+const double MinDiff = 0.00000001;
+
+LogPrinter logPrinter;

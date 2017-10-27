@@ -1,46 +1,107 @@
 #pragma once
 #include <core/core.hpp>
-#include <highgui/highgui.hpp>
-#include <filesystem>
+#include <opencv2/imgproc/imgproc.hpp>
 #include "../Models/FourLimits.hpp"
 #include "../Utils/Util.hpp"
+#include "../Utils/PerformanceUtil.hpp"
+#include "../PreProcessor/PreProcesssorFactory.hpp"
 
-cv::Mat previousFrame = cv::Mat(cv::Size(IMAGE_WIDTH, IMAGE_HEIGHT), CV_32SC1, cv::Scalar(1));
-
+template <class DataType>
 class DetectByMaxFilterAndAdptiveThreshold
 {
 public:
+	DetectByMaxFilterAndAdptiveThreshold(int image_width, int image_height)
+		: imageWidth(image_width),
+		  imageHeight(image_height),
+		  totalObject(0)
+	{
+		preprocessor = PreProcessorFactory::CreatePreProcessor<DataType>(image_width, image_height);
+		frameAfterMaxFilter = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
+		frameAfterDiscrezated = Mat(imageHeight, imageWidth, CV_DATA_TYPE);
+	}
 
-	static std::vector<cv::Rect> Detect(cv::Mat curFrame);
+	void Detect(cv::Mat& curFrame, std::vector<cv::Rect>& resultRects);
+
+	void GetPreprocessedResult(cv::Mat& preProcessedFrame) const;
 
 private:
+	void Reload(cv::Mat& currentGrayFrame);
 
-	static void MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize);
+	void MaxFilter(int kernelSize);
 
-	static unsigned char GetMaxPixelValue(const cv::Mat& curFrame, std::vector<uchar>& pixelValues, int r, int c, int kernelSize);
+	void GetAllObjects();
 
-	static int GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap);
+	void Discretization();
 
-	static void Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame);
+	void MergeCrossedRectangles();
 
-	static void MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects);
+	bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const;
 
-	static void RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result);
+	void RemoveSmallAndBigObjects(std::vector<FourLimits>& objects);
 
-	static void FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result);
+	void RemoveObjectsWithLowContrast(std::vector<FourLimits>& objects);
 
-	static bool CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond);
+	void DoubleCheckAfterMerge();
 
-	static void CalculateThreshold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY);
+private:
+	int imageWidth;
+	int imageHeight;
 
-	static void RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame);
+	int totalObject;
+	std::vector<FourLimits> fourLimitsOfAllObjects;
+	std::vector<FourLimits> fourLimitsAfterMergeObjects;
 
-	static void FillRectToFrame(cv::Rect& rect);
-
-	static bool CheckRect(cv::Rect& rect);
+	cv::Mat frameNeedDetect;
+	cv::Mat frameAfterMaxFilter;
+	cv::Mat frameAfterDiscrezated;
+	cv::Ptr<PreProcessor<DataType>> preprocessor;
 };
 
-inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond)
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::Reload(cv::Mat& currentGrayFrame)
+{
+	frameNeedDetect = currentGrayFrame;
+
+	totalObject = 0;
+	fourLimitsOfAllObjects.clear();
+	fourLimitsAfterMergeObjects.clear();
+
+	preprocessor->SetSourceFrame(frameNeedDetect);
+}
+
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::Detect(cv::Mat& currentGrayFrame, std::vector<cv::Rect>& resultRects)
+{
+	Reload(currentGrayFrame);
+
+	if(IsNeedStrengthenIntensity)
+		preprocessor->StrengthenIntensityOfBlock();
+
+	MaxFilter(DilateKernelSize);
+
+	Discretization();
+
+	GetAllObjects();
+
+	RemoveSmallAndBigObjects(fourLimitsOfAllObjects);
+
+	RemoveObjectsWithLowContrast(fourLimitsOfAllObjects);
+
+	MergeCrossedRectangles();
+
+	DoubleCheckAfterMerge();
+
+	resultRects = Util<DataType>::GetCandidateTargets(fourLimitsAfterMergeObjects);
+}
+
+template <class DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetPreprocessedResult(cv::Mat& preProcessedFrame) const
+{
+	preProcessedFrame = frameAfterDiscrezated;
+}
+
+template <typename DataType>
+bool DetectByMaxFilterAndAdptiveThreshold<DataType>::CheckCross(const FourLimits& objectFirst, const FourLimits& objectSecond) const
 {
 	auto firstCenterX = (objectFirst.right + objectFirst.left) / 2;
 	auto firstCenterY = (objectFirst.bottom + objectFirst.top) / 2;
@@ -57,288 +118,192 @@ inline bool DetectByMaxFilterAndAdptiveThreshold::CheckCross(const FourLimits& o
 	auto centerXDiff = std::abs(firstCenterX - secondCenterX);
 	auto centerYDiff = std::abs(firstCenterY - secondCenterY);
 
-	if (centerXDiff <= (firstWidth + secondWidth) / 2 && centerYDiff <= (firstHeight + secondHeight) / 2)
+	if (centerXDiff <= (firstWidth + secondWidth) / 2 + 1 && centerYDiff <= (firstHeight + secondHeight) / 2 + 1)
 		return true;
 
 	return false;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::CalculateThreshold(const cv::Mat& frame, uchar& threshHold, int leftTopX, int leftTopY, int rightBottomX, int rightBottomY)
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveSmallAndBigObjects(std::vector<FourLimits>& objects)
 {
-	auto sumAll = 0;
-	for (auto r = leftTopY; r < rightBottomY; ++ r)
+	for (auto it = objects.begin(); it != objects.end();)
 	{
-		auto sumRow = 0;
-		for (auto c = leftTopX; c < rightBottomX; ++c)
-		{
-			sumRow += frame.at<uchar>(r, c);
-		}
-		sumAll += (sumRow / (rightBottomX - leftTopX));
+		auto width = it->right - it->left + 1;
+		auto height = it->bottom - it->top + 1;
+
+		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
+			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT))
+			it = objects.erase(it);
+		else
+			++it;
 	}
-
-	threshHold = sumAll / (rightBottomY - leftTopY);
-
-	//	threshHold += (threshHold) / 4;
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::RemoveSmallAndBigObjects(std::vector<FourLimits>& allObjects, const cv::Mat& frame)
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::RemoveObjectsWithLowContrast(std::vector<FourLimits>& objects)
 {
-	for (auto it = allObjects.begin(); it != allObjects.end();)
+	for (auto it = objects.begin(); it != objects.end();)
 	{
-		uchar threshold = 0;
+		DataType threshold = 0;
+		DataType centerValue = 0;
 
 		auto width = it->right - it->left + 1;
 		auto height = it->bottom - it->top + 1;
 
-		auto surroundBoxWidth = 2 * width;
-		auto surroundBoxHeight = 2 * height;
+		auto surroundBoxWidth = 3 * width;
+		auto surroundBoxHeight = 3 * height;
 
 		auto centerX = (it->right + it->left) / 2;
 		auto centerY = (it->bottom + it->top) / 2;
 
 		auto leftTopX = centerX - surroundBoxWidth / 2;
 		if (leftTopX < 0)
+		{
 			leftTopX = 0;
+		}
 
 		auto leftTopY = centerY - surroundBoxHeight / 2;
 		if (leftTopY < 0)
+		{
 			leftTopY = 0;
+		}
 
 		auto rightBottomX = leftTopX + surroundBoxWidth;
-		if (rightBottomX > frame.cols)
-			rightBottomX = frame.cols;
+		if (rightBottomX > imageWidth)
+		{
+			rightBottomX = imageWidth;
+		}
 
 		auto rightBottomY = leftTopY + surroundBoxHeight;
-		if (rightBottomY > frame.rows)
-			rightBottomY = frame.rows;
+		if (rightBottomY > imageHeight)
+		{
+			rightBottomY = imageHeight;
+		}
 
-		CalculateThreshold(frame, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
+		Util<DataType>::CalculateThreshHold(frameAfterDiscrezated, threshold, leftTopX, leftTopY, rightBottomX, rightBottomY);
 
-		if ((width < TARGET_WIDTH_MIN_LIMIT || height < TARGET_HEIGHT_MIN_LIMIT) ||
-			(width > TARGET_WIDTH_MAX_LIMIT || height > TARGET_HEIGHT_MAX_LIMIT) ||
-			frame.at<uchar>(it->top + 1, it->left + 1) < threshold)
-			it = allObjects.erase(it);
+		Util<DataType>::CalCulateCenterValue(frameAfterDiscrezated, centerValue, cv::Rect(it->left, it->top, it->right - it->left + 1, it->bottom - it->top + 1));
+
+		if (std::abs(static_cast<int>(centerValue) - static_cast<int>(threshold)) < 3)
+		{
+			it = objects.erase(it);
+		}
 		else
+		{
 			++it;
-	}
-}
-
-inline void DetectByMaxFilterAndAdptiveThreshold::FillRectToFrame(cv::Rect& rect)
-{
-	for (auto r = rect.y; r < rect.y + rect.height; ++r)
-	{
-		for (auto c = rect.x; c < rect.x + rect.width; ++c)
-		{
-			previousFrame.at<int32_t>(r, c) = 1;
 		}
 	}
 }
 
-inline bool DetectByMaxFilterAndAdptiveThreshold::CheckRect(cv::Rect& rect)
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::DoubleCheckAfterMerge()
 {
-	auto leftTopX = rect.x - rect.width > 0 ? rect.x - rect.width > 0 : 0;
-	auto leftTopY = rect.y - rect.height > 0 ? rect.y - rect.height > 0 : 0;
-	auto rightBottomX = rect.x + 2 * rect.width < previousFrame.cols ? rect.x + 2 * rect.width : previousFrame.cols - 1;
-	auto rightBottomY = rect.y + 2 * rect.height < previousFrame.rows ? rect.y + 2 * rect.height : previousFrame.rows - 1;
-
-	auto count = 0;
-	for (auto r = leftTopY; r <= rightBottomY; ++r)
-	{
-		for (auto c = leftTopX; c <= rightBottomX; ++c)
-		{
-			if (previousFrame.at<int32_t>(r, c) == 1)
-				++count;
-		}
-	}
-	auto x = static_cast<double>(count) / (rect.width * rect.height * 4);
-	if (x > 0.2)
-		return true;
-	return false;
+	RemoveSmallAndBigObjects(fourLimitsAfterMergeObjects);
+	RemoveObjectsWithLowContrast(fourLimitsAfterMergeObjects);
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::MergeCrossedRectangles(std::vector<FourLimits>& allObjects, std::vector<FourLimits>& afterMergeObjects)
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::MergeCrossedRectangles()
 {
-	for (auto i = 0; i < allObjects.size(); ++i)
+	for (auto i = 0; i < fourLimitsOfAllObjects.size(); ++i)
 	{
-		if (allObjects[i].identify == -1)
+		if (fourLimitsOfAllObjects[i].identify == -1)
 			continue;
-		for (auto j = 0; j < allObjects.size(); ++j)
+		for (auto j = 0; j < fourLimitsOfAllObjects.size(); ++j)
 		{
-			if (i == j || allObjects[j].identify == -1)
+			if (i == j || fourLimitsOfAllObjects[j].identify == -1)
 				continue;
-			if (CheckCross(allObjects[i], allObjects[j]))
+			if (CheckCross(fourLimitsOfAllObjects[i], fourLimitsOfAllObjects[j]))
 			{
-				allObjects[j].identify = -1;
+				fourLimitsOfAllObjects[j].identify = -1;
 
-				if (allObjects[i].top > allObjects[j].top)
-					allObjects[i].top = allObjects[j].top;
+				if (fourLimitsOfAllObjects[i].top > fourLimitsOfAllObjects[j].top)
+					fourLimitsOfAllObjects[i].top = fourLimitsOfAllObjects[j].top;
 
-				if (allObjects[i].left > allObjects[j].left)
-					allObjects[i].left = allObjects[j].left;
+				if (fourLimitsOfAllObjects[i].left > fourLimitsOfAllObjects[j].left)
+					fourLimitsOfAllObjects[i].left = fourLimitsOfAllObjects[j].left;
 
-				if (allObjects[i].right < allObjects[j].right)
-					allObjects[i].right = allObjects[j].right;
+				if (fourLimitsOfAllObjects[i].right < fourLimitsOfAllObjects[j].right)
+					fourLimitsOfAllObjects[i].right = fourLimitsOfAllObjects[j].right;
 
-				if (allObjects[i].bottom < allObjects[j].bottom)
-					allObjects[i].bottom = allObjects[j].bottom;
+				if (fourLimitsOfAllObjects[i].bottom < fourLimitsOfAllObjects[j].bottom)
+					fourLimitsOfAllObjects[i].bottom = fourLimitsOfAllObjects[j].bottom;
 			}
-		}
-	}
-	// for left top may be missed, so need double check
-	for (auto i = 0; i < allObjects.size(); ++i)
-	{
-		if (allObjects[i].identify == -1)
-			continue;
-		for (auto j = 0; j < allObjects.size(); ++j)
-		{
-			if (i == j || allObjects[j].identify == -1)
-				continue;
-			if (CheckCross(allObjects[i], allObjects[j]))
+
+			if((fourLimitsOfAllObjects[i].bottom - fourLimitsOfAllObjects[i].top) > TARGET_HEIGHT_MAX_LIMIT ||
+			   (fourLimitsOfAllObjects[i].right - fourLimitsOfAllObjects[i].left) > TARGET_WIDTH_MAX_LIMIT)
 			{
-				allObjects[j].identify = -1;
-
-				if (allObjects[i].top > allObjects[j].top)
-					allObjects[i].top = allObjects[j].top;
-
-				if (allObjects[i].left > allObjects[j].left)
-					allObjects[i].left = allObjects[j].left;
-
-				if (allObjects[i].right < allObjects[j].right)
-					allObjects[i].right = allObjects[j].right;
-
-				if (allObjects[i].bottom < allObjects[j].bottom)
-					allObjects[i].bottom = allObjects[j].bottom;
+				fourLimitsOfAllObjects[i].identify = -1;
+				break;
 			}
 		}
 	}
 
-	for (auto i = 0; i < allObjects.size(); ++i)
+	for (auto i = 0; i < fourLimitsOfAllObjects.size(); ++i)
 	{
-		if (allObjects[i].identify != -1)
-			afterMergeObjects.push_back(allObjects[i]);
+		if (fourLimitsOfAllObjects[i].identify != -1)
+			fourLimitsAfterMergeObjects.push_back(fourLimitsOfAllObjects[i]);
 	}
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::RefreshMask(cv::Mat curFrame, std::vector<cv::Rect> result)
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::MaxFilter(int kernelSize)
 {
-	previousFrame.release();
-	previousFrame = cv::Mat(cv::Size(curFrame.cols, curFrame.rows), CV_32SC1, cv::Scalar(-1));
-	for (auto i = 0; i < result.size(); ++i)
-		FillRectToFrame(result[i]);
+	auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
+//	morphologyEx(frameNeedDetect, frameAfterMaxFilter, CV_MOP_OPEN, kernel);
+	dilate(frameNeedDetect, frameAfterMaxFilter, kernel);
 }
 
-inline void DetectByMaxFilterAndAdptiveThreshold::FilterRectByContinuty(cv::Mat curFrame, std::vector<cv::Rect> rects, std::vector<cv::Rect> result)
+template <class DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::GetAllObjects()
 {
-	for (auto it = rects.begin(); it != rects.end(); ++it)
+	auto classCount = static_cast<int>(std::pow(256, sizeof(DataType))) / DISCRATED_BIN + 1;
+
+	vector<Mat> subMaskList(classCount,Mat());
+
+	for (auto i = 0; i < classCount; ++i)
 	{
-		if (CheckRect(*it))
-			result.push_back(*it);
+		subMaskList[i] = frameAfterDiscrezated == static_cast<DataType>(i * DISCRATED_BIN);
 	}
 
-	if (result.size() >= 2)
-		RefreshMask(curFrame, result);
-	else
-		RefreshMask(curFrame, rects);
-}
+	fourLimitsOfAllObjects.clear();
+	auto index = 0;
 
-inline std::vector<cv::Rect> DetectByMaxFilterAndAdptiveThreshold::Detect(cv::Mat curFrame)
-{
-	cv::Mat filtedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
-	auto kernelSize = 3;
-
-	MaxFilter(curFrame, filtedFrame, kernelSize);
-
-	cv::Mat discrezatedFrame(cv::Size(curFrame.cols, curFrame.rows), CV_8UC1);
-
-	Discretization(filtedFrame, discrezatedFrame);
-
-	imshow("Max Filter and Discrezated", discrezatedFrame);
-
-
-	cv::Mat blockMap(cv::Size(discrezatedFrame.cols, discrezatedFrame.rows), CV_32SC1, cv::Scalar(-1));
-	auto totalObject = GetBlocks(discrezatedFrame, blockMap);
-
-	std::vector<FourLimits> allObjects(totalObject);
-	Util::GetRectangleSize(blockMap, allObjects);
-
-	Util::ShowAllObject(curFrame, allObjects, "Before Merge and Remove out scale Objects");
-
-	RemoveSmallAndBigObjects(allObjects, discrezatedFrame);
-
-	Util::ShowAllObject(curFrame, allObjects, "Before Merge");
-
-	std::vector<FourLimits> afterMergeObjects;
-	MergeCrossedRectangles(allObjects, afterMergeObjects);
-
-	Util::ShowAllObject(curFrame, afterMergeObjects, "After Merge Cross Rectangles");
-
-	auto rects = Util::GetCandidateTargets(curFrame, afterMergeObjects);
-
-	Util::ShowAllCandidateTargets(curFrame, rects);
-
-	return rects;
-}
-
-inline void DetectByMaxFilterAndAdptiveThreshold::MaxFilter(const cv::Mat& curFrame, cv::Mat& filtedFrame, int kernelSize)
-{
-	std::vector<uchar> pixelVector;
-
-	for (auto r = 0; r < curFrame.rows; ++r)
+	for (auto i = 0; i < classCount; ++i)
 	{
-		for (auto c = 0; c < curFrame.cols; ++c)
+		vector<vector<Point>> contours;
+		vector<Vec4i> hierarchy;
+
+		findContours(subMaskList[i], contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+
+		vector<vector<Point>> contours_poly(contours.size());
+		vector<Rect> boundRect(contours.size());
+
+		for (auto j = 0; j < contours.size(); j++)
 		{
-			pixelVector.clear();
-			filtedFrame.at<uchar>(r, c) = GetMaxPixelValue(curFrame, pixelVector, r, c, kernelSize);
-		}
-	}
-}
+			approxPolyDP(Mat(contours[j]), contours_poly[j], 3, true);
+			boundRect[j] = boundingRect(Mat(contours_poly[j]));
 
-inline unsigned char DetectByMaxFilterAndAdptiveThreshold::GetMaxPixelValue(const cv::Mat& curFrame, std::vector<uchar>& pixelValues, int r, int c, int kernelSize)
-{
-	auto radius = kernelSize / 2;
-	auto leftTopX = c - radius;
-	auto leftTopY = r - radius;
-
-	auto rightBottomX = leftTopX + 2 * radius;
-	auto rightBottomY = leftTopY + 2 * radius;
-
-	uchar maxVal = 0;
-
-	for (auto row = leftTopY; row <= rightBottomY; ++row)
-	{
-		if (row >= 0 && row < curFrame.rows)
-		{
-			for (auto col = leftTopX; col <= rightBottomX; ++col)
-			{
-				if (col >= 0 && col < curFrame.cols && maxVal < curFrame.at<uchar>(row, col))
-					maxVal = curFrame.at<uchar>(row, col);
-			}
+			fourLimitsOfAllObjects.push_back(FourLimits(boundRect[j].tl().y, boundRect[j].br().y - 1, boundRect[j].tl().x, boundRect[j].br().x -1 , index));
+			++index;
 		}
 	}
 
-	return maxVal;
+	totalObject = fourLimitsOfAllObjects.size();
 }
 
-inline int DetectByMaxFilterAndAdptiveThreshold::GetBlocks(const cv::Mat& filtedFrame, cv::Mat& blockMap)
+template <typename DataType>
+void DetectByMaxFilterAndAdptiveThreshold<DataType>::Discretization()
 {
-	auto currentIndex = 0;
-	for (auto r = 0; r < filtedFrame.rows; ++r)
+	for (auto r = 0; r < frameAfterMaxFilter.rows; ++r)
 	{
-		for (auto c = 0; c < filtedFrame.cols; ++c)
-		{
-			if (blockMap.at<int32_t>(r, c) != -1)
-				continue;
+		auto srcImgPtr = frameAfterMaxFilter.ptr<DataType>(r);
+		auto destImgPtr = frameAfterDiscrezated.ptr<DataType>(r);
 
-			auto val = filtedFrame.at<uchar>(r, c);
-			Util::FindNeighbor(filtedFrame, blockMap, r, c, currentIndex++, FieldType::Four, val);
+		for (auto c = 0; c < frameAfterMaxFilter.cols; ++c)
+		{
+			destImgPtr[c] = (srcImgPtr[c] / DISCRATED_BIN) * DISCRATED_BIN;
 		}
 	}
-	return currentIndex;
-}
-
-inline void DetectByMaxFilterAndAdptiveThreshold::Discretization(const cv::Mat& filtedFrame, cv::Mat& discretizatedFrame)
-{
-	for (auto r = 0; r < filtedFrame.rows; ++r)
-		for (auto c = 0; c < filtedFrame.cols; ++c)
-			discretizatedFrame.at<uint8_t>(r, c) = (filtedFrame.at<uint8_t>(r, c) / DISCRATED_BIN) * DISCRATED_BIN;
 }
