@@ -145,6 +145,7 @@
     <ClInclude Include="Models\FieldType.hpp" />
     <ClInclude Include="Models\FourLimits.hpp" />
     <ClInclude Include="Models\LogLevel.hpp" />
+    <ClInclude Include="Models\TargetWithScore.hpp" />
     <ClInclude Include="Monitor\Monitor.hpp" />
     <ClInclude Include="Monitor\MonitorFactory.hpp" />
     <ClInclude Include="PreProcessor\PreProcessor.hpp" />

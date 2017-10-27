@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 	{
 		logPrinter.PrintLogs("Open Image List Success!", LogLevel::Info);
 
-		monitor->SetResultPersistanceFlag(true, true);
+		monitor->SetResultPersistanceFlag(true, false);
 
 		monitor->Process();
 	}

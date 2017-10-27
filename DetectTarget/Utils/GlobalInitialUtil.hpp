@@ -107,10 +107,10 @@ inline void ForSecondOriginalBinFiles(SecondTestCaseListNum listNum, bool isShow
 
 	CHECK_STANDARD_DEVIATION_FLAG = true;
 
-//	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\ir_file_20170531_1000m_";
-//	std::string inBackend = "_8bit\\Frame_%04d.png";
-	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\Frames\\ir_file_20170531_1000m_";
-	std::string inBackend = "\\Frame_%08d.png";
+	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\ir_file_20170531_1000m_";
+	std::string inBackend = "_8bit\\Frame_%04d.png";
+//	std::string inPrefix = "E:\\WorkLogs\\Projects\\Project4\\Data\\Second\\Frames\\ir_file_20170531_1000m_";
+//	std::string inBackend = "\\Frame_%08d.png";
 	inFullStr = inPrefix + listNumStr + inBackend;
 
 	GlobalImageListNameFormat = inFullStr.c_str();
@@ -215,6 +215,29 @@ enum LongWaveEnum
 	fragment_1500_middle,
 	fragment_1500_700_middle
 };
+
+inline void ForbackgroundData()
+{
+	CHECK_STANDARD_DEVIATION_FLAG = true;
+	CHECK_SURROUNDING_BOUNDARY_FLAG = true;
+	CHECK_INSIDE_BOUNDARY_FLAG = true;
+	CHECK_FOUR_BLOCK_FLAG = false;
+	CHECK_COVERAGE_FLAG = true;
+
+	CHECK_ORIGIN_FLAG = true;
+	ConvexPartitionOfOriginalImage = 10;
+	ConcavePartitionOfOriginalImage = 1;
+
+	CHECK_DECRETIZATED_FLAG = true;
+	ConvexPartitionOfDiscretizedImage = 10;
+	ConcavePartitionOfDiscretizedImage = 1;
+
+	IsNeedStrengthenIntensity = false;
+	DISCRATED_BIN = 15;
+	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Sixth\\backGround\\images\\Frame_%08d.png";
+	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\Sixth\\result\\Frame_%08d.png";
+	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\Sixth\\result";
+}
 
 inline void ForThirdLongWave(LongWaveEnum fragmentKind, bool isShowLastResultOnly = false)
 {
@@ -363,15 +386,44 @@ inline void ForThirdLongWave(LongWaveEnum fragmentKind, bool isShowLastResultOnl
 	}
 }
 
+inline void ForDDEBackGroundData()
+{
+	CHECK_STANDARD_DEVIATION_FLAG = false;
+	CHECK_SURROUNDING_BOUNDARY_FLAG = false;
+	CHECK_INSIDE_BOUNDARY_FLAG = false;
+	CHECK_FOUR_BLOCK_FLAG = false;
+	CHECK_COVERAGE_FLAG = false;
+
+	CHECK_CONSTRAST = true;
+
+	CHECK_ORIGIN_FLAG = true;
+	ConvexPartitionOfOriginalImage = 200;
+	ConcavePartitionOfOriginalImage = 1;
+
+	CHECK_DECRETIZATED_FLAG = true;
+	ConvexPartitionOfDiscretizedImage = 200;
+	ConcavePartitionOfDiscretizedImage = 1;
+
+	IsNeedStrengthenIntensity = false;
+	DISCRATED_BIN = 10;
+	GlobalImageListNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\video\\frames\\Frame_%08d.png";
+	GlobalWriteFileNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\video\\result\\Frame_%08d.png";
+	GlobalWriteVideoFileFolder = "E:\\WorkLogs\\Projects\\Project4\\Data\\video\\result";
+}
+
 inline void InitGlobalConfigure()
 {
-//	ForSecondOriginalBinFiles(Second, true);
+	//ForSecondOriginalBinFiles(Second, true);
 
-	ForWorstFrames("500", "yundong");
+//	ForWorstFrames("500", "yundong");
 
-	ForThirdLongWave(fragment_2_500_1500_150ms, true);
+	//ForThirdLongWave(fragment_1km, true);
 
-	For6kmData(Out, true);
+	//For6kmData(Out, true);
+
+//	ForbackgroundData();
+
+	ForDDEBackGroundData();
 
 	if (UpdateConstants())
 	{

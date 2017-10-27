@@ -6,6 +6,12 @@
 #include "../Models/DrawResultType.hpp"
 #include "../FramePersistance/FramePersistance.hpp"
 #include "../Utils/ToVideo.hpp"
+#include "../Models/TargetWithScore.hpp"
+
+inline bool DoubleCompare(TargetWithScore& a, TargetWithScore& b)
+{
+	return a.score - b.score > 0.0000001;
+}
 
 template <typename DataType>
 class Monitor
@@ -34,10 +40,14 @@ protected:
 
 	bool CheckStandardDeviation(const Mat& grayFrame, const cv::Rect& rect) const;
 
+	bool CheckConstrast(const Mat& grayFrame, const cv::Rect& rect, double& constrastVal) const;
+
 private:
 	void ConvertToGray();
 
-	std::vector<cv::Rect> Tracking(std::vector<cv::Rect> targetRects) const;
+	DataType GetMaxValue(const Mat& grayFrame, const Rect& rect) const;
+
+	std::vector<TargetWithScore> Tracking(std::vector<cv::Rect> targetRects) const;
 
 	void GetPreprocessedResult(const Mat& mat);
 
@@ -104,11 +114,44 @@ void Monitor<DataType>::ConvertToGray()
 }
 
 template <typename DataType>
-std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRects) const
+DataType Monitor<DataType>::GetMaxValue(const Mat& grayFrame, const Rect& rect) const
 {
-	std::vector<cv::Rect> trackingResult = {};
-	for (auto rect : targetRects)
+	DataType maxVal = 0;
+	for (auto r = rect.tl().y; r <= rect.br().y; ++r)
 	{
+		auto ptr = grayFrame.ptr<DataType>(r);
+		for (auto c = rect.tl().x; c <= rect.br().x; ++c)
+		{
+			if (maxVal < ptr[c])
+				maxVal = ptr[c];
+		}
+	}
+	return maxVal;
+}
+
+template <typename DataType>
+std::vector<TargetWithScore> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRects) const
+{
+	std::vector<TargetWithScore> trackingResult = {};
+//	for (auto rect : targetRects)
+	for(int i = 0;i<targetRects.size();++i)
+	{
+		double constrastVal = 0.0;
+		auto rect = targetRects[i];
+		int centerX = rect.x + rect.width / 2;
+		int centerY = rect.y + rect.height / 2;
+
+		if(rect.height <3 || rect.width < 3)
+			continue;
+
+		if ((centerX > 250)
+			&& (centerX < 260)
+			&& (centerY > 205)
+			&& (centerY < 215))
+		{
+			std::cout << "Got it" << std::endl;
+		}
+
 		auto currentResult = (CHECK_ORIGIN_FLAG && CheckOriginalImageSuroundedBox(grayFrame, rect))
 			|| (CHECK_DECRETIZATED_FLAG && CheckDiscretizedImageSuroundedBox(preprocessResultFrame, rect));
 		if(currentResult == false)
@@ -142,9 +185,20 @@ std::vector<cv::Rect> Monitor<DataType>::Tracking(std::vector<cv::Rect> targetRe
 			if (currentResult == false) continue;
 		}
 
+		if(CHECK_CONSTRAST)
+		{
+			currentResult &= CheckConstrast(grayFrame, rect, constrastVal);
+			if (currentResult == false) continue;
+		}
+
 		if (currentResult)
 		{
-			trackingResult.push_back(rect);
+			TargetWithScore temp;
+			temp.rect = rect;
+//			temp.score = GetMaxValue(grayFrame, rect) + ((constrastVal * 100) - 110) * 10;
+			temp.score = GetMaxValue(grayFrame, rect) ;
+			trackingResult.push_back(temp);
+//			trackingResult.push_back(rect);
 		}
 	}
 	return trackingResult;
@@ -163,7 +217,8 @@ void Monitor<DataType>::GetDetectedResult(std::vector<cv::Rect> targetRects)
 
 	for (auto i = 0; i < targetRects.size(); ++i)
 	{
-		rectangle(detectedResultFrame, targetRects[i], COLOR_BLUE);
+		auto rec = targetRects[i];
+		rectangle(detectedResultFrame, rec, COLOR_BLUE);
 	}
 }
 
@@ -174,7 +229,9 @@ void Monitor<DataType>::GetTrackedResult(std::vector<cv::Rect> trackedTargetRect
 
 	for (auto rect : trackedTargetRects)
 	{
-		DrawResult(trackedResultFrame, rect, DrawResultType::Rectangles);
+		if(rect.tl().y <180 || rect.tl().y > 235 || rect.tl().x < 150 || rect.x > 360)
+			continue;
+		DrawResult(trackedResultFrame, Rect(rect.tl().x-3, rect.tl().y-3, rect.width + 6, rect.height+6), DrawResultType::HalfRectangle);
 	}
 }
 
@@ -225,9 +282,16 @@ void Monitor<DataType>::CombineResultFramesAndPersistance()
 	waitKey(SHOW_DELAY);
 }
 
+
+
 template <typename DataType>
 void Monitor<DataType>::Process()
 {
+	int originalFrameIndex = 0;
+	const auto originalFrameNameBufferSize = 200;
+	char originalframeNameBuffer[originalFrameNameBufferSize];
+	char* originalFrameNameFormat = "E:\\WorkLogs\\Projects\\Project4\\Data\\video\\originalFrames\\Frame_%08d.png";
+
 	while (!curFrame.empty() || frameIndex == 0)
 	{
 		frameSource->nextFrame(curFrame);
@@ -242,13 +306,47 @@ void Monitor<DataType>::Process()
 
 			detector->GetPreprocessedResult(preprocessResultFrame);
 
+			sprintf_s(originalframeNameBuffer, originalFrameNameBufferSize, originalFrameNameFormat, frameIndex);
+			Mat originalFrame = imread(originalframeNameBuffer);
+			if (originalFrame.channels() == 1)
+				cvtColor(originalFrame, colorFrame, CV_GRAY2RGB);
+			else
+				originalFrame.copyTo(colorFrame);
+			originalFrameIndex++;
+
+			cvtColor(colorFrame, grayFrame, CV_RGB2GRAY);
+
 			GetPreprocessedResult(preprocessResultFrame);
+
+			auto kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+			//	morphologyEx(frameNeedDetect, frameAfterMaxFilter, CV_MOP_OPEN, kernel);
+			dilate(grayFrame, preprocessResultFrame, kernel);
+			for(auto r = 0;r < 512;r ++)
+			{
+				auto ptr = preprocessResultFrame.ptr<uchar>(r);
+				for(auto c = 0;c < 640;++c)
+				{
+					ptr[c] = (ptr[c] / 10) * 10;
+				}
+			}
+			cvtColor(preprocessResultFrame, colorPreprocessResultFrame, CV_GRAY2RGB);
 
 			GetDetectedResult(detectedTargetRects);
 
 			auto trackedTargetRects = Tracking(detectedTargetRects);
 
-			GetTrackedResult(trackedTargetRects);
+			sort(trackedTargetRects.begin(), trackedTargetRects.end(), DoubleCompare);
+
+			std::vector<cv::Rect> targets = {};
+			
+			int predefinedCount = 3;
+			int maxCount = trackedTargetRects.size() > predefinedCount ? predefinedCount : trackedTargetRects.size();
+			for (int i = 0; i < maxCount; ++i)
+			{
+				targets.push_back(trackedTargetRects[i].rect);
+			}
+
+			GetTrackedResult(targets);
 
 			CombineResultFramesAndPersistance();
 
@@ -549,6 +647,42 @@ bool Monitor<DataType>::CheckStandardDeviation(const Mat& grayFrame, const cv::R
 }
 
 template <typename DataType>
+bool Monitor<DataType>::CheckConstrast(const Mat& grayFrame, const cv::Rect& rect, double& constrastVal) const
+{
+	auto centerX = rect.x + rect.width / 2;
+	auto centerY = rect.y + rect.height / 2;
+
+	auto boxLeftTopX = centerX - 3 * rect.width / 2 >= 0 ? centerX - 3 * rect.width / 2 : 0;
+	auto boxLeftTopY = centerY - 3 * rect.height / 2 >= 0 ? centerY - 3 * rect.height / 2 : 0;
+	auto boxRightBottomX = centerX + 3 * rect.width / 2 < IMAGE_WIDTH ? centerX + 3 * rect.width / 2 : IMAGE_WIDTH - 1;
+	auto boxRightBottomY = centerY + 3 * rect.height / 2 < IMAGE_HEIGHT ? centerY + 3 * rect.height / 2 : IMAGE_HEIGHT - 1;
+
+	// temp added
+	int zeroCount = 0;
+	for (auto r = boxLeftTopY; r <= boxRightBottomY; ++r)
+	{
+		auto ptr = grayFrame.ptr<DataType>(r);
+		for (auto c = boxLeftTopX; c <= boxRightBottomX; ++c)
+		{
+			if (ptr[c] == 0)
+				zeroCount++;
+		}
+	}
+	if(zeroCount > 0)
+		return false;
+	// end
+	
+	auto avgValOfSurroundingBox = Util<DataType>::AverageValue(grayFrame, cv::Rect(boxLeftTopX, boxLeftTopY, boxRightBottomX - boxLeftTopX + 1, boxRightBottomY - boxLeftTopY + 1));
+
+	DataType maxVal = GetMaxValue(grayFrame, rect);
+
+	constrastVal = static_cast<double>(maxVal) / avgValOfSurroundingBox;
+	if(constrastVal - 1.13 > 0.00000001)
+		return true;
+	return false;
+}
+
+template <typename DataType>
 void Monitor<DataType>::DrawResult(cv::Mat& colorFrame, const cv::Rect& rect, DrawResultType drawResultType) const
 {
 	auto left = rect.x - 2 < 0 ? 0 : rect.x - 2;
@@ -612,3 +746,4 @@ void Monitor<DataType>::DrawHalfRectangle(cv::Mat& colorFrame, const int left, c
 	line(colorFrame, cv::Point(right, bottom), cv::Point(right, bottom - 3), lineColor, 1, CV_AA);
 	line(colorFrame, cv::Point(right, bottom), cv::Point(right - 3, bottom), lineColor, 1, CV_AA);
 }
+

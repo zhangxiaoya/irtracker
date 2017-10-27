@@ -16,7 +16,7 @@ const auto QUEUE_SIZE = 5;
 const auto SEARCH_WINDOW_WIDTH = 8;
 const auto SEARCH_WINDOW_HEIGHT = 8;
 const auto THRESHOLD = 25;
-const auto SHOW_DELAY = 1000;
+const auto SHOW_DELAY = 100;
 static auto SHOW_LAST_RESULT_ONLY = false;
 
 const auto THINGKING_STAGE = 6;
@@ -47,6 +47,7 @@ static bool CHECK_INSIDE_BOUNDARY_FLAG = true;
 static bool CHECK_FOUR_BLOCK_FLAG = true;
 static bool CHECK_COVERAGE_FLAG = true;
 static bool CHECK_STANDARD_DEVIATION_FLAG = false;
+static bool CHECK_CONSTRAST = false;
 
 static auto ConvexPartitionOfOriginalImage = 0;
 static auto ConcavePartitionOfOriginalImage = 0;

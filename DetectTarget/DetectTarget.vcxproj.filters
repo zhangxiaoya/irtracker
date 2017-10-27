@@ -103,6 +103,9 @@
     <ClInclude Include="Utils\ToVideo.hpp">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Models\TargetWithScore.hpp">
+      <Filter>Models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Monitor">
