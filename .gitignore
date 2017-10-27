@@ -6,6 +6,9 @@
 # png file
 *.png
 
+# props
+*.props
+
 # User-specific files
 *.suo
 *.user

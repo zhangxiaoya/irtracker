@@ -17,7 +17,7 @@ public:
 
 	void Process();
 
-	void SetResultPersistanceFlag(bool flag = false);
+	void SetResultPersistanceFlag(bool flag = false, bool isPersistentLastResultOnly = false);
 
 protected:
 	bool CheckOriginalImageSuroundedBox(const cv::Mat& grayFrame, const cv::Rect& rect) const;
@@ -207,10 +207,21 @@ void Monitor<DataType>::CombineResultFramesAndPersistance()
 
 	if(resultPersistanceFlag == true)
 	{
-		framePersistance->Persistance(combinedResultFrame);
+		if(PersistentLastResult)
+		{
+			framePersistance->Persistance(trackedResultFrame);
+		}
+		else
+		{
+			framePersistance->Persistance(combinedResultFrame);
+		}
 	}
 
-	imshow("Combined Result", combinedResultFrame);
+	if (SHOW_LAST_RESULT_ONLY)
+		imshow("Last Result Only", trackedResultFrame);
+	else
+		imshow("Combined Result", combinedResultFrame);
+
 	waitKey(SHOW_DELAY);
 }
 
@@ -252,9 +263,12 @@ void Monitor<DataType>::Process()
 }
 
 template <typename DataType>
-void Monitor<DataType>::SetResultPersistanceFlag(bool flag)
+void Monitor<DataType>::SetResultPersistanceFlag(bool flag, bool isPersistentLastResultOnly)
 {
 	this->resultPersistanceFlag = flag;
+	PersistentLastResult = isPersistentLastResultOnly;
+	if(isPersistentLastResultOnly)
+		toVideo->SetFrameSize(IMAGE_WIDTH, IMAGE_HEIGHT);
 }
 
 template <typename DataType>
@@ -528,15 +542,8 @@ bool Monitor<DataType>::CheckStandardDeviation(const Mat& grayFrame, const cv::R
 	auto k = 2;
 	auto adaptiveThreshold = standardDeviation * k + averageValue;
 
-//	Mat temp;
-//	cvtColor(grayFrame, temp, CV_GRAY2RGB);
-//	rectangle(temp, rect, Scalar(0, 255, 255));
-
-	if(adaptiveThreshold >= 180)
-	{
-		std::cout << adaptiveThreshold << std::endl;
+	if(adaptiveThreshold >= 150)
 		return true;
-	}
 
 	return false;
 }

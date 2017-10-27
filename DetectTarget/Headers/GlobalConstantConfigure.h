@@ -16,7 +16,8 @@ const auto QUEUE_SIZE = 5;
 const auto SEARCH_WINDOW_WIDTH = 8;
 const auto SEARCH_WINDOW_HEIGHT = 8;
 const auto THRESHOLD = 25;
-const auto SHOW_DELAY = 100;
+const auto SHOW_DELAY = 1000;
+static auto SHOW_LAST_RESULT_ONLY = false;
 
 const auto THINGKING_STAGE = 6;
 
@@ -54,6 +55,8 @@ static auto ConvexPartitionOfDiscretizedImage = 0;
 static auto ConcavePartitionOfDiscretizedImage = 0;
 
 static auto IsNeedStrengthenIntensity = false;
+
+static auto PersistentLastResult = false;
 
 const auto LowContrastThreshold = 3;
 
